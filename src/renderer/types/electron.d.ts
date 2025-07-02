@@ -1,6 +1,6 @@
 export interface ElectronAPI {
   ai: {
-    streamChat: (messages: any[], options?: any) => Promise<{ streamId: string; success: boolean }>
+    streamChat: (messages: any[], options?: any) => Promise<{ success: boolean; streamId?: string; error?: string }>
     generateText: (prompt: string, options?: any) => Promise<{ success: boolean; text?: string; error?: string }>
     stopStream: (streamId: string) => void
     onStreamData: (callback: (data: any) => void) => () => void
@@ -12,21 +12,28 @@ export interface ElectronAPI {
     get: (taskId: string) => Promise<{ success: boolean; task?: any; error?: string }>
     getAll: () => Promise<{ success: boolean; tasks?: any[]; error?: string }>
     getChildren: (parentId: string) => Promise<{ success: boolean; tasks?: any[]; error?: string }>
-    decompose: (taskId: string) => Promise<any>
-    execute: (taskId: string, mode: 'interactive' | 'autonomous') => Promise<any>
+    decompose: (taskId: string) => Promise<{ success: boolean; subtasks?: any[]; error?: string }>
+    execute: (taskId: string, mode: 'interactive' | 'autonomous') => Promise<{ success: boolean; error?: string }>
+  }
+  messages: {
+    getByTask: (taskId: string) => Promise<{ success: boolean; messages?: any[]; error?: string }>
+    getWithContext: (taskId: string) => Promise<{ success: boolean; messages?: any[]; hasParentContext?: boolean; error?: string }>
+    create: (message: any) => Promise<{ success: boolean; id?: string; error?: string }>
+    deleteByTask: (taskId: string) => Promise<{ success: boolean; error?: string }>
   }
   prompts: {
-    getLibrary: () => Promise<any>
-    savePrompt: (prompt: any) => Promise<any>
-    getMetrics: (promptId: string) => Promise<any>
-    testPrompt: (promptId: string, testData: any) => Promise<any>
+    getLibrary: () => Promise<{ success: boolean; prompts?: any[]; error?: string }>
+    savePrompt: (prompt: any) => Promise<{ success: boolean; id?: string; error?: string }>
+    getMetrics: (promptId: string) => Promise<{ success: boolean; metrics?: any[]; error?: string }>
+    testPrompt: (promptId: string, testData: any) => Promise<{ success: boolean; result?: any; error?: string }>
   }
   settings: {
     get: (key: string) => Promise<any>
     set: (key: string, value: any) => Promise<void>
   }
   onMenuAction: (callback: (action: string) => void) => () => void
-  platform: NodeJS.Platform
+  platform: string
+  getVersion: () => Promise<string>
 }
 
 declare global {

@@ -1,6 +1,7 @@
 import { IpcMain } from 'electron'
 import { nanoid } from 'nanoid'
-import { getDatabase } from './database'
+import { getDatabase, db } from './database'
+import { taskExecutor } from './task-executor'
 
 export function setupTaskHandlers(ipcMain: IpcMain) {
   const db = getDatabase()
@@ -124,5 +125,42 @@ export function setupTaskHandlers(ipcMain: IpcMain) {
     // This will execute the task using AI
     // For now, return a placeholder
     return { success: true, message: 'Task execution not yet implemented' }
+  })
+
+  // Create a new task
+  ipcMain.handle('tasks:create', async (_, taskData) => {
+    try {
+      const id = nanoid()
+      const now = Date.now()
+      
+      const task = {
+        id,
+        parent_id: taskData.parent_id || null,
+        title: taskData.title,
+        description: taskData.description || '',
+        status: taskData.status || 'pending',
+        execution_mode: taskData.execution_mode || 'interactive',
+        created_at: now,
+        updated_at: now,
+        completed_at: null,
+        metadata: JSON.stringify(taskData.metadata || {})
+      }
+      
+      db.prepare(`
+        INSERT INTO tasks (
+          id, parent_id, title, description, status, 
+          execution_mode, created_at, updated_at, completed_at, metadata
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(...Object.values(task))
+      
+      // If it's an autonomous task, queue it for execution
+      if (task.execution_mode === 'autonomous' && task.status === 'pending') {
+        taskExecutor.queueTask(id)
+      }
+      
+      return { success: true, id }
+    } catch (error: any) {
+      return { success: false, error: error.message }
+    }
   })
 } 

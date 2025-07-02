@@ -32,6 +32,17 @@ export async function initializeDatabase() {
       FOREIGN KEY (parent_id) REFERENCES tasks(id) ON DELETE CASCADE
     );
     
+    -- Messages table
+    CREATE TABLE IF NOT EXISTS messages (
+      id TEXT PRIMARY KEY,
+      task_id TEXT NOT NULL,
+      role TEXT NOT NULL,
+      content TEXT NOT NULL,
+      metadata TEXT DEFAULT '{}',
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE
+    );
+    
     -- Conversations table
     CREATE TABLE IF NOT EXISTS conversations (
       id TEXT PRIMARY KEY,
@@ -72,6 +83,7 @@ export async function initializeDatabase() {
     -- Create indexes
     CREATE INDEX IF NOT EXISTS idx_tasks_parent_id ON tasks(parent_id);
     CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+    CREATE INDEX IF NOT EXISTS idx_messages_task_id ON messages(task_id);
     CREATE INDEX IF NOT EXISTS idx_conversations_task_id ON conversations(task_id);
     CREATE INDEX IF NOT EXISTS idx_prompt_metrics_prompt_id ON prompt_metrics(prompt_id);
     CREATE INDEX IF NOT EXISTS idx_prompt_metrics_success ON prompt_metrics(success);
@@ -142,4 +154,7 @@ export function getDatabase() {
     throw new Error('Database not initialized')
   }
   return db
-} 
+}
+
+// Export db for easier access
+export { db } 

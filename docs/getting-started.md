@@ -299,7 +299,7 @@ NODE_OPTIONS='--inspect' pnpm dev
 
 1. Read the [Architecture Guide](./architecture.md) for deeper understanding
 2. Check [Contributing Guidelines](../CONTRIBUTING.md) to submit changes
-3. Explore the [original concept](../doc/README.md) for feature ideas
+3. Explore the [original concept](./concept.md) for feature ideas
 
 ## Getting Help
 

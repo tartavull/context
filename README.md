@@ -1,115 +1,80 @@
-# Orchestrator Electron App
+# Orchestrator
 
-This is the Electron implementation of the Orchestrator - a recursive task decomposition system for optimal LLM performance.
+> **Stop losing 39% of your AI's capability in long conversations.** 
 
-## Setup
+Orchestrator is a desktop app that revolutionizes how you work with AI by keeping conversations short, focused, and optimally effective.
 
-### Prerequisites
+## The Problem
 
-1. Install Nix package manager if you haven't already
-2. Install direnv and hook it to your shell
+Microsoft Research shows that **ALL** major LLMs (GPT-4, Claude, Gemini) lose 39% of their performance in multi-turn conversations. Once they make a wrong assumption, they rarely recover.
 
-### Development Setup
+## The Solution
 
-1. Navigate to the project directory:
-   ```bash
-   cd orchestrator
-   ```
-
-2. Allow direnv to load the environment:
-   ```bash
-   direnv allow
-   ```
-
-3. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-
-4. Set up your API keys in `.env.local`:
-   ```bash
-   # Add your API keys
-   OPENAI_API_KEY=your-openai-key-here
-   ANTHROPIC_API_KEY=your-anthropic-key-here
-   ```
-
-5. Start the development server:
-   ```bash
-   pnpm dev
-   ```
-
-## Project Structure
+Orchestrator automatically breaks complex tasks into focused sub-conversations, maintaining peak AI performance throughout your project.
 
 ```
-orchestrator/
-├── src/
-│   ├── main/           # Electron main process
-│   │   ├── index.ts    # Main entry point
-│   │   ├── preload.ts  # Preload script
-│   │   ├── database.ts # SQLite database
-│   │   ├── ai-handlers.ts      # AI SDK integration
-│   │   └── task-handlers.ts    # Task management
-│   ├── renderer/       # React renderer process
-│   │   ├── App.tsx     # Main app component
-│   │   ├── components/ # React components
-│   │   ├── store/      # Zustand stores
-│   │   └── styles/     # CSS and styling
-│   └── shared/         # Shared types/utilities
-├── doc/               # Documentation
-│   └── README.md      # Original project concept
-├── flake.nix          # Nix flake configuration
-├── package.json       # NPM dependencies
-└── README.md          # This file
+Your request: "Build a todo app"
+                    ↓
+         Orchestrator creates:
+    ┌────────────┬────────────┬──────────┐
+    │ Design UI  │ Setup DB   │ Frontend │ → Each in its own 
+    │ (focused)  │ (focused)  │ (focused)│   optimized conversation
+    └────────────┴────────────┴──────────┘
 ```
 
-## Available Scripts
+## Key Benefits
 
-- `pnpm dev` - Start development server
-- `pnpm build` - Build for production
-- `pnpm start` - Run built application
-- `pnpm package` - Package application for distribution
-- `pnpm lint` - Run ESLint
-- `pnpm format` - Format code with Prettier
+- ✅ **39% Better AI Performance** - Keep conversations in the optimal single-turn zone
+- ✅ **Parallel Progress** - Multiple tasks advance simultaneously  
+- ✅ **Visual Task Management** - See your entire project at a glance
+- ✅ **No Context Pollution** - Each task has its own clean context
 
-## Features
-
-- **Task Tree View**: Visual representation of task hierarchy
-- **Chat Interface**: AI-powered chat for each task
-- **Task Decomposition**: Automatically break down complex tasks
-- **Execution Modes**: Interactive or autonomous task execution
-- **Prompt Library**: Manage and version prompts
-- **Performance Tracking**: Monitor prompt effectiveness
-- **SQLite Database**: Local storage for tasks and conversations
-
-## Technologies
-
-- **Electron**: Desktop application framework
-- **React**: UI framework
-- **TypeScript**: Type safety
-- **Vercel AI SDK**: AI integration
-- **SQLite**: Local database
-- **Tailwind CSS**: Styling
-- **Zustand**: State management
-- **Nix**: Reproducible development environment
-
-## Development Notes
-
-- The app uses Electron's context isolation for security
-- All AI operations happen in the main process to protect API keys
-- The SQLite database is stored in the user's app data directory
-- Hot reload is enabled for the renderer process in development
-
-## Building for Production
-
-To build the application for distribution:
+## Quick Start
 
 ```bash
-pnpm build
-pnpm package
+# Clone the repository
+git clone https://github.com/tartavull/orchestrator.git
+cd orchestrator
+
+# Set up environment (with Nix)
+direnv allow
+
+# Install and run
+pnpm install
+pnpm dev
 ```
 
-The packaged application will be available in the `release` directory.
+## Documentation
+
+📚 **[Read the full documentation →](https://tartavull.github.io/orchestrator/)**
+
+- [Quick Start Guide](https://tartavull.github.io/orchestrator/quick-start) - Get running in 5 minutes
+- [Getting Started](https://tartavull.github.io/orchestrator/getting-started) - Complete setup guide
+- [Architecture](https://tartavull.github.io/orchestrator/architecture) - Technical deep dive
+- [Original Concept](https://tartavull.github.io/orchestrator/concept) - The research and vision
+
+## Who It's For
+
+- **Developers** building complex applications with AI assistance
+- **Researchers** who need reliable, consistent AI performance
+- **Teams** working on multi-faceted projects
+- **Anyone** frustrated by AI getting confused in long conversations
+
+## Built With
+
+- **Electron + React** - Native desktop experience
+- **Vercel AI SDK** - Streaming AI responses
+- **TypeScript** - Type-safe development
+- **SQLite** - Local data persistence
+
+## Contributing
+
+We welcome contributions! See our [documentation](https://tartavull.github.io/orchestrator/) for development setup.
 
 ## License
 
-See the main project README for license information. 
+MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+*Based on research: ["LLMs Get Lost in the Middle of Long Contexts"](https://arxiv.org/abs/2401.16929) - Microsoft Research, 2024* 

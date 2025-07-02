@@ -7,11 +7,12 @@ Welcome to the Orchestrator developer documentation. This directory contains gui
 ### Getting Started
 - **[Quick Start Guide](./quick-start.md)** - Get up and running in 5 minutes
 - **[Getting Started Guide](./getting-started.md)** - Comprehensive setup and overview
+- **[Setup Guide](./setup.md)** - Implementation details and testing guide
 - **[Architecture Overview](./architecture.md)** - Technical design and implementation details
 
 ### Concept & Design
-- **[Original Concept](../doc/README.md)** - The vision and research behind Orchestrator
-- **[Task Decomposition](../doc/README.md#how-it-works)** - Core algorithm and approach
+- **[Original Concept](./concept.md)** - The vision and research behind Orchestrator
+- **[Task Decomposition](./concept.md#how-it-works)** - Core algorithm and approach
 
 ## Quick Links
 

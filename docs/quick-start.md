@@ -78,7 +78,7 @@ lsof -ti:5173 | xargs kill -9
 
 - Read the full [Getting Started Guide](./getting-started.md)
 - Explore the [Architecture](./architecture.md)
-- Check out the [original concept](../doc/README.md)
+- Check out the [original concept](./concept.md)
 
 ---
 

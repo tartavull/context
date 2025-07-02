@@ -62,7 +62,18 @@ const electronAPI = {
   },
 
   // Platform info
-  platform: process.platform
+  platform: process.platform,
+
+  // Message management
+  messages: {
+    getByTask: (taskId: string) => ipcRenderer.invoke('messages:get-by-task', taskId),
+    getWithContext: (taskId: string) => ipcRenderer.invoke('messages:get-with-context', taskId),
+    create: (message: any) => ipcRenderer.invoke('messages:create', message),
+    deleteByTask: (taskId: string) => ipcRenderer.invoke('messages:delete-by-task', taskId),
+  },
+
+  // App info
+  getVersion: () => ipcRenderer.invoke('app:get-version'),
 }
 
 // Expose the API to the renderer process

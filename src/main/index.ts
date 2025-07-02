@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url'
 import { initializeDatabase } from './database'
 import { setupAIHandlers } from './ai-handlers'
 import { setupTaskHandlers } from './task-handlers'
+import { setupMessageHandlers } from './message-handlers'
 import Store from 'electron-store'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -135,8 +136,13 @@ app.whenReady().then(async () => {
   await initializeDatabase()
 
   // Setup IPC handlers
-  setupAIHandlers(ipcMain)
   setupTaskHandlers(ipcMain)
+  setupAIHandlers(ipcMain)
+  setupMessageHandlers(ipcMain)
+
+  // Import and queue any pending autonomous tasks
+  const { taskExecutor } = await import('./task-executor')
+  await taskExecutor.queuePendingTasks()
 
   // Create app menu
   createMenu()
