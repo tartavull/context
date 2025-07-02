@@ -1,6 +1,6 @@
 {
   "name": "orchestrator",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Recursive Task Decomposition for Optimal LLM Performance",
   "main": "dist/main/index.js",
   "scripts": {
