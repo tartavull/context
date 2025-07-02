@@ -39,20 +39,30 @@ jobs:
 
       - name: Setup Windows build tools
         if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup Python (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Setup node-gyp (Windows)
+        if: runner.os == 'Windows'
         run: |
           npm install -g node-gyp
           npm config set msvs_version 2022
-        continue-on-error: true
+          npm config set python python
 
       - name: Install dependencies (Unix)
         if: runner.os != 'Windows'
-        run: nix develop --command pnpm install
+        run: nix develop --command pnpm install --frozen-lockfile
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          pnpm install
-          npx electron-rebuild
+          pnpm install --frozen-lockfile
+          npx electron-rebuild --force
 
       - name: Run linter (Unix)
         if: runner.os != 'Windows'

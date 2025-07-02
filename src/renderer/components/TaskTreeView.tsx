@@ -24,7 +24,14 @@ interface TaskTreeItemProps {
   children?: Task[]
 }
 
-function TaskTreeItem({ task, level, isSelected, onSelect, onDeleteTask, children = [] }: TaskTreeItemProps) {
+function TaskTreeItem({
+  task,
+  level,
+  isSelected,
+  onSelect,
+  onDeleteTask,
+  children = [],
+}: TaskTreeItemProps) {
   const [showActions, setShowActions] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(task.title)
@@ -61,7 +68,7 @@ function TaskTreeItem({ task, level, isSelected, onSelect, onDeleteTask, childre
     const date = new Date(timestamp)
     const now = new Date()
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-    
+
     if (diffInHours < 24) {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     } else if (diffInHours < 24 * 7) {
@@ -77,7 +84,7 @@ function TaskTreeItem({ task, level, isSelected, onSelect, onDeleteTask, childre
         className={`flex items-center gap-2 px-3 py-2 cursor-pointer group transition-colors relative`}
         style={{
           paddingLeft: `${12 + indent}px`,
-          backgroundColor: isSelected ? '#007AFF' : 'transparent'
+          backgroundColor: isSelected ? '#007AFF' : 'transparent',
         }}
         onMouseEnter={(e) => {
           if (!isSelected) {
@@ -94,7 +101,7 @@ function TaskTreeItem({ task, level, isSelected, onSelect, onDeleteTask, childre
         onClick={() => onSelect(task.id)}
       >
         {/* Project Avatar */}
-        <div 
+        <div
           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-medium"
           style={{ backgroundColor: getStatusColor() }}
         >
@@ -110,11 +117,7 @@ function TaskTreeItem({ task, level, isSelected, onSelect, onDeleteTask, childre
             }}
             className="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
           >
-            {isExpanded ? (
-              <FolderOpen className="w-3 h-3" />
-            ) : (
-              <Folder className="w-3 h-3" />
-            )}
+            {isExpanded ? <FolderOpen className="w-3 h-3" /> : <Folder className="w-3 h-3" />}
           </button>
         )}
 
@@ -133,15 +136,21 @@ function TaskTreeItem({ task, level, isSelected, onSelect, onDeleteTask, childre
           ) : (
             <div>
               <div className="flex items-center justify-between">
-                <div className={`text-sm font-medium truncate ${isSelected ? 'text-white' : 'text-white'}`}>
+                <div
+                  className={`text-sm font-medium truncate ${isSelected ? 'text-white' : 'text-white'}`}
+                >
                   {task.title}
                 </div>
-                <span className={`text-xs ml-2 flex-shrink-0 ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+                <span
+                  className={`text-xs ml-2 flex-shrink-0 ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}
+                >
                   {formatDate(task.created_at)}
                 </span>
               </div>
               {task.description && (
-                <div className={`text-xs truncate ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+                <div
+                  className={`text-xs truncate ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}
+                >
                   {task.description}
                 </div>
               )}
@@ -151,15 +160,9 @@ function TaskTreeItem({ task, level, isSelected, onSelect, onDeleteTask, childre
 
         {/* Status Indicator */}
         <div className="flex items-center gap-1">
-          {task.status === 'completed' && (
-            <div className="w-2 h-2 rounded-full bg-green-400"></div>
-          )}
-          {task.status === 'active' && (
-            <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-          )}
-          {task.status === 'failed' && (
-            <div className="w-2 h-2 rounded-full bg-red-400"></div>
-          )}
+          {task.status === 'completed' && <div className="w-2 h-2 rounded-full bg-green-400"></div>}
+          {task.status === 'active' && <div className="w-2 h-2 rounded-full bg-blue-400"></div>}
+          {task.status === 'failed' && <div className="w-2 h-2 rounded-full bg-red-400"></div>}
         </div>
 
         {/* Actions Menu */}
@@ -210,7 +213,8 @@ function TaskTreeItem({ task, level, isSelected, onSelect, onDeleteTask, childre
 }
 
 export function TaskTreeView() {
-  const { tasks, selectedTaskId, selectTask, loadTasks, deleteTask, getTaskChildren } = useTaskStore()
+  const { tasks, selectedTaskId, selectTask, loadTasks, deleteTask, getTaskChildren } =
+    useTaskStore()
 
   useEffect(() => {
     loadTasks()
@@ -234,7 +238,7 @@ export function TaskTreeView() {
             onClick={() => {
               window.electron.tasks.create({
                 title: 'My First Project',
-                description: 'Get started with your first project'
+                description: 'Get started with your first project',
               })
             }}
             className="inline-flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg transition-colors"

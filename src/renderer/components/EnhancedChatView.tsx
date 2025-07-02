@@ -11,11 +11,11 @@ interface EnhancedChatViewProps {
 }
 
 export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
-  const task = useTaskStore(state => state.tasks.get(taskId))
-  const createTask = useTaskStore(state => state.createTask)
+  const task = useTaskStore((state) => state.tasks.get(taskId))
+  const createTask = useTaskStore((state) => state.createTask)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
-  
+
   // Use our custom Electron chat hook
   const {
     messages,
@@ -26,7 +26,7 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
     stop,
     reload,
     setMessages,
-    append
+    append,
   } = useElectronChat({
     initialMessages: [],
     onFinish: async (message) => {
@@ -34,30 +34,30 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
       await window.electron.messages.create({
         task_id: taskId,
         role: 'assistant',
-        content: message.content
+        content: message.content,
       })
-      
+
       // Check for task decomposition
       await checkForTaskDecomposition(message.content)
     },
     onError: (error) => {
       console.error('Chat error:', error)
-    }
+    },
   })
-  
+
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [])
-  
+
   useEffect(() => {
     scrollToBottom()
   }, [messages, scrollToBottom])
-  
+
   // Load messages from database on mount
   useEffect(() => {
     loadMessages()
   }, [taskId])
-  
+
   const loadMessages = async () => {
     const result = await window.electron.messages.getByTask(taskId)
     if (result.success && result.messages) {
@@ -65,15 +65,15 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
         id: msg.id,
         role: msg.role,
         content: msg.content,
-        createdAt: new Date(msg.created_at)
+        createdAt: new Date(msg.created_at),
       }))
       setMessages(formattedMessages)
     }
   }
-  
+
   const checkForTaskDecomposition = async (content: string) => {
     const subtasks = parseSubtasks(content)
-    
+
     for (const subtask of subtasks) {
       try {
         const newTaskId = await createTask({
@@ -81,9 +81,9 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
           title: subtask.title,
           description: subtask.description,
           execution_mode: subtask.execution_mode as 'interactive' | 'autonomous',
-          status: 'pending'
+          status: 'pending',
         })
-        
+
         if (newTaskId && subtask.execution_mode === 'autonomous') {
           console.log('Created autonomous task:', newTaskId)
         }
@@ -92,24 +92,24 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
       }
     }
   }
-  
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading || !task) return
-    
+
     // Save user message to database
     await window.electron.messages.create({
       task_id: taskId,
       role: 'user',
-      content: input.trim()
+      content: input.trim(),
     })
-    
+
     // Add system context to the submission
     const systemMessage = {
       role: 'system' as const,
-      content: getSystemPrompt(task)
+      content: getSystemPrompt(task),
     }
-    
+
     // Use the built-in handleSubmit with custom options
     handleSubmit(e, {
       body: {
@@ -118,12 +118,12 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
           id: taskId,
           title: task.title,
           description: task.description,
-          execution_mode: task.execution_mode
-        }
-      }
+          execution_mode: task.execution_mode,
+        },
+      },
     })
   }
-  
+
   const copyToClipboard = async (content: string, messageId: string) => {
     try {
       await navigator.clipboard.writeText(content)
@@ -133,7 +133,7 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
       console.error('Failed to copy:', error)
     }
   }
-  
+
   if (!task) {
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground">
@@ -141,7 +141,7 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
       </div>
     )
   }
-  
+
   return (
     <div className="h-full flex flex-col bg-background">
       {/* Header */}
@@ -152,12 +152,10 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
           </div>
           <div>
             <h2 className="font-semibold text-lg">{task.title}</h2>
-            <span className="text-xs text-muted-foreground">
-              {task.execution_mode} mode
-            </span>
+            <span className="text-xs text-muted-foreground">{task.execution_mode} mode</span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {isLoading && (
             <button
@@ -179,7 +177,7 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
           )}
         </div>
       </div>
-      
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto p-4 space-y-6">
@@ -200,12 +198,12 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
               )}
             </div>
           )}
-          
+
           {messages.map((message, index) => (
             <div
               key={message.id}
               className={cn(
-                "flex gap-4 group",
+                'flex gap-4 group',
                 message.role === 'user' ? 'justify-end' : 'justify-start'
               )}
             >
@@ -214,10 +212,10 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
                   <Bot className="w-5 h-5 text-primary" />
                 </div>
               )}
-              
+
               <div
                 className={cn(
-                  "max-w-[80%] rounded-xl px-4 py-3 relative",
+                  'max-w-[80%] rounded-xl px-4 py-3 relative',
                   message.role === 'user'
                     ? 'bg-primary text-primary-foreground ml-12'
                     : 'bg-card border border-border mr-12'
@@ -228,25 +226,26 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
                     className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:p-0"
                     components={{
                       pre: ({ children }) => (
-                        <pre className="overflow-x-auto bg-muted p-4 rounded-lg">
-                          {children}
-                        </pre>
+                        <pre className="overflow-x-auto bg-muted p-4 rounded-lg">{children}</pre>
                       ),
                       code: ({ children, className }) => (
-                        <code className={cn("relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm", className)}>
+                        <code
+                          className={cn(
+                            'relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm',
+                            className
+                          )}
+                        >
                           {children}
                         </code>
-                      )
+                      ),
                     }}
                   >
                     {message.content}
                   </ReactMarkdown>
                 ) : (
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                    {message.content}
-                  </p>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                 )}
-                
+
                 {/* Copy button */}
                 <button
                   onClick={() => copyToClipboard(message.content, message.id)}
@@ -260,7 +259,7 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
                   )}
                 </button>
               </div>
-              
+
               {message.role === 'user' && (
                 <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
                   <User className="w-5 h-5" />
@@ -268,7 +267,7 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
               )}
             </div>
           ))}
-          
+
           {isLoading && (
             <div className="flex gap-4">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -283,10 +282,10 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
             </div>
           )}
         </div>
-        
+
         <div ref={messagesEndRef} />
       </div>
-      
+
       {/* Input */}
       <div className="p-4 border-t border-border bg-card/50 backdrop-blur-sm">
         <form onSubmit={handleFormSubmit} className="max-w-4xl mx-auto">
@@ -297,8 +296,8 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
                 onChange={handleInputChange}
                 placeholder={
                   task.execution_mode === 'autonomous'
-                    ? "This task runs autonomously..."
-                    : "Type your message... (Shift+Enter for new line)"
+                    ? 'This task runs autonomously...'
+                    : 'Type your message... (Shift+Enter for new line)'
                 }
                 className="w-full px-4 py-3 pr-12 bg-background border border-input rounded-xl focus:outline-none focus:ring-2 focus:ring-ring resize-none min-h-[52px] max-h-32"
                 disabled={isLoading || task.execution_mode === 'autonomous'}
@@ -311,7 +310,7 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
                 }}
                 style={{
                   height: 'auto',
-                  minHeight: '52px'
+                  minHeight: '52px',
                 }}
                 onInput={(e) => {
                   const target = e.target as HTMLTextAreaElement
@@ -320,7 +319,7 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
                 }}
               />
             </div>
-            
+
             <button
               type="submit"
               disabled={!input.trim() || isLoading || task.execution_mode === 'autonomous'}
@@ -333,10 +332,12 @@ export function EnhancedChatView({ taskId }: EnhancedChatViewProps) {
               )}
             </button>
           </div>
-          
+
           <div className="flex items-center justify-between mt-2 px-1">
             <span className="text-xs text-muted-foreground">
-              {task.execution_mode === 'interactive' ? 'Press Enter to send, Shift+Enter for new line' : 'Autonomous mode active'}
+              {task.execution_mode === 'interactive'
+                ? 'Press Enter to send, Shift+Enter for new line'
+                : 'Autonomous mode active'}
             </span>
             {messages.length > 0 && (
               <span className="text-xs text-muted-foreground">

@@ -7,7 +7,7 @@ import { useElectronChat } from '../hooks/useElectronChat'
 export function GeneralChatView() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
-  
+
   // Use our custom Electron chat hook for general conversations
   const {
     messages,
@@ -18,7 +18,7 @@ export function GeneralChatView() {
     stop,
     reload,
     setMessages,
-    append
+    append,
   } = useElectronChat({
     initialMessages: [],
     onFinish: async (message) => {
@@ -27,35 +27,36 @@ export function GeneralChatView() {
     },
     onError: (error) => {
       console.error('General chat error:', error)
-    }
+    },
   })
-  
+
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [])
-  
+
   useEffect(() => {
     scrollToBottom()
   }, [messages, scrollToBottom])
-  
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
-    
+
     // Add system context for general chat
     const systemMessage = {
       role: 'system' as const,
-      content: 'You are a helpful AI assistant in the Orchestrator app. You can help with general questions, task planning, productivity advice, and anything else the user needs. Be friendly, helpful, and concise.'
+      content:
+        'You are a helpful AI assistant in the Orchestrator app. You can help with general questions, task planning, productivity advice, and anything else the user needs. Be friendly, helpful, and concise.',
     }
-    
+
     // Use the built-in handleSubmit with system context
     handleSubmit(e, {
       body: {
-        systemMessage
-      }
+        systemMessage,
+      },
     })
   }
-  
+
   const copyToClipboard = async (content: string, messageId: string) => {
     try {
       await navigator.clipboard.writeText(content)
@@ -65,14 +66,17 @@ export function GeneralChatView() {
       console.error('Failed to copy:', error)
     }
   }
-  
+
   return (
     <div className="h-full flex flex-col" style={{ backgroundColor: '#1e1e1e' }}>
       {/* Header - macOS Messages style */}
-      <div className="h-12 px-4 flex items-center justify-center border-b" style={{ 
-        backgroundColor: '#2d2d2d', 
-        borderBottomColor: '#3d3d3d' 
-      }}>
+      <div
+        className="h-12 px-4 flex items-center justify-center border-b"
+        style={{
+          backgroundColor: '#2d2d2d',
+          borderBottomColor: '#3d3d3d',
+        }}
+      >
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
             <Bot className="w-4 h-4 text-white" />
@@ -82,7 +86,7 @@ export function GeneralChatView() {
           </div>
         </div>
       </div>
-      
+
       {/* Messages - macOS Messages dark style */}
       <div className="flex-1 overflow-y-auto" style={{ backgroundColor: '#1e1e1e' }}>
         <div className="max-w-2xl mx-auto px-4 py-4">
@@ -97,31 +101,35 @@ export function GeneralChatView() {
               </p>
               <div className="space-y-2 max-w-sm mx-auto">
                 <button
-                  onClick={() => append({
-                    id: 'suggestion-1',
-                    role: 'user',
-                    content: 'Help me break down a complex project into manageable tasks',
-                    createdAt: new Date()
-                  })}
+                  onClick={() =>
+                    append({
+                      id: 'suggestion-1',
+                      role: 'user',
+                      content: 'Help me break down a complex project into manageable tasks',
+                      createdAt: new Date(),
+                    })
+                  }
                   className="w-full p-3 rounded-lg text-left transition-colors text-sm"
                   style={{ backgroundColor: '#2d2d2d' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d3d3d'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2d2d2d'}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#3d3d3d')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#2d2d2d')}
                 >
                   <div className="font-medium text-white">📋 Task Planning</div>
                   <div className="text-gray-400 text-xs">Break down complex projects</div>
                 </button>
                 <button
-                  onClick={() => append({
-                    id: 'suggestion-2',
-                    role: 'user',
-                    content: 'What are some productivity tips for managing multiple projects?',
-                    createdAt: new Date()
-                  })}
+                  onClick={() =>
+                    append({
+                      id: 'suggestion-2',
+                      role: 'user',
+                      content: 'What are some productivity tips for managing multiple projects?',
+                      createdAt: new Date(),
+                    })
+                  }
                   className="w-full p-3 rounded-lg text-left transition-colors text-sm"
                   style={{ backgroundColor: '#2d2d2d' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#3d3d3d'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2d2d2d'}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#3d3d3d')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#2d2d2d')}
                 >
                   <div className="font-medium text-white">⚡ Productivity Tips</div>
                   <div className="text-gray-400 text-xs">Get advice on staying organized</div>
@@ -129,59 +137,68 @@ export function GeneralChatView() {
               </div>
             </div>
           )}
-          
+
           <div className="space-y-2">
             {messages.map((message, index) => (
               <div
                 key={message.id}
                 className={cn(
-                  "flex gap-2 group",
+                  'flex gap-2 group',
                   message.role === 'user' ? 'justify-end' : 'justify-start'
                 )}
               >
                 {message.role === 'assistant' && (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1" style={{ backgroundColor: '#3d3d3d' }}>
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-1"
+                    style={{ backgroundColor: '#3d3d3d' }}
+                  >
                     <Bot className="w-3 h-3 text-gray-300" />
                   </div>
                 )}
-                
+
                 <div
                   className={cn(
-                    "max-w-[70%] px-3 py-2 text-sm relative group",
+                    'max-w-[70%] px-3 py-2 text-sm relative group',
                     message.role === 'user'
                       ? 'rounded-2xl rounded-br-md'
                       : 'rounded-2xl rounded-bl-md'
                   )}
                   style={{
                     backgroundColor: message.role === 'user' ? '#007AFF' : '#2d2d2d',
-                    color: message.role === 'user' ? 'white' : '#ffffff'
+                    color: message.role === 'user' ? 'white' : '#ffffff',
                   }}
                 >
                   {message.role === 'assistant' ? (
                     <ReactMarkdown
                       className="prose prose-sm max-w-none [&_p]:leading-relaxed [&_p]:my-1 [&_p]:text-white [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:text-xs [&_pre]:overflow-x-auto"
                       components={{
-                        p: ({ children }) => <div className="leading-relaxed text-white">{children}</div>,
+                        p: ({ children }) => (
+                          <div className="leading-relaxed text-white">{children}</div>
+                        ),
                         code: ({ children, className }) => (
-                          <code className="px-1 py-0.5 rounded text-xs font-mono text-white" style={{ backgroundColor: '#3d3d3d' }}>
+                          <code
+                            className="px-1 py-0.5 rounded text-xs font-mono text-white"
+                            style={{ backgroundColor: '#3d3d3d' }}
+                          >
                             {children}
                           </code>
                         ),
                         pre: ({ children }) => (
-                          <pre className="p-2 rounded-lg text-xs overflow-x-auto font-mono text-white" style={{ backgroundColor: '#3d3d3d' }}>
+                          <pre
+                            className="p-2 rounded-lg text-xs overflow-x-auto font-mono text-white"
+                            style={{ backgroundColor: '#3d3d3d' }}
+                          >
                             {children}
                           </pre>
-                        )
+                        ),
                       }}
                     >
                       {message.content}
                     </ReactMarkdown>
                   ) : (
-                    <div className="leading-relaxed text-white">
-                      {message.content}
-                    </div>
+                    <div className="leading-relaxed text-white">{message.content}</div>
                   )}
-                  
+
                   {/* Copy button - only show on hover */}
                   <button
                     onClick={() => copyToClipboard(message.content, message.id)}
@@ -196,7 +213,7 @@ export function GeneralChatView() {
                     )}
                   </button>
                 </div>
-                
+
                 {message.role === 'user' && (
                   <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-1">
                     <User className="w-3 h-3 text-white" />
@@ -205,33 +222,51 @@ export function GeneralChatView() {
               </div>
             ))}
           </div>
-          
+
           {isLoading && (
             <div className="flex gap-2 justify-start mt-2">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#3d3d3d' }}>
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: '#3d3d3d' }}
+              >
                 <Bot className="w-3 h-3 text-gray-300" />
               </div>
-              <div className="rounded-2xl rounded-bl-md px-3 py-2" style={{ backgroundColor: '#2d2d2d' }}>
+              <div
+                className="rounded-2xl rounded-bl-md px-3 py-2"
+                style={{ backgroundColor: '#2d2d2d' }}
+              >
                 <div className="flex items-center gap-1">
                   <div className="flex space-x-1">
-                    <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    <div
+                      className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0ms' }}
+                    ></div>
+                    <div
+                      className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '150ms' }}
+                    ></div>
+                    <div
+                      className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '300ms' }}
+                    ></div>
                   </div>
                 </div>
               </div>
             </div>
           )}
         </div>
-        
+
         <div ref={messagesEndRef} />
       </div>
-      
+
       {/* Input - macOS Messages dark style */}
-      <div className="p-3 border-t" style={{ 
-        backgroundColor: '#2d2d2d', 
-        borderTopColor: '#3d3d3d' 
-      }}>
+      <div
+        className="p-3 border-t"
+        style={{
+          backgroundColor: '#2d2d2d',
+          borderTopColor: '#3d3d3d',
+        }}
+      >
         <form onSubmit={handleFormSubmit} className="max-w-2xl mx-auto">
           <div className="flex items-end gap-2">
             <div className="flex-1 relative">
@@ -253,7 +288,7 @@ export function GeneralChatView() {
                   minHeight: '36px',
                   backgroundColor: '#1e1e1e',
                   borderColor: '#3d3d3d',
-                  color: 'white'
+                  color: 'white',
                 }}
                 onInput={(e) => {
                   const target = e.target as HTMLTextAreaElement
@@ -262,7 +297,7 @@ export function GeneralChatView() {
                 }}
               />
             </div>
-            
+
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
@@ -279,4 +314,4 @@ export function GeneralChatView() {
       </div>
     </div>
   )
-} 
+}

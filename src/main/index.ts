@@ -250,6 +250,11 @@ ipcMain.handle('settings:set', (_, key: string, value: any) => {
   store.set(key, value)
 })
 
+// Handle app version
+ipcMain.handle('app:get-version', () => {
+  return app.getVersion()
+})
+
 // Handle deep links (orchestrator://)
 app.setAsDefaultProtocolClient('orchestrator')
 
