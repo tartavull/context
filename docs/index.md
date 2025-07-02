@@ -2,20 +2,17 @@
 
 ## The Problem: LLMs Get Lost in Long Conversations
 
-Recent research from Microsoft reveals a critical limitation in how we use Large Language Models:
+Recent research from Microsoft reveals a critical limitation in Large Language Models:
 
-- **39% Performance Drop**: All LLMs (GPT-4, Claude, Gemini) exhibit significantly worse performance in multi-turn conversations compared to single-turn interactions
-- **Self-Poisoning Context**: Once an LLM makes an incorrect assumption, it rarely recovers. They "talk when they should listen," generating overly verbose responses that compound errors
-- **Universal Problem**: This affects all models equally - from open-source to cutting-edge systems
+- **39% Performance Drop**: All LLMs exhibit significantly worse performance in multi-turn conversations compared to single-turn interactions
+- **Self-Poisoning Context**: Once an LLM makes an incorrect assumption, it rarely recovers, generating overly verbose responses that compound errors
+- **Universal Problem**: This affects all models equally - GPT-4, Claude, Gemini, and open-source alternatives
 
 > *"When LLMs take a wrong turn in a conversation, they get lost and do not recover."* - Microsoft Research, 2025
 
 ## The Solution: Keep Conversations Short and Focused
 
-Orchestrator is a conversation router that recursively decomposes complex tasks into minimal sub-tasks, solving each in isolation with optimal performance.
-
-### Core Insight
-Instead of fighting the multi-turn degradation problem, we architect around it. By keeping each LLM interaction within its optimal performance zone (short, focused conversations), we maintain peak effectiveness.
+Orchestrator is a conversation router that recursively decomposes complex tasks into minimal sub-tasks, solving each in isolation with optimal performance. Instead of fighting the multi-turn degradation problem, we architect around it by keeping each LLM interaction within its optimal performance zone.
 
 ## How It Works
 
@@ -32,7 +29,7 @@ Instead of fighting the multi-turn degradation problem, we architect around it. 
 ### Visual Task Tree
 
 <div class="mermaid">
-graph TD
+graph LR
     A[Todo App Project] --> B[✓ Design Phase]
     A --> C[● Development - active]
     A --> D[Testing]
@@ -61,7 +58,7 @@ Click any node to jump into that conversation. See what's done, what's active, a
 The system automatically decides when to split vs. execute tasks:
 
 <div class="mermaid">
-graph TD
+graph LR
     A["Add authentication to my app"] --> B[Research auth providers<br/>autonomous]
     A --> C[Design auth flow<br/>interactive]
     A --> D[Implement login<br/>interactive]
@@ -134,7 +131,7 @@ flowchart LR
 ### System Overview
 
 <div class="mermaid">
-flowchart TD
+flowchart LR
     subgraph UI["User Interface"]
         A[Task Tree View]
         B[Chat/Canvas Editor]
@@ -168,37 +165,34 @@ flowchart TD
 
 ### Technology Stack
 
-**Recommended Approach**: Electron + React
-- **Why**: Rich visual interface, real-time updates, canvas editor capabilities, cross-platform
+- **Frontend**: Electron + React for rich visual interface and cross-platform support
 - **AI Integration**: Vercel AI SDK for streaming responses and tool-calling
-- **State Management**: Centralized task tree state
+- **State Management**: Centralized task tree state with Zustand
 - **Storage**: SQLite for task history and prompt versioning
-
-**Alternative**: Terminal User Interface (TUI)
-- For power users and CLI workflows
-- Lightweight but limited visualization capabilities
+- **Styling**: Tailwind CSS for modern, responsive design
+- **Development**: TypeScript for type safety and better developer experience
 
 ## Implementation Roadmap
 
-### Phase 1: MVP (Months 1-3)
+### Phase 1: MVP
 - Basic chat that can spawn chats
 - Simple parent-child relationships
 - Manual task creation
 - Core decomposition prompts
 
-### Phase 2: Visual & Interactive (Months 4-6)
+### Phase 2: Visual & Interactive
 - Tree visualization component
 - Real-time status tracking
 - Interactive vs autonomous execution modes
 - Basic prompt performance tracking
 
-### Phase 3: Intelligence Layer (Months 7-9)
+### Phase 3: Intelligence Layer
 - Smart decomposition with dependency detection
 - Parallel task execution
 - Automated prompt optimization
 - Pattern recognition for common workflows
 
-### Phase 4: Scale & Polish (Months 10-12)
+### Phase 4: Scale & Polish
 - Multi-model support
 - Team collaboration features
 - Advanced analytics dashboard
@@ -207,7 +201,7 @@ flowchart TD
 ## Example: Feature Development Workflow
 
 <div class="mermaid">
-graph TD
+graph LR
     A["Add a shopping cart to my e-commerce site"] --> B[Shopping Cart Feature]
     
     B --> C[Research best practices<br/>Auto]
@@ -320,22 +314,16 @@ Orchestrator transforms how we work with AI by embracing a fundamental truth: fo
 
 The future of LLM applications lies not in trying to fix the multi-turn problem at the model level, but in building intelligent orchestration layers that work with the natural strengths of these systems.
 
+## Get Involved
+
+We're building Orchestrator in the open. Check out the [GitHub repository](https://github.com/tartavull/orchestrator) to follow our progress, contribute ideas, or build upon this concept.
+
 ---
 
 ## References
 
 - ["LLMs Get Lost in Multi-Turn Conversation"](https://arxiv.org/abs/2401.16929) - Microsoft Research, 2025
-- Analysis of 200,000+ simulated conversations showing universal performance degradation
-- Empirical evidence of 39% average performance drop across all major LLMs
-
-## Getting Started
-
-*[Installation and setup instructions to be added as development progresses]*
-
-## Contributing
-
-*[Contribution guidelines to be added]*
 
 ## License
 
-*[License information to be added]* 
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/tartavull/orchestrator/blob/main/LICENSE) file for details. 

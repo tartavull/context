@@ -2,20 +2,17 @@
 
 ## The Problem: LLMs Get Lost in Long Conversations
 
-Recent research from Microsoft reveals a critical limitation in how we use Large Language Models:
+Recent research from Microsoft reveals a critical limitation in Large Language Models:
 
-- **39% Performance Drop**: All LLMs (GPT-4, Claude, Gemini) exhibit significantly worse performance in multi-turn conversations compared to single-turn interactions
-- **Self-Poisoning Context**: Once an LLM makes an incorrect assumption, it rarely recovers. They "talk when they should listen," generating overly verbose responses that compound errors
-- **Universal Problem**: This affects all models equally - from open-source to cutting-edge systems
+- **39% Performance Drop**: All LLMs exhibit significantly worse performance in multi-turn conversations compared to single-turn interactions
+- **Self-Poisoning Context**: Once an LLM makes an incorrect assumption, it rarely recovers, generating overly verbose responses that compound errors
+- **Universal Problem**: This affects all models equally - GPT-4, Claude, Gemini, and open-source alternatives
 
 > *"When LLMs take a wrong turn in a conversation, they get lost and do not recover."* - Microsoft Research, 2025
 
 ## The Solution: Keep Conversations Short and Focused
 
-Orchestrator is a conversation router that recursively decomposes complex tasks into minimal sub-tasks, solving each in isolation with optimal performance.
-
-### Core Insight
-Instead of fighting the multi-turn degradation problem, we architect around it. By keeping each LLM interaction within its optimal performance zone (short, focused conversations), we maintain peak effectiveness.
+Orchestrator is a conversation router that recursively decomposes complex tasks into minimal sub-tasks, solving each in isolation with optimal performance. Instead of fighting the multi-turn degradation problem, we architect around it by keeping each LLM interaction within its optimal performance zone.
 
 ## How It Works
 
@@ -31,16 +28,27 @@ Instead of fighting the multi-turn degradation problem, we architect around it. 
 
 ### Visual Task Tree
 
-```
-[Todo App Project]
-    ├── [✓] Design Phase
-    │   ├── [✓] User Stories
-    │   └── [✓] Mockups
-    ├── [●] Development (active)
-    │   ├── [●] Backend API
-    │   └── [ ] Frontend
-    └── [ ] Testing
-```
+<div class="mermaid">
+graph LR
+    A[Todo App Project] --> B[✓ Design Phase]
+    A --> C[● Development - active]
+    A --> D[Testing]
+    
+    B --> E[✓ User Stories]
+    B --> F[✓ Mockups]
+    
+    C --> G[● Backend API]
+    C --> H[Frontend]
+    
+    style B fill:#90ee90
+    style E fill:#90ee90
+    style F fill:#90ee90
+    style C fill:#87ceeb
+    style G fill:#87ceeb
+    style A fill:#f0f0f0
+    style D fill:#f0f0f0
+    style H fill:#f0f0f0
+</div>
 
 Click any node to jump into that conversation. See what's done, what's active, and what's pending at a glance.
 
@@ -49,16 +57,21 @@ Click any node to jump into that conversation. See what's done, what's active, a
 ### 1. Smart Task Decomposition
 The system automatically decides when to split vs. execute tasks:
 
-```
-User: "Add authentication to my app"
-
-Orchestrator breaks down into:
-├── Research auth providers (autonomous)
-├── Design auth flow (interactive)
-├── Implement login (interactive)
-├── Add session management (autonomous)
-└── Write auth tests (autonomous)
-```
+<div class="mermaid">
+graph LR
+    A["Add authentication to my app"] --> B[Research auth providers<br/>autonomous]
+    A --> C[Design auth flow<br/>interactive]
+    A --> D[Implement login<br/>interactive]
+    A --> E[Add session management<br/>autonomous]
+    A --> F[Write auth tests<br/>autonomous]
+    
+    style B fill:#ffd700
+    style C fill:#87ceeb
+    style D fill:#87ceeb
+    style E fill:#ffd700
+    style F fill:#ffd700
+    style A fill:#f0f0f0
+</div>
 
 ### 2. Hybrid Execution Modes
 - **Interactive Tasks**: You participate and guide the conversation (e.g., design decisions, complex logic)
@@ -81,19 +94,31 @@ Orchestrator breaks down into:
 
 ### Split-Screen Design
 
-```
-┌─────────────────────────┬───────────────────────┐
-│     Task Tree View      │    Active Chat/       │
-│                         │    Canvas Editor      │
-│  [Project Root]         │                       │
-│    ├─[✓] Setup          │  Current: Frontend    │
-│    ├─[●] Frontend ←──── │                       │
-│    │  ├─[●] Login       │  AI: Let's implement  │
-│    │  └─[ ] Dashboard   │  the login component. │
-│    └─[ ] Deploy         │                       │
-│                         │  You: ...             │
-└─────────────────────────┴───────────────────────┘
-```
+<div class="mermaid">
+flowchart LR
+    subgraph "Orchestrator UI"
+        subgraph "Task Tree View"
+            A[Project Root] --> B[✓ Setup]
+            A --> C[● Frontend]
+            A --> D[Deploy]
+            C --> E[● Login]
+            C --> F[Dashboard]
+        end
+        
+        subgraph "Active Chat / Canvas Editor"
+            G[Current: Frontend<br/><br/>AI: Let's implement<br/>the login component.<br/><br/>You: ...]
+        end
+    end
+    
+    C -.->|Active Task| G
+    
+    style B fill:#90ee90
+    style C fill:#87ceeb
+    style E fill:#87ceeb
+    style A fill:#f0f0f0
+    style D fill:#f0f0f0
+    style F fill:#f0f0f0
+</div>
 
 ### Key Interactions
 - Click a task node to switch conversations
@@ -105,67 +130,69 @@ Orchestrator breaks down into:
 
 ### System Overview
 
-```
-┌─────────────────────────────────────────────────┐
-│                 User Interface                  │
-│  ┌─────────────────┐  ┌───────────────────────┐ │
-│  │  Task Tree View │  │  Chat/Canvas Editor   │ │
-│  └─────────────────┘  └───────────────────────┘ │
-└─────────────────────────────────────────────────┘
-                          │
-┌─────────────────────────────────────────────────┐
-│              Orchestration Layer                │
-│  - Task Decomposer                              │
-│  - Execution Manager (Mode Selection)           │
-│  - Context Isolation                            │
-└─────────────────────────────────────────────────┘
-                          │
-┌─────────────────────────────────────────────────┐
-│              Prompt Factory Layer               │
-│  - Prompt Library & Versioning                  │
-│  - Performance Tracking & Analytics             │
-│  - A/B Testing Infrastructure                   │
-└─────────────────────────────────────────────────┘
-                          │
-┌─────────────────────────────────────────────────┐
-│           LLM Interface Layer                   │
-│      (Short, Focused Conversations)             │
-└─────────────────────────────────────────────────┘
-```
+<div class="mermaid">
+flowchart LR
+    subgraph UI["User Interface"]
+        A[Task Tree View]
+        B[Chat/Canvas Editor]
+    end
+    
+    subgraph OL["Orchestration Layer"]
+        C[Task Decomposer]
+        D[Execution Manager<br/>Mode Selection]
+        E[Context Isolation]
+    end
+    
+    subgraph PF["Prompt Factory Layer"]
+        F[Prompt Library & Versioning]
+        G[Performance Tracking & Analytics]
+        H[A/B Testing Infrastructure]
+    end
+    
+    subgraph LLM["LLM Interface Layer"]
+        I[Short, Focused Conversations]
+    end
+    
+    UI --> OL
+    OL --> PF
+    PF --> LLM
+    
+    style UI fill:#e6f3ff
+    style OL fill:#fff0e6
+    style PF fill:#f0e6ff
+    style LLM fill:#e6ffe6
+</div>
 
 ### Technology Stack
 
-**Recommended Approach**: Electron + React
-- **Why**: Rich visual interface, real-time updates, canvas editor capabilities, cross-platform
+- **Frontend**: Electron + React for rich visual interface and cross-platform support
 - **AI Integration**: Vercel AI SDK for streaming responses and tool-calling
-- **State Management**: Centralized task tree state
+- **State Management**: Centralized task tree state with Zustand
 - **Storage**: SQLite for task history and prompt versioning
-
-**Alternative**: Terminal User Interface (TUI)
-- For power users and CLI workflows
-- Lightweight but limited visualization capabilities
+- **Styling**: Tailwind CSS for modern, responsive design
+- **Development**: TypeScript for type safety and better developer experience
 
 ## Implementation Roadmap
 
-### Phase 1: MVP (Months 1-3)
+### Phase 1: MVP
 - Basic chat that can spawn chats
 - Simple parent-child relationships
 - Manual task creation
 - Core decomposition prompts
 
-### Phase 2: Visual & Interactive (Months 4-6)
+### Phase 2: Visual & Interactive
 - Tree visualization component
 - Real-time status tracking
 - Interactive vs autonomous execution modes
 - Basic prompt performance tracking
 
-### Phase 3: Intelligence Layer (Months 7-9)
+### Phase 3: Intelligence Layer
 - Smart decomposition with dependency detection
 - Parallel task execution
 - Automated prompt optimization
 - Pattern recognition for common workflows
 
-### Phase 4: Scale & Polish (Months 10-12)
+### Phase 4: Scale & Polish
 - Multi-model support
 - Team collaboration features
 - Advanced analytics dashboard
@@ -173,19 +200,28 @@ Orchestrator breaks down into:
 
 ## Example: Feature Development Workflow
 
-```
-User: "Add a shopping cart to my e-commerce site"
-
-Orchestrator creates:
-[Shopping Cart Feature]
-├── [Auto] Research best practices
-├── [Interactive] Design cart UI
-├── [Auto] Set up database schema
-├── [Interactive] Implement cart logic
-├── [Auto] Create API endpoints
-├── [Interactive] Frontend integration
-└── [Auto] Write tests
-```
+<div class="mermaid">
+graph LR
+    A["Add a shopping cart to my e-commerce site"] --> B[Shopping Cart Feature]
+    
+    B --> C[Research best practices<br/>Auto]
+    B --> D[Design cart UI<br/>Interactive]
+    B --> E[Set up database schema<br/>Auto]
+    B --> F[Implement cart logic<br/>Interactive]
+    B --> G[Create API endpoints<br/>Auto]
+    B --> H[Frontend integration<br/>Interactive]
+    B --> I[Write tests<br/>Auto]
+    
+    style C fill:#ffd700
+    style D fill:#87ceeb
+    style E fill:#ffd700
+    style F fill:#87ceeb
+    style G fill:#ffd700
+    style H fill:#87ceeb
+    style I fill:#ffd700
+    style A fill:#f0f0f0
+    style B fill:#f0f0f0
+</div>
 
 While you design the UI, the system:
 - Researches best practices in the background
@@ -278,22 +314,16 @@ Orchestrator transforms how we work with AI by embracing a fundamental truth: fo
 
 The future of LLM applications lies not in trying to fix the multi-turn problem at the model level, but in building intelligent orchestration layers that work with the natural strengths of these systems.
 
+## Get Involved
+
+We're building Orchestrator in the open. Check out the [GitHub repository](https://github.com/tartavull/orchestrator) to follow our progress, contribute ideas, or build upon this concept.
+
 ---
 
 ## References
 
 - ["LLMs Get Lost in Multi-Turn Conversation"](https://arxiv.org/abs/2401.16929) - Microsoft Research, 2025
-- Analysis of 200,000+ simulated conversations showing universal performance degradation
-- Empirical evidence of 39% average performance drop across all major LLMs
-
-## Getting Started
-
-*[Installation and setup instructions to be added as development progresses]*
-
-## Contributing
-
-*[Contribution guidelines to be added]*
 
 ## License
 
-*[License information to be added]* 
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/tartavull/orchestrator/blob/main/LICENSE) file for details. 
