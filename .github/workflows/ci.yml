@@ -10,7 +10,7 @@ jobs:
   test-build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
 
@@ -18,29 +18,68 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Nix
+      - name: Install Nix (Unix)
+        if: runner.os != 'Windows'
         uses: DeterminateSystems/nix-installer-action@v14
 
-      - name: Setup Nix cache
+      - name: Setup Nix cache (Unix)
+        if: runner.os != 'Windows'
         uses: DeterminateSystems/magic-nix-cache-action@v8
 
-      - name: Install dependencies
+      - name: Setup Node.js and pnpm (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm (Windows)
+        if: runner.os == 'Windows'
+        run: npm install -g pnpm
+
+      - name: Install dependencies (Unix)
+        if: runner.os != 'Windows'
         run: nix develop --command pnpm install
 
-      - name: Run linter
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: pnpm install
+
+      - name: Run linter (Unix)
+        if: runner.os != 'Windows'
         run: nix develop --command pnpm lint
 
-      - name: Check formatting
-        run: nix develop --command pnpm format --check
+      - name: Run linter (Windows)
+        if: runner.os == 'Windows'
+        run: pnpm lint
 
-      - name: Build application
+      - name: Check formatting (Unix)
+        if: runner.os != 'Windows'
+        run: nix develop --command pnpm format:check
+
+      - name: Check formatting (Windows)
+        if: runner.os == 'Windows'
+        run: pnpm format:check
+
+      - name: Build application (Unix)
+        if: runner.os != 'Windows'
         run: nix develop --command pnpm build
 
-      - name: Test packaging (without publishing)
+      - name: Build application (Windows)
+        if: runner.os == 'Windows'
+        run: pnpm build
+
+      - name: Test packaging (Unix)
+        if: runner.os != 'Windows'
         run: |
           nix develop --command bash -c "
             # Just test that packaging works, don't upload
             pnpm package --dir --publish never
           "
+
+      - name: Test packaging (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # Just test that packaging works, don't upload
+          pnpm package --dir --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

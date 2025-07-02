@@ -17,6 +17,9 @@ jobs:
           - os: ubuntu-latest
             platform: linux
             arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: x64
           - os: macos-latest
             platform: darwin
             arch: x64
@@ -30,23 +33,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Nix
+      - name: Install Nix (Unix)
+        if: runner.os != 'Windows'
         uses: DeterminateSystems/nix-installer-action@v14
 
-      - name: Setup Nix cache
+      - name: Setup Nix cache (Unix)
+        if: runner.os != 'Windows'
         uses: DeterminateSystems/magic-nix-cache-action@v8
 
-      - name: Setup Node.js with pnpm
+      - name: Setup Node.js with pnpm (Unix)
+        if: runner.os != 'Windows'
         run: |
           nix develop --command bash -c "
             echo 'Node version:' && node --version
             echo 'pnpm version:' && pnpm --version
           "
 
-      - name: Install dependencies
+      - name: Setup Node.js and pnpm (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm (Windows)
+        if: runner.os == 'Windows'
+        run: npm install -g pnpm
+
+      - name: Install dependencies (Unix)
+        if: runner.os != 'Windows'
         run: nix develop --command pnpm install
 
-      - name: Build Electron app
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: pnpm install
+
+      - name: Build Electron app (Unix)
+        if: runner.os != 'Windows'
         run: |
           nix develop --command bash -c "
             # Set architecture for macOS universal builds
@@ -66,6 +88,15 @@ jobs:
             # Package the app
             pnpm package --${{ matrix.platform }} --${{ matrix.arch }}
           "
+
+      - name: Build Electron app (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # Build the app
+          pnpm build
+          
+          # Package the app
+          pnpm package --${{ matrix.platform }} --${{ matrix.arch }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
