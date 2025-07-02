@@ -16,13 +16,16 @@
         
         # Electron and development dependencies
         electronDeps = with pkgs; [
-          electron_29
-          nodePackages.electron-builder
+          electron
         ];
         
         # System dependencies for Electron
         systemDeps = with pkgs; [
-          # Graphics and display
+          # Development tools
+          git
+          sqlite
+        ] ++ lib.optionals stdenv.isLinux [
+          # Graphics and display (Linux only)
           xorg.libX11
           xorg.libXcomposite
           xorg.libXdamage
@@ -52,10 +55,7 @@
           gdk-pixbuf
           mesa
           
-          # Development tools
-          git
-          sqlite
-        ] ++ lib.optionals stdenv.isLinux [
+          # Linux specific
           libxkbcommon
           systemd
         ] ++ lib.optionals stdenv.isDarwin [
@@ -89,7 +89,7 @@
           shellHook = ''
             echo "🚀 Orchestrator Development Environment"
             echo "📦 Node.js: ${nodejs.version}"
-            echo "⚡ Electron: 29.x"
+            echo "⚡ Electron: Latest"
             echo ""
             echo "Available commands:"
             echo "  pnpm install    - Install dependencies"
@@ -100,7 +100,7 @@
             
             # Set up Electron environment
             export ELECTRON_SKIP_BINARY_DOWNLOAD=1
-            export ELECTRON_OVERRIDE_DIST_PATH=${pkgs.electron_29}/bin
+            export ELECTRON_OVERRIDE_DIST_PATH=${pkgs.electron}/bin
             
             # For Linux
             ${if pkgs.stdenv.isLinux then ''
