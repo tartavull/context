@@ -59,13 +59,21 @@ jobs:
         if: runner.os == 'Windows'
         run: npm install -g pnpm
 
+      - name: Setup Windows build tools
+        if: runner.os == 'Windows'
+        run: |
+          npm install -g node-gyp
+          npm config set msvs_version 2022
+
       - name: Install dependencies (Unix)
         if: runner.os != 'Windows'
         run: nix develop --command pnpm install
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
-        run: pnpm install
+        run: |
+          pnpm install
+          npx electron-rebuild
 
       - name: Build Electron app (Unix)
         if: runner.os != 'Windows'
