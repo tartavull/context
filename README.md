@@ -1,43 +1,115 @@
-# Orchestrator
+# Orchestrator Electron App
 
-**Recursive Task Decomposition for Optimal LLM Performance**
+This is the Electron implementation of the Orchestrator - a recursive task decomposition system for optimal LLM performance.
 
-Orchestrator is a next-generation AI task management system that addresses the fundamental limitation of Large Language Models (LLMs) in multi-turn conversations. By employing recursive task decomposition, Orchestrator maintains short, focused conversations that maximize LLM effectiveness.
+## Setup
 
-## 🚀 Key Features
+### Prerequisites
 
-- **Defeats Context Degradation**: Each conversation stays short and focused
-- **Parallel Task Execution**: Multiple tasks advance simultaneously  
-- **Interactive & Autonomous Modes**: Jump in exactly where your expertise is needed
-- **Visual Task Tree**: Real-time visualization of task decomposition
-- **Continuous Learning**: Built-in prompt improvement system
+1. Install Nix package manager if you haven't already
+2. Install direnv and hook it to your shell
 
-## 📖 Documentation
+### Development Setup
 
-For detailed information about the architecture, implementation, and roadmap, please see our [full documentation](doc/README.md).
+1. Navigate to the project directory:
+   ```bash
+   cd orchestrator
+   ```
 
-## 🎯 The Problem We Solve
+2. Allow direnv to load the environment:
+   ```bash
+   direnv allow
+   ```
 
-Research shows that LLMs exhibit a **39% performance drop** in multi-turn conversations. Orchestrator solves this by keeping each LLM interaction within its optimal performance zone through recursive task decomposition.
+3. Install dependencies:
+   ```bash
+   pnpm install
+   ```
 
-## 🛠️ Quick Start
+4. Set up your API keys in `.env.local`:
+   ```bash
+   # Add your API keys
+   OPENAI_API_KEY=your-openai-key-here
+   ANTHROPIC_API_KEY=your-anthropic-key-here
+   ```
 
-*[Installation and setup instructions coming soon]*
+5. Start the development server:
+   ```bash
+   pnpm dev
+   ```
 
-## 🤝 Contributing
+## Project Structure
 
-*[Contribution guidelines coming soon]*
+```
+orchestrator/
+├── src/
+│   ├── main/           # Electron main process
+│   │   ├── index.ts    # Main entry point
+│   │   ├── preload.ts  # Preload script
+│   │   ├── database.ts # SQLite database
+│   │   ├── ai-handlers.ts      # AI SDK integration
+│   │   └── task-handlers.ts    # Task management
+│   ├── renderer/       # React renderer process
+│   │   ├── App.tsx     # Main app component
+│   │   ├── components/ # React components
+│   │   ├── store/      # Zustand stores
+│   │   └── styles/     # CSS and styling
+│   └── shared/         # Shared types/utilities
+├── doc/               # Documentation
+│   └── README.md      # Original project concept
+├── flake.nix          # Nix flake configuration
+├── package.json       # NPM dependencies
+└── README.md          # This file
+```
 
-## 📄 License
+## Available Scripts
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm start` - Run built application
+- `pnpm package` - Package application for distribution
+- `pnpm lint` - Run ESLint
+- `pnpm format` - Format code with Prettier
 
-## 📚 Learn More
+## Features
 
-- [Full Documentation](doc/README.md)
-- [Related Projects and Research](doc/README.md#related-projects-and-research)
-- [Implementation Roadmap](doc/README.md#implementation-roadmap)
+- **Task Tree View**: Visual representation of task hierarchy
+- **Chat Interface**: AI-powered chat for each task
+- **Task Decomposition**: Automatically break down complex tasks
+- **Execution Modes**: Interactive or autonomous task execution
+- **Prompt Library**: Manage and version prompts
+- **Performance Tracking**: Monitor prompt effectiveness
+- **SQLite Database**: Local storage for tasks and conversations
 
----
+## Technologies
 
-Built with the insight that focused conversations work better than long, meandering ones. 
+- **Electron**: Desktop application framework
+- **React**: UI framework
+- **TypeScript**: Type safety
+- **Vercel AI SDK**: AI integration
+- **SQLite**: Local database
+- **Tailwind CSS**: Styling
+- **Zustand**: State management
+- **Nix**: Reproducible development environment
+
+## Development Notes
+
+- The app uses Electron's context isolation for security
+- All AI operations happen in the main process to protect API keys
+- The SQLite database is stored in the user's app data directory
+- Hot reload is enabled for the renderer process in development
+
+## Building for Production
+
+To build the application for distribution:
+
+```bash
+pnpm build
+pnpm package
+```
+
+The packaged application will be available in the `release` directory.
+
+## License
+
+See the main project README for license information. 

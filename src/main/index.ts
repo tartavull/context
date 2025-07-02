@@ -27,7 +27,7 @@ function createWindow() {
     },
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     frame: process.platform !== 'darwin',
-    icon: path.join(__dirname, '../../assets/icon.png')
+    icon: path.join(__dirname, '../assets/icon.png')
   })
 
   // Load the app
