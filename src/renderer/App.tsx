@@ -2,6 +2,7 @@ import React from 'react'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { TaskTreeView } from './components/TaskTreeView'
 import { ChatView } from './components/ChatView'
+import { UpdateNotification } from './components/UpdateNotification'
 import { useTaskStore } from './store/taskStore'
 
 function App() {
@@ -13,8 +14,9 @@ function App() {
         {/* Task Tree Panel */}
         <Panel defaultSize={30} minSize={20} maxSize={40}>
           <div className="h-full border-r border-border">
-            <div className="h-12 px-4 flex items-center border-b border-border">
+            <div className="h-12 px-4 flex items-center justify-between border-b border-border">
               <h2 className="font-semibold text-lg">Tasks</h2>
+              <UpdateNotification />
             </div>
             <TaskTreeView />
           </div>

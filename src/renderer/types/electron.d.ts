@@ -34,6 +34,25 @@ export interface ElectronAPI {
   onMenuAction: (callback: (action: string) => void) => () => void
   platform: string
   getVersion: () => Promise<string>
+  
+  // Update management
+  update: {
+    check: () => Promise<void>
+    download: () => Promise<void>
+    install: () => Promise<void>
+    getAutoEnabled: () => Promise<boolean>
+    setAutoEnabled: (enabled: boolean) => Promise<void>
+    getCheckInterval: () => Promise<number>
+    setCheckInterval: (hours: number) => Promise<void>
+  }
+
+  // Update event listeners
+  onUpdateChecking: (callback: () => void) => () => void
+  onUpdateAvailable: (callback: (info: any) => void) => () => void
+  onUpdateNotAvailable: (callback: () => void) => () => void
+  onUpdateError: (callback: (error: string) => void) => () => void
+  onUpdateDownloadProgress: (callback: (progress: any) => void) => () => void
+  onUpdateDownloaded: (callback: (info: any) => void) => () => void
 }
 
 declare global {

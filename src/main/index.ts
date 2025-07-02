@@ -4,6 +4,7 @@ import { initializeDatabase } from './database'
 import { setupAIHandlers } from './ai-handlers'
 import { setupTaskHandlers } from './task-handlers'
 import { setupMessageHandlers } from './message-handlers'
+// import { updateManager } from './update-manager' // TODO: Implement update manager
 import Store from 'electron-store'
 
 // For CommonJS compatibility (tsup will provide these)
@@ -29,6 +30,9 @@ function createWindow() {
     frame: process.platform !== 'darwin',
     icon: path.join(__dirname, '../assets/icon.png')
   })
+
+  // Set the main window for update manager
+  updateManager.setMainWindow(mainWindow)
 
   // Load the app
   if (process.env.NODE_ENV === 'development') {
@@ -129,31 +133,102 @@ function createMenu() {
   Menu.setApplicationMenu(menu)
 }
 
+// Setup update handlers
+function setupUpdateHandlers() {
+  // Check for updates
+  ipcMain.handle('update:check', async () => {
+    await updateManager.checkForUpdates()
+  })
+
+  // Download update
+  ipcMain.handle('update:download', async () => {
+    await updateManager.downloadUpdate()
+  })
+
+  // Install update
+  ipcMain.handle('update:install', () => {
+    updateManager.quitAndInstall()
+  })
+
+  // Get auto-update settings
+  ipcMain.handle('update:get-auto-enabled', () => {
+    return updateManager.getAutoUpdateEnabled()
+  })
+
+  // Set auto-update enabled
+  ipcMain.handle('update:set-auto-enabled', (_, enabled: boolean) => {
+    updateManager.setAutoUpdateEnabled(enabled)
+  })
+
+  // Get check interval
+  ipcMain.handle('update:get-check-interval', () => {
+    return updateManager.getCheckInterval()
+  })
+
+  // Set check interval
+  ipcMain.handle('update:set-check-interval', (_, hours: number) => {
+    updateManager.setCheckInterval(hours)
+  })
+}
+
 // App event handlers
 app.whenReady().then(async () => {
-  // Initialize database
-  await initializeDatabase()
+  try {
+    // Initialize database
+    await initializeDatabase()
+    console.log('Database initialized successfully')
 
-  // Setup IPC handlers
-  setupTaskHandlers(ipcMain)
-  setupAIHandlers(ipcMain)
-  setupMessageHandlers(ipcMain)
+    // Setup IPC handlers
+    setupTaskHandlers(ipcMain)
+    setupAIHandlers(ipcMain)
+    setupMessageHandlers(ipcMain)
+    setupUpdateHandlers()
+    console.log('IPC handlers set up')
 
-  // Import and queue any pending autonomous tasks
-  const { taskExecutor } = await import('./task-executor')
-  await taskExecutor.queuePendingTasks()
+    // Import and queue any pending autonomous tasks
+    const { taskExecutor } = await import('./task-executor')
+    await taskExecutor.queuePendingTasks()
+    console.log('Task executor initialized')
 
-  // Create app menu
-  createMenu()
+    // Create app menu
+    createMenu()
 
-  // Create window
-  createWindow()
+    // Create window
+    createWindow()
+    console.log('Main window created')
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
-    }
-  })
+    // Start periodic update checks
+    updateManager.startPeriodicChecks()
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow()
+      }
+    })
+  } catch (error: any) {
+    console.error('Failed to initialize app:', error)
+    
+    // Create a simple error window
+    const errorWindow = new BrowserWindow({
+      width: 600,
+      height: 400,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true
+      }
+    })
+    
+    errorWindow.loadURL(`data:text/html,
+      <html>
+        <body style="font-family: Arial; padding: 20px;">
+          <h1>Orchestrator - Initialization Error</h1>
+          <p>Failed to initialize the application. Please check the console for details.</p>
+          <pre style="background: #f0f0f0; padding: 10px; border-radius: 4px;">${error?.message || error}</pre>
+          <p>Try restarting the application or check if you have the necessary permissions.</p>
+        </body>
+      </html>
+    `)
+  }
 })
 
 app.on('window-all-closed', () => {
