@@ -60,15 +60,6 @@ pnpm dev
 - **Teams** working on multi-faceted projects
 - **Anyone** frustrated by AI getting confused in long conversations
 
-## Built With
-
-- **Electron + React** - Native desktop experience
-- **Vercel AI SDK** - Streaming AI responses
-- **TypeScript** - Type-safe development
-- **SQLite** - Local data persistence
-
-## Contributing
-
 We welcome contributions! See our [documentation](https://tartavull.github.io/orchestrator/) for development setup.
 
 ## License
