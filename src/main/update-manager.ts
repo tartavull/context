@@ -37,13 +37,13 @@ class UpdateManager extends EventEmitter {
     // Configure auto-updater
     autoUpdater.autoDownload = false // We'll handle download manually for better UX
     autoUpdater.autoInstallOnAppQuit = true
-    
+
     // Set GitHub as the update server
     autoUpdater.setFeedURL({
       provider: 'github',
       owner: 'tartavull',
       repo: 'orchestrator',
-      private: false
+      private: false,
     })
 
     // Auto-updater event handlers
@@ -59,7 +59,7 @@ class UpdateManager extends EventEmitter {
         version: info.version,
         releaseDate: info.releaseDate,
         releaseNotes: typeof info.releaseNotes === 'string' ? info.releaseNotes : '',
-        downloadSize: info.files?.[0]?.size || 0
+        downloadSize: info.files?.[0]?.size || 0,
       }
       this.emit('update-available', updateInfo)
       this.sendToRenderer('update:available', updateInfo)
@@ -83,7 +83,7 @@ class UpdateManager extends EventEmitter {
         percent: Math.round(progress.percent),
         bytesPerSecond: progress.bytesPerSecond,
         total: progress.total,
-        transferred: progress.transferred
+        transferred: progress.transferred,
       }
       this.emit('download-progress', progressInfo)
       this.sendToRenderer('update:download-progress', progressInfo)
@@ -96,7 +96,7 @@ class UpdateManager extends EventEmitter {
     })
   }
 
-  private sendToRenderer(channel: string, ...args: any[]) {
+  private sendToRenderer(channel: string, ...args: unknown[]) {
     if (this.mainWindow && !this.mainWindow.isDestroyed()) {
       this.mainWindow.webContents.send(channel, ...args)
     }
@@ -173,4 +173,4 @@ class UpdateManager extends EventEmitter {
   }
 }
 
-export const updateManager = new UpdateManager() 
+export const updateManager = new UpdateManager()

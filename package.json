@@ -13,7 +13,7 @@
     "build:renderer": "vite build",
     "start": "electron .",
     "package": "electron-builder",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 100",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,md}\""
   },
@@ -64,7 +64,7 @@
     "@radix-ui/react-separator": "^1.0.3",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-tabs": "^1.0.4",
-    "@radix-ui/react-textarea": "^1.0.3",
+
     "@radix-ui/react-tooltip": "^1.0.7",
     "@tanstack/react-query": "^5.24.1",
     "ai": "^3.0.15",

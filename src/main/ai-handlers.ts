@@ -13,69 +13,71 @@ export function setupAIHandlers(ipcMain: IpcMain) {
     const streamId = nanoid()
     const abortController = new AbortController()
     activeStreams.set(streamId, abortController)
-    
+
     try {
       // Get API keys from environment
       const provider = options.provider || 'openai'
-      const model = provider === 'anthropic' 
-        ? anthropic('claude-3-opus-20240229')
-        : openai('gpt-4-turbo-preview')
-      
+      const model =
+        provider === 'anthropic'
+          ? anthropic('claude-3-opus-20240229')
+          : openai('gpt-4-turbo-preview')
+
       const result = await streamText({
         model,
         messages,
         abortSignal: abortController.signal,
-        ...options
+        ...options,
       })
-      
+
       // Stream data back to renderer
       for await (const textPart of result.textStream) {
         event.sender.send('ai:stream-data', {
           streamId,
           type: 'text',
-          data: textPart
+          data: textPart,
         })
       }
-      
+
       // Send completion signal
       event.sender.send('ai:stream-data', {
         streamId,
-        type: 'complete'
+        type: 'complete',
       })
-      
+
       return { streamId, success: true }
     } catch (error: any) {
       event.sender.send('ai:stream-data', {
         streamId,
         type: 'error',
-        error: error.message
+        error: error.message,
       })
       return { streamId, success: false, error: error.message }
     } finally {
       activeStreams.delete(streamId)
     }
   })
-  
+
   // Handle text generation
   ipcMain.handle('ai:generate-text', async (_, prompt, options = {}) => {
     try {
       const provider = options.provider || 'openai'
-      const model = provider === 'anthropic' 
-        ? anthropic('claude-3-opus-20240229')
-        : openai('gpt-4-turbo-preview')
-      
+      const model =
+        provider === 'anthropic'
+          ? anthropic('claude-3-opus-20240229')
+          : openai('gpt-4-turbo-preview')
+
       const result = await generateText({
         model,
         prompt,
-        ...options
+        ...options,
       })
-      
+
       return { success: true, text: result.text }
     } catch (error: any) {
       return { success: false, error: error.message }
     }
   })
-  
+
   // Handle stream cancellation
   ipcMain.on('ai:stop-stream', (_, streamId) => {
     const controller = activeStreams.get(streamId)
@@ -84,4 +86,4 @@ export function setupAIHandlers(ipcMain: IpcMain) {
       activeStreams.delete(streamId)
     }
   })
-} 
+}

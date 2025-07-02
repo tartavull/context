@@ -7,20 +7,20 @@ let db: any // Database.Database
 
 export async function initializeDatabase() {
   console.log('Initializing mock database (better-sqlite3 disabled for now)')
-  
+
   // Mock database for development
   db = {
     prepare: (sql: string) => ({
       run: (...args: any[]) => ({ changes: 1, lastInsertRowid: Date.now() }),
       get: (...args: any[]) => null,
-      all: (...args: any[]) => []
+      all: (...args: any[]) => [],
     }),
     exec: (sql: string) => {},
-    pragma: (pragma: string) => {}
+    pragma: (pragma: string) => {},
   }
-  
+
   console.log('Mock database initialized successfully')
-  
+
   /* TODO: Re-enable when better-sqlite3 is fixed
   const userDataPath = app.getPath('userData')
   const dbPath = path.join(userDataPath, 'orchestrator.db')
@@ -123,4 +123,4 @@ export function getDatabase() {
 }
 
 // Export db for easier access
-export { db } 
+export { db }

@@ -18,7 +18,7 @@ interface TaskStore {
   tasks: Map<string, Task>
   selectedTaskId: string | null
   isLoading: boolean
-  
+
   // Actions
   loadTasks: () => Promise<void>
   createTask: (task: Partial<Task>) => Promise<string | null>
@@ -33,13 +33,13 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: new Map(),
   selectedTaskId: null,
   isLoading: false,
-  
+
   loadTasks: async () => {
     set({ isLoading: true })
     try {
       const result = await window.electron.tasks.getAll()
       if (result.success && result.tasks) {
-        const tasksMap = new Map(result.tasks.map(task => [task.id, task]))
+        const tasksMap = new Map(result.tasks.map((task) => [task.id, task]))
         set({ tasks: tasksMap })
       } else {
         toast.error(result.error || 'Failed to load tasks')
@@ -51,7 +51,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       set({ isLoading: false })
     }
   },
-  
+
   createTask: async (taskData) => {
     try {
       const result = await window.electron.tasks.create(taskData)
@@ -70,7 +70,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       return null
     }
   },
-  
+
   updateTask: async (taskId, updates) => {
     try {
       const result = await window.electron.tasks.update(taskId, updates)
@@ -91,7 +91,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       console.error(error)
     }
   },
-  
+
   deleteTask: async (taskId) => {
     try {
       const result = await window.electron.tasks.delete(taskId)
@@ -100,12 +100,12 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         const tasks = new Map(get().tasks)
         tasks.delete(taskId)
         set({ tasks })
-        
+
         // If this was the selected task, clear selection
         if (get().selectedTaskId === taskId) {
           set({ selectedTaskId: null })
         }
-        
+
         toast.success('Task deleted')
       } else {
         toast.error(result.error || 'Failed to delete task')
@@ -115,20 +115,20 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       console.error(error)
     }
   },
-  
+
   selectTask: (taskId) => {
     set({ selectedTaskId: taskId })
   },
-  
+
   getTaskChildren: (taskId) => {
     const tasks = Array.from(get().tasks.values())
-    return tasks.filter(task => task.parent_id === taskId)
+    return tasks.filter((task) => task.parent_id === taskId)
   },
-  
+
   getTaskPath: (taskId) => {
     const path: Task[] = []
     let currentTask = get().tasks.get(taskId)
-    
+
     while (currentTask) {
       path.unshift(currentTask)
       if (currentTask.parent_id) {
@@ -137,7 +137,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         break
       }
     }
-    
+
     return path
-  }
-})) 
+  },
+}))

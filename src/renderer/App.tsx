@@ -1,7 +1,7 @@
 import React from 'react'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { TaskTreeView } from './components/TaskTreeView'
-import { ChatView } from './components/ChatView'
+import { EnhancedChatView } from './components/EnhancedChatView'
 import { UpdateNotification } from './components/UpdateNotification'
 import { useTaskStore } from './store/taskStore'
 
@@ -29,19 +29,19 @@ function App() {
         <Panel defaultSize={70}>
           <div className="h-full">
             {selectedTaskId ? (
-              <ChatView taskId={selectedTaskId} />
+              <EnhancedChatView taskId={selectedTaskId} />
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground">
                 <div className="text-center">
                   <h3 className="text-2xl font-semibold mb-2">Welcome to Orchestrator</h3>
                   <p className="mb-4">Create a new task or select an existing one to get started</p>
-                  <button 
+                  <button
                     className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
                     onClick={() => {
                       // Create new task
                       window.electron.tasks.create({
                         title: 'New Task',
-                        description: ''
+                        description: '',
                       })
                     }}
                   >
@@ -57,4 +57,4 @@ function App() {
   )
 }
 
-export default App 
+export default App

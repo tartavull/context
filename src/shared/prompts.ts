@@ -34,9 +34,12 @@ Guidelines for decomposition:
 Remember: The goal is to maintain optimal performance by keeping conversations focused and short.`
 
   if (task.execution_mode === 'autonomous') {
-    return basePrompt + `\n\nThis is an AUTONOMOUS task. Work independently without asking for user input. Make reasonable assumptions and complete the task. Provide a comprehensive solution.`
+    return (
+      basePrompt +
+      `\n\nThis is an AUTONOMOUS task. Work independently without asking for user input. Make reasonable assumptions and complete the task. Provide a comprehensive solution.`
+    )
   }
-  
+
   return basePrompt
 }
 
@@ -87,11 +90,13 @@ Requirements:
 Execute the task now:`
 }
 
-export function parseSubtasks(content: string): Array<{title: string, description: string, execution_mode: string}> {
+export function parseSubtasks(
+  content: string
+): Array<{ title: string; description: string; execution_mode: string }> {
   const subtasks = []
   const taskPattern = /\[SUBTASK\](.*?)\[\/SUBTASK\]/gs
   const matches = content.matchAll(taskPattern)
-  
+
   for (const match of matches) {
     try {
       const taskData = JSON.parse(match[1])
@@ -99,21 +104,23 @@ export function parseSubtasks(content: string): Array<{title: string, descriptio
         subtasks.push({
           title: taskData.title,
           description: taskData.description || '',
-          execution_mode: taskData.execution_mode
+          execution_mode: taskData.execution_mode,
         })
       }
     } catch (error) {
       console.error('Failed to parse subtask:', error)
     }
   }
-  
+
   return subtasks
 }
 
-export function parseDecision(content: string): { action: 'EXECUTE' | 'DECOMPOSE', reasoning: string } | null {
+export function parseDecision(
+  content: string
+): { action: 'EXECUTE' | 'DECOMPOSE'; reasoning: string } | null {
   const decisionPattern = /\[DECISION\](.*?)\[\/DECISION\]/s
   const match = content.match(decisionPattern)
-  
+
   if (match) {
     try {
       const decision = JSON.parse(match[1])
@@ -124,6 +131,6 @@ export function parseDecision(content: string): { action: 'EXECUTE' | 'DECOMPOSE
       console.error('Failed to parse decision:', error)
     }
   }
-  
+
   return null
-} 
+}

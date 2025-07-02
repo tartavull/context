@@ -75,7 +75,7 @@ export function UpdateNotification() {
     )
 
     return () => {
-      removeListeners.forEach(remove => remove())
+      removeListeners.forEach((remove) => remove())
     }
   }, [])
 
@@ -158,26 +158,33 @@ export function UpdateNotification() {
               </div>
 
               <p className="text-sm text-muted-foreground mb-4">
-                {updateDownloaded ? (
-                  'The update has been downloaded and is ready to install.'
-                ) : (
-                  `A new version (v${updateAvailable?.version}) is available.`
-                )}
+                {updateDownloaded
+                  ? 'The update has been downloaded and is ready to install.'
+                  : `A new version (v${updateAvailable?.version}) is available.`}
               </p>
 
               {updateAvailable && !updateDownloaded && (
                 <div className="space-y-4">
                   <div className="text-sm text-muted-foreground space-y-1">
-                    <p><strong>Version:</strong> {updateAvailable.version}</p>
-                    <p><strong>Size:</strong> {formatBytes(updateAvailable.downloadSize)}</p>
-                    <p><strong>Release Date:</strong> {new Date(updateAvailable.releaseDate).toLocaleDateString()}</p>
+                    <p>
+                      <strong>Version:</strong> {updateAvailable.version}
+                    </p>
+                    <p>
+                      <strong>Size:</strong> {formatBytes(updateAvailable.downloadSize)}
+                    </p>
+                    <p>
+                      <strong>Release Date:</strong>{' '}
+                      {new Date(updateAvailable.releaseDate).toLocaleDateString()}
+                    </p>
                   </div>
 
                   {updateAvailable.releaseNotes && (
                     <div className="text-sm">
                       <p className="font-medium mb-2">Release Notes:</p>
                       <div className="bg-muted p-3 rounded-md max-h-32 overflow-y-auto">
-                        <pre className="whitespace-pre-wrap text-xs">{updateAvailable.releaseNotes}</pre>
+                        <pre className="whitespace-pre-wrap text-xs">
+                          {updateAvailable.releaseNotes}
+                        </pre>
                       </div>
                     </div>
                   )}
@@ -189,13 +196,16 @@ export function UpdateNotification() {
                         <span>{downloadProgress.percent}%</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-primary h-2 rounded-full transition-all duration-300"
                           style={{ width: `${downloadProgress.percent}%` }}
                         />
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>{formatBytes(downloadProgress.transferred)} / {formatBytes(downloadProgress.total)}</span>
+                        <span>
+                          {formatBytes(downloadProgress.transferred)} /{' '}
+                          {formatBytes(downloadProgress.total)}
+                        </span>
                         <span>{formatSpeed(downloadProgress.bytesPerSecond)}</span>
                       </div>
                     </div>
@@ -244,4 +254,4 @@ export function UpdateNotification() {
       )}
     </>
   )
-} 
+}

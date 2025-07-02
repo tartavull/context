@@ -24,11 +24,11 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
     },
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     frame: process.platform !== 'darwin',
-    icon: path.join(__dirname, '../assets/icon.png')
+    icon: path.join(__dirname, '../assets/icon.png'),
   })
 
   // Set the main window for update manager
@@ -64,14 +64,14 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+N',
           click: () => {
             mainWindow?.webContents.send('menu:new-task')
-          }
+          },
         },
         {
           label: 'Open Task',
           accelerator: 'CmdOrCtrl+O',
           click: () => {
             mainWindow?.webContents.send('menu:open-task')
-          }
+          },
         },
         { type: 'separator' },
         {
@@ -79,11 +79,11 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+,',
           click: () => {
             mainWindow?.webContents.send('menu:preferences')
-          }
+          },
         },
         { type: 'separator' },
-        { role: 'quit' }
-      ]
+        { role: 'quit' },
+      ],
     },
     {
       label: 'Edit',
@@ -93,8 +93,8 @@ function createMenu() {
         { type: 'separator' },
         { role: 'cut' },
         { role: 'copy' },
-        { role: 'paste' }
-      ]
+        { role: 'paste' },
+      ],
     },
     {
       label: 'View',
@@ -107,9 +107,9 @@ function createMenu() {
         { role: 'zoomIn' },
         { role: 'zoomOut' },
         { type: 'separator' },
-        { role: 'togglefullscreen' }
-      ]
-    }
+        { role: 'togglefullscreen' },
+      ],
+    },
   ]
 
   if (process.platform === 'darwin') {
@@ -124,8 +124,8 @@ function createMenu() {
         { role: 'hideOthers' },
         { role: 'unhide' },
         { type: 'separator' },
-        { role: 'quit' }
-      ]
+        { role: 'quit' },
+      ],
     })
   }
 
@@ -207,17 +207,17 @@ app.whenReady().then(async () => {
     })
   } catch (error: any) {
     console.error('Failed to initialize app:', error)
-    
+
     // Create a simple error window
     const errorWindow = new BrowserWindow({
       width: 600,
       height: 400,
       webPreferences: {
         nodeIntegration: false,
-        contextIsolation: true
-      }
+        contextIsolation: true,
+      },
     })
-    
+
     errorWindow.loadURL(`data:text/html,
       <html>
         <body style="font-family: Arial; padding: 20px;">
@@ -255,4 +255,4 @@ app.on('web-contents-created', (_, contents) => {
     shell.openExternal(url)
     return { action: 'deny' }
   })
-}) 
+})

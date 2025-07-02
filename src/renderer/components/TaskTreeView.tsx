@@ -4,31 +4,31 @@ import { useTaskStore } from '../store/taskStore'
 
 export function TaskTreeView() {
   const { tasks, selectedTaskId, selectTask, loadTasks, createTask } = useTaskStore()
-  
+
   useEffect(() => {
     loadTasks()
   }, [])
-  
-  const rootTasks = Array.from(tasks.values()).filter(task => !task.parent_id)
-  
+
+  const rootTasks = Array.from(tasks.values()).filter((task) => !task.parent_id)
+
   const handleCreateRootTask = async () => {
     const taskId = await createTask({
       title: 'New Task',
-      description: ''
+      description: '',
     })
     if (taskId) {
       selectTask(taskId)
     }
   }
-  
+
   return (
     <div className="h-full overflow-y-auto custom-scrollbar p-4">
       <div className="space-y-1">
-        {rootTasks.map(task => (
+        {rootTasks.map((task) => (
           <TaskNode key={task.id} task={task} level={0} />
         ))}
       </div>
-      
+
       <button
         onClick={handleCreateRootTask}
         className="mt-4 w-full p-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md flex items-center gap-2 transition-colors"
@@ -48,24 +48,24 @@ interface TaskNodeProps {
 function TaskNode({ task, level }: TaskNodeProps) {
   const { tasks, selectedTaskId, selectTask, getTaskChildren } = useTaskStore()
   const [isExpanded, setIsExpanded] = React.useState(true)
-  
+
   const children = getTaskChildren(task.id)
   const hasChildren = children.length > 0
-  
+
   const statusIcon = {
     pending: '○',
     active: '●',
     completed: '✓',
-    failed: '✗'
+    failed: '✗',
   }[task.status]
-  
+
   const statusColor = {
     pending: 'text-muted-foreground',
     active: 'text-blue-500',
     completed: 'text-green-500',
-    failed: 'text-red-500'
+    failed: 'text-red-500',
   }[task.status]
-  
+
   return (
     <div>
       <div
@@ -92,13 +92,13 @@ function TaskNode({ task, level }: TaskNodeProps) {
             )}
           </button>
         )}
-        
+
         {!hasChildren && <div className="w-4" />}
-        
+
         <span className={`${statusColor} mr-2`}>{statusIcon}</span>
-        
+
         <span className="flex-1 text-sm truncate">{task.title}</span>
-        
+
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -109,14 +109,14 @@ function TaskNode({ task, level }: TaskNodeProps) {
           <MoreHorizontal className="w-3 h-3" />
         </button>
       </div>
-      
+
       {hasChildren && isExpanded && (
         <div>
-          {children.map(child => (
+          {children.map((child) => (
             <TaskNode key={child.id} task={child} level={level + 1} />
           ))}
         </div>
       )}
     </div>
   )
-} 
+}
