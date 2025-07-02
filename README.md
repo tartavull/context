@@ -1,8 +1,8 @@
-# Orchestrator
+# Context
 
 > **Stop losing 39% of your AI's capability in long conversations.** 
 
-Orchestrator is a desktop app that revolutionizes how you work with AI by keeping conversations short, focused, and optimally effective.
+Context is a desktop app that revolutionizes how you work with AI by keeping conversations short, focused, and optimally effective. Never lose context.
 
 <div align="center">
   
@@ -19,12 +19,12 @@ Microsoft Research shows that **ALL** major LLMs (GPT-4, Claude, Gemini) lose 39
 
 ## The Solution
 
-Orchestrator automatically breaks complex tasks into focused sub-conversations, maintaining peak AI performance throughout your project.
+Context automatically breaks complex tasks into focused sub-conversations, maintaining peak AI performance throughout your project.
 
 ```
 Your request: "Build a todo app"
                     ↓
-         Orchestrator creates:
+           Context creates:
     ┌────────────┬────────────┬──────────┐
     │ Design UI  │ Setup DB   │ Frontend │ → Each in its own 
     │ (focused)  │ (focused)  │ (focused)│   optimized conversation

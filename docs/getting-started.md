@@ -1,6 +1,6 @@
-# Getting Started with Orchestrator
+# Getting Started with Context
 
-This guide will walk you through setting up and running the Orchestrator application, a recursive task decomposition system for optimal LLM performance.
+This guide will walk you through setting up and running the Context application, a recursive task decomposition system for optimal LLM performance.
 
 ## Table of Contents
 
@@ -291,9 +291,9 @@ NODE_OPTIONS='--inspect' pnpm dev
 
 - **Development**: Check the terminal and DevTools console
 - **Production**: 
-  - macOS: `~/Library/Logs/orchestrator/`
-  - Linux: `~/.config/orchestrator/logs/`
-  - Windows: `%USERPROFILE%\AppData\Roaming\orchestrator\logs\`
+  - macOS: `~/Library/Logs/context/`
+  - Linux: `~/.config/context/logs/`
+  - Windows: `%USERPROFILE%\AppData\Roaming\context\logs\`
 
 ## Next Steps
 

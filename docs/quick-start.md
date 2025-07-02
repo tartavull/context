@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get Orchestrator running in under 5 minutes.
+Get Context running in under 5 minutes.
 
 ## Prerequisites
 

@@ -1,6 +1,6 @@
 # Auto-Update System
 
-Orchestrator includes a comprehensive auto-update system that automatically checks for new releases and allows users to update the application seamlessly.
+Context includes a comprehensive auto-update system that automatically checks for new releases and allows users to update the application seamlessly.
 
 ## Overview
 

@@ -1,10 +1,10 @@
-# Orchestrator Architecture
+# Context Architecture
 
-This document describes the technical architecture of the Orchestrator application, including design decisions, component interactions, and implementation details.
+This document describes the technical architecture of the Context application, including design decisions, component interactions, and implementation details.
 
 ## Overview
 
-Orchestrator is built as an Electron desktop application that implements recursive task decomposition to optimize LLM interactions. The architecture is designed to:
+Context is built as an Electron desktop application that implements recursive task decomposition to optimize LLM interactions. The architecture is designed to:
 
 1. **Prevent context degradation** by keeping conversations short and focused
 2. **Enable parallel task execution** through isolated task contexts
@@ -44,7 +44,7 @@ The main process manages the application lifecycle and handles sensitive operati
 #### Window Management (`index.ts`)
 - Creates and manages BrowserWindow instances
 - Handles application menu and shortcuts
-- Manages deep linking (`orchestrator://` protocol)
+- Manages deep linking (`context://` protocol)
 - Configures security policies
 
 #### AI Handlers (`ai-handlers.ts`)

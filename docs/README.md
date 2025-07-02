@@ -1,6 +1,6 @@
-# Orchestrator Documentation
+# Context Documentation
 
-Welcome to the Orchestrator developer documentation. This directory contains guides and references for building and extending the Orchestrator application.
+Welcome to the Context developer documentation. This directory contains guides and references for building and extending the Context application.
 
 ## Documentation Index
 
@@ -11,7 +11,7 @@ Welcome to the Orchestrator developer documentation. This directory contains gui
 - **[Architecture Overview](./architecture.md)** - Technical design and implementation details
 
 ### Concept & Design
-- **[Original Concept](./concept.md)** - The vision and research behind Orchestrator
+- **[Original Concept](./concept.md)** - The vision and research behind Context
 - **[Task Decomposition](./concept.md#how-it-works)** - Core algorithm and approach
 
 ## Quick Links
@@ -55,7 +55,7 @@ Each task maintains its own conversation context to prevent degradation.
 
 - **Issues**: [GitHub Issues](https://github.com/your-org/orchestrator/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-org/orchestrator/discussions)
-- **Email**: support@orchestrator.dev
+- **Email**: support@context.dev
 
 ## Contributing
 

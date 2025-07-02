@@ -1,4 +1,4 @@
-# Orchestrator: Recursive Task Decomposition for Optimal LLM Performance
+# Context: Recursive Task Decomposition for Optimal LLM Performance
 
 ## The Problem: LLMs Get Lost in Long Conversations
 
@@ -12,7 +12,7 @@ Recent research from Microsoft reveals a critical limitation in Large Language M
 
 ## The Solution: Keep Conversations Short and Focused
 
-Orchestrator is a conversation router that recursively decomposes complex tasks into minimal sub-tasks, solving each in isolation with optimal performance. Instead of fighting the multi-turn degradation problem, we architect around it by keeping each LLM interaction within its optimal performance zone.
+Context is a conversation router that recursively decomposes complex tasks into minimal sub-tasks, solving each in isolation with optimal performance. Instead of fighting the multi-turn degradation problem, we architect around it by keeping each LLM interaction within its optimal performance zone. Never lose context.
 
 ## How It Works
 
@@ -96,7 +96,7 @@ graph LR
 
 <div class="mermaid">
 flowchart LR
-    subgraph "Orchestrator UI"
+    subgraph "Context UI"
         subgraph "Task Tree View"
             A[Project Root] --> B[✓ Setup]
             A --> C[● Frontend]
@@ -297,9 +297,9 @@ Several projects and research papers explore similar approaches to recursive tas
 
 4. **LangChain Agents** - Provides tools for building agents with memory, planning, and tool integration capabilities.
 
-### Key Differentiators of Orchestrator
+### Key Differentiators of Context
 
-While these projects share similar insights about task decomposition, Orchestrator distinguishes itself through:
+While these projects share similar insights about task decomposition, Context distinguishes itself through:
 
 - **Explicit focus on context degradation** - Built specifically to address the 39% performance drop in multi-turn conversations
 - **Interactive/Autonomous hybrid execution** - Allows selective user intervention at the task level
@@ -310,13 +310,13 @@ The convergence of multiple independent projects on similar architectures valida
 
 ## Conclusion
 
-Orchestrator transforms how we work with AI by embracing a fundamental truth: focused conversations work better than long, meandering ones. By building a system where chats can create and manage other chats, we unlock a new paradigm for AI-assisted work - one that's more efficient, more reliable, and more transparent.
+Context transforms how we work with AI by embracing a fundamental truth: focused conversations work better than long, meandering ones. By building a system where chats can create and manage other chats, we unlock a new paradigm for AI-assisted work - one that's more efficient, more reliable, and more transparent.
 
 The future of LLM applications lies not in trying to fix the multi-turn problem at the model level, but in building intelligent orchestration layers that work with the natural strengths of these systems.
 
 ## Get Involved
 
-We're building Orchestrator in the open. Check out the [GitHub repository](https://github.com/tartavull/orchestrator) to follow our progress, contribute ideas, or build upon this concept.
+We're building Context in the open. Check out the [GitHub repository](https://github.com/tartavull/orchestrator) to follow our progress, contribute ideas, or build upon this concept.
 
 ---
 

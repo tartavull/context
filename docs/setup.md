@@ -1,8 +1,8 @@
-# Orchestrator Chat System Setup Guide
+# Context Chat System Setup Guide
 
 ## What We've Implemented
 
-We've successfully implemented the core chat system for Orchestrator with the following features:
+We've successfully implemented the core chat system for Context with the following features:
 
 ### 1. **Streaming Chat Interface**
 - Real-time streaming responses from AI models
