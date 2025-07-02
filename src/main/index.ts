@@ -4,7 +4,7 @@ import { initializeDatabase } from './database'
 import { setupAIHandlers } from './ai-handlers'
 import { setupTaskHandlers } from './task-handlers'
 import { setupMessageHandlers } from './message-handlers'
-// import { updateManager } from './update-manager' // TODO: Implement update manager
+import { updateManager } from './update-manager'
 import Store from 'electron-store'
 
 // For CommonJS compatibility (tsup will provide these)
@@ -35,10 +35,14 @@ function createWindow() {
   updateManager.setMainWindow(mainWindow)
 
   // Load the app
-  if (process.env.NODE_ENV === 'development') {
+  console.log('NODE_ENV:', process.env.NODE_ENV)
+  console.log('__dirname:', __dirname)
+  if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
+    console.log('Loading development URL: http://localhost:5173')
     mainWindow.loadURL('http://localhost:5173')
     mainWindow.webContents.openDevTools()
   } else {
+    console.log('Loading production file:', path.join(__dirname, '../renderer/index.html'))
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 

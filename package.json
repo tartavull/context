@@ -4,10 +4,10 @@
   "description": "Recursive Task Decomposition for Optimal LLM Performance",
   "main": "dist/main/index.js",
   "scripts": {
-    "dev": "concurrently -k \"pnpm dev:main\" \"pnpm dev:renderer\" \"pnpm dev:electron\"",
+    "dev": "concurrently -k \"pnpm dev:main\" \"pnpm dev:renderer\" \"sleep 3 && pnpm dev:electron\"",
     "dev:main": "tsup --watch",
     "dev:renderer": "vite",
-    "dev:electron": "electron .",
+    "dev:electron": "NODE_ENV=development electron .",
     "build": "pnpm build:renderer && pnpm build:main",
     "build:main": "tsup src/main/index.ts src/main/preload.ts --outDir dist/main",
     "build:renderer": "vite build",
