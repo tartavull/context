@@ -75,6 +75,8 @@ jobs:
             # Just test that packaging works, don't upload
             pnpm package --dir --publish never
           "
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test packaging (Windows)
         if: runner.os == 'Windows'

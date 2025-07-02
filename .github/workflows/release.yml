@@ -88,6 +88,8 @@ jobs:
             # Package the app
             pnpm package --${{ matrix.platform }} --${{ matrix.arch }}
           "
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Electron app (Windows)
         if: runner.os == 'Windows'
