@@ -1,14 +1,13 @@
 import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron'
 import path from 'path'
-import { fileURLToPath } from 'url'
 import { initializeDatabase } from './database'
 import { setupAIHandlers } from './ai-handlers'
 import { setupTaskHandlers } from './task-handlers'
 import { setupMessageHandlers } from './message-handlers'
 import Store from 'electron-store'
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+// For CommonJS compatibility (tsup will provide these)
+declare const __dirname: string
 
 // Initialize electron store for persistent settings
 const store = new Store()
@@ -177,8 +176,8 @@ app.setAsDefaultProtocolClient('orchestrator')
 
 // Security: Prevent new window creation
 app.on('web-contents-created', (_, contents) => {
-  contents.on('new-window', (event, navigationUrl) => {
-    event.preventDefault()
-    shell.openExternal(navigationUrl)
+  contents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url)
+    return { action: 'deny' }
   })
 }) 

@@ -1,0 +1,112 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EC4899;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#mainGradient)" filter="url(#shadow)"/>
+  
+  <!-- Central orchestrator node (brain/AI) -->
+  <circle cx="256" cy="256" r="45" fill="white" filter="url(#glow)"/>
+  <circle cx="256" cy="256" r="35" fill="url(#nodeGradient)"/>
+  
+  <!-- Neural network pattern in center -->
+  <g stroke="white" stroke-width="2" fill="none" opacity="0.8">
+    <circle cx="246" cy="246" r="8" fill="white"/>
+    <circle cx="266" cy="246" r="6" fill="white"/>
+    <circle cx="256" cy="266" r="7" fill="white"/>
+    <line x1="246" y1="246" x2="266" y2="246"/>
+    <line x1="246" y1="246" x2="256" y2="266"/>
+    <line x1="266" y1="246" x2="256" y2="266"/>
+  </g>
+  
+  <!-- Task decomposition nodes arranged in a tree structure -->
+  <!-- Level 1 - Main branches -->
+  <g fill="url(#nodeGradient)" filter="url(#shadow)">
+    <!-- Top branch -->
+    <circle cx="256" cy="140" r="25"/>
+    <circle cx="256" cy="140" r="18" fill="white" opacity="0.3"/>
+    
+    <!-- Bottom left branch -->
+    <circle cx="180" cy="340" r="25"/>
+    <circle cx="180" cy="340" r="18" fill="white" opacity="0.3"/>
+    
+    <!-- Bottom right branch -->
+    <circle cx="332" cy="340" r="25"/>
+    <circle cx="332" cy="340" r="18" fill="white" opacity="0.3"/>
+  </g>
+  
+  <!-- Level 2 - Sub-tasks -->
+  <g fill="url(#connectionGradient)" filter="url(#shadow)">
+    <!-- Top sub-tasks -->
+    <circle cx="200" cy="100" r="18"/>
+    <circle cx="312" cy="100" r="18"/>
+    
+    <!-- Left sub-tasks -->
+    <circle cx="120" cy="380" r="18"/>
+    <circle cx="140" cy="300" r="18"/>
+    
+    <!-- Right sub-tasks -->
+    <circle cx="392" cy="380" r="18"/>
+    <circle cx="372" cy="300" r="18"/>
+  </g>
+  
+  <!-- Connection lines showing orchestration flow -->
+  <g stroke="white" stroke-width="3" opacity="0.7" fill="none">
+    <!-- Central to main branches -->
+    <line x1="256" y1="211" x2="256" y2="165"/>
+    <line x1="225" y1="285" x2="205" y2="315"/>
+    <line x1="287" y1="285" x2="307" y2="315"/>
+    
+    <!-- Main branches to sub-tasks -->
+    <line x1="236" y1="150" x2="220" y2="118"/>
+    <line x1="276" y1="150" x2="292" y2="118"/>
+    
+    <line x1="160" y1="330" x2="140" y2="318"/>
+    <line x1="170" y1="360" x2="138" y2="372"/>
+    
+    <line x1="352" y1="330" x2="372" y2="318"/>
+    <line x1="342" y1="360" x2="374" y2="372"/>
+  </g>
+  
+  <!-- Animated flow indicators -->
+  <g fill="white" opacity="0.9">
+    <circle cx="256" cy="185" r="3">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="240" cy="290" r="3">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="0.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="272" cy="290" r="3">
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" begin="1s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Subtle geometric pattern overlay -->
+  <g stroke="white" stroke-width="1" fill="none" opacity="0.1">
+    <polygon points="256,80 320,160 320,240 256,320 192,240 192,160"/>
+    <polygon points="256,120 290,180 290,220 256,280 222,220 222,180"/>
+  </g>
+</svg> 

@@ -4,6 +4,15 @@
 
 Orchestrator is a desktop app that revolutionizes how you work with AI by keeping conversations short, focused, and optimally effective.
 
+<div align="center">
+  
+[![Download Latest Release](https://img.shields.io/github/v/release/tartavull/orchestrator?color=brightgreen&label=Download&style=for-the-badge)](https://github.com/tartavull/orchestrator/releases/latest)
+[![Windows](https://img.shields.io/badge/Windows-0078D6?style=flat-square&logo=windows&logoColor=white)](https://github.com/tartavull/orchestrator/releases/latest)
+[![macOS](https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/tartavull/orchestrator/releases/latest)
+[![Linux](https://img.shields.io/badge/Linux-FCC624?style=flat-square&logo=linux&logoColor=black)](https://github.com/tartavull/orchestrator/releases/latest)
+
+</div>
+
 ## The Problem
 
 Microsoft Research shows that **ALL** major LLMs (GPT-4, Claude, Gemini) lose 39% of their performance in multi-turn conversations. Once they make a wrong assumption, they rarely recover.

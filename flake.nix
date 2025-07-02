@@ -80,6 +80,7 @@
             # Build tools
             pkg-config
             python3
+            imagemagick
             
             # For node-gyp
             gnumake

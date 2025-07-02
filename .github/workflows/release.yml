@@ -1,0 +1,112 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v14
+
+      - name: Setup Nix cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Setup Node.js with pnpm
+        run: |
+          nix develop --command bash -c "
+            echo 'Node version:' && node --version
+            echo 'pnpm version:' && pnpm --version
+          "
+
+      - name: Install dependencies
+        run: nix develop --command pnpm install
+
+      - name: Build Electron app
+        run: |
+          nix develop --command bash -c "
+            # Set architecture for macOS universal builds
+            if [[ '${{ matrix.platform }}' == 'darwin' ]]; then
+              if [[ '${{ matrix.arch }}' == 'arm64' ]]; then
+                export npm_config_arch=arm64
+                export npm_config_target_arch=arm64
+              else
+                export npm_config_arch=x64
+                export npm_config_target_arch=x64
+              fi
+            fi
+            
+            # Build the app
+            pnpm build
+            
+            # Package the app
+            pnpm package --${{ matrix.platform }} --${{ matrix.arch }}
+          "
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: orchestrator-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            release/*.dmg
+            release/*.AppImage
+            release/*.deb
+            release/*.snap
+            release/*.exe
+            release/*.msi
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-artifacts
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          find dist-artifacts -type f \( -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.snap" -o -name "*.exe" -o -name "*.msi" \) -exec cp {} release-files/ \;
+          ls -la release-files/
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "release-files/*"
+          generateReleaseNotes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
