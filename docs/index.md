@@ -31,16 +31,27 @@ Instead of fighting the multi-turn degradation problem, we architect around it. 
 
 ### Visual Task Tree
 
-```
-[Todo App Project]
-    ├── [✓] Design Phase
-    │   ├── [✓] User Stories
-    │   └── [✓] Mockups
-    ├── [●] Development (active)
-    │   ├── [●] Backend API
-    │   └── [ ] Frontend
-    └── [ ] Testing
-```
+<div class="mermaid">
+graph TD
+    A[Todo App Project] --> B[✓ Design Phase]
+    A --> C[● Development - active]
+    A --> D[Testing]
+    
+    B --> E[✓ User Stories]
+    B --> F[✓ Mockups]
+    
+    C --> G[● Backend API]
+    C --> H[Frontend]
+    
+    style B fill:#90ee90
+    style E fill:#90ee90
+    style F fill:#90ee90
+    style C fill:#87ceeb
+    style G fill:#87ceeb
+    style A fill:#f0f0f0
+    style D fill:#f0f0f0
+    style H fill:#f0f0f0
+</div>
 
 Click any node to jump into that conversation. See what's done, what's active, and what's pending at a glance.
 
@@ -49,16 +60,21 @@ Click any node to jump into that conversation. See what's done, what's active, a
 ### 1. Smart Task Decomposition
 The system automatically decides when to split vs. execute tasks:
 
-```
-User: "Add authentication to my app"
-
-Orchestrator breaks down into:
-├── Research auth providers (autonomous)
-├── Design auth flow (interactive)
-├── Implement login (interactive)
-├── Add session management (autonomous)
-└── Write auth tests (autonomous)
-```
+<div class="mermaid">
+graph TD
+    A["Add authentication to my app"] --> B[Research auth providers<br/>autonomous]
+    A --> C[Design auth flow<br/>interactive]
+    A --> D[Implement login<br/>interactive]
+    A --> E[Add session management<br/>autonomous]
+    A --> F[Write auth tests<br/>autonomous]
+    
+    style B fill:#ffd700
+    style C fill:#87ceeb
+    style D fill:#87ceeb
+    style E fill:#ffd700
+    style F fill:#ffd700
+    style A fill:#f0f0f0
+</div>
 
 ### 2. Hybrid Execution Modes
 - **Interactive Tasks**: You participate and guide the conversation (e.g., design decisions, complex logic)
@@ -81,19 +97,31 @@ Orchestrator breaks down into:
 
 ### Split-Screen Design
 
-```
-┌─────────────────────────┬───────────────────────┐
-│     Task Tree View      │    Active Chat/       │
-│                         │    Canvas Editor      │
-│  [Project Root]         │                       │
-│    ├─[✓] Setup          │  Current: Frontend    │
-│    ├─[●] Frontend ←──── │                       │
-│    │  ├─[●] Login       │  AI: Let's implement  │
-│    │  └─[ ] Dashboard   │  the login component. │
-│    └─[ ] Deploy         │                       │
-│                         │  You: ...             │
-└─────────────────────────┴───────────────────────┘
-```
+<div class="mermaid">
+flowchart LR
+    subgraph "Orchestrator UI"
+        subgraph "Task Tree View"
+            A[Project Root] --> B[✓ Setup]
+            A --> C[● Frontend]
+            A --> D[Deploy]
+            C --> E[● Login]
+            C --> F[Dashboard]
+        end
+        
+        subgraph "Active Chat / Canvas Editor"
+            G[Current: Frontend<br/><br/>AI: Let's implement<br/>the login component.<br/><br/>You: ...]
+        end
+    end
+    
+    C -.->|Active Task| G
+    
+    style B fill:#90ee90
+    style C fill:#87ceeb
+    style E fill:#87ceeb
+    style A fill:#f0f0f0
+    style D fill:#f0f0f0
+    style F fill:#f0f0f0
+</div>
 
 ### Key Interactions
 - Click a task node to switch conversations
@@ -105,33 +133,38 @@ Orchestrator breaks down into:
 
 ### System Overview
 
-```
-┌─────────────────────────────────────────────────┐
-│                 User Interface                  │
-│  ┌─────────────────┐  ┌───────────────────────┐ │
-│  │  Task Tree View │  │  Chat/Canvas Editor   │ │
-│  └─────────────────┘  └───────────────────────┘ │
-└─────────────────────────────────────────────────┘
-                          │
-┌─────────────────────────────────────────────────┐
-│              Orchestration Layer                │
-│  - Task Decomposer                              │
-│  - Execution Manager (Mode Selection)           │
-│  - Context Isolation                            │
-└─────────────────────────────────────────────────┘
-                          │
-┌─────────────────────────────────────────────────┐
-│              Prompt Factory Layer               │
-│  - Prompt Library & Versioning                  │
-│  - Performance Tracking & Analytics             │
-│  - A/B Testing Infrastructure                   │
-└─────────────────────────────────────────────────┘
-                          │
-┌─────────────────────────────────────────────────┐
-│           LLM Interface Layer                   │
-│      (Short, Focused Conversations)             │
-└─────────────────────────────────────────────────┘
-```
+<div class="mermaid">
+flowchart TD
+    subgraph UI["User Interface"]
+        A[Task Tree View]
+        B[Chat/Canvas Editor]
+    end
+    
+    subgraph OL["Orchestration Layer"]
+        C[Task Decomposer]
+        D[Execution Manager<br/>Mode Selection]
+        E[Context Isolation]
+    end
+    
+    subgraph PF["Prompt Factory Layer"]
+        F[Prompt Library & Versioning]
+        G[Performance Tracking & Analytics]
+        H[A/B Testing Infrastructure]
+    end
+    
+    subgraph LLM["LLM Interface Layer"]
+        I[Short, Focused Conversations]
+    end
+    
+    UI --> OL
+    OL --> PF
+    PF --> LLM
+    
+    style UI fill:#e6f3ff
+    style OL fill:#fff0e6
+    style PF fill:#f0e6ff
+    style LLM fill:#e6ffe6
+</div>
 
 ### Technology Stack
 
@@ -173,19 +206,28 @@ Orchestrator breaks down into:
 
 ## Example: Feature Development Workflow
 
-```
-User: "Add a shopping cart to my e-commerce site"
-
-Orchestrator creates:
-[Shopping Cart Feature]
-├── [Auto] Research best practices
-├── [Interactive] Design cart UI
-├── [Auto] Set up database schema
-├── [Interactive] Implement cart logic
-├── [Auto] Create API endpoints
-├── [Interactive] Frontend integration
-└── [Auto] Write tests
-```
+<div class="mermaid">
+graph TD
+    A["Add a shopping cart to my e-commerce site"] --> B[Shopping Cart Feature]
+    
+    B --> C[Research best practices<br/>Auto]
+    B --> D[Design cart UI<br/>Interactive]
+    B --> E[Set up database schema<br/>Auto]
+    B --> F[Implement cart logic<br/>Interactive]
+    B --> G[Create API endpoints<br/>Auto]
+    B --> H[Frontend integration<br/>Interactive]
+    B --> I[Write tests<br/>Auto]
+    
+    style C fill:#ffd700
+    style D fill:#87ceeb
+    style E fill:#ffd700
+    style F fill:#87ceeb
+    style G fill:#ffd700
+    style H fill:#87ceeb
+    style I fill:#ffd700
+    style A fill:#f0f0f0
+    style B fill:#f0f0f0
+</div>
 
 While you design the UI, the system:
 - Researches best practices in the background
