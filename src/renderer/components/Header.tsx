@@ -1,5 +1,4 @@
 import React from 'react'
-import { Eye, EyeOff } from 'lucide-react'
 
 interface HeaderProps {
   showProjects: boolean
@@ -9,6 +8,28 @@ interface HeaderProps {
   onToggleChart: () => void
   onToggleChat: () => void
 }
+
+// Custom panel icons
+const LeftPanelIcon = ({ isActive }: { isActive: boolean }) => (
+  <svg width="16" height="12" viewBox="0 0 16 12" className="w-4 h-3">
+    <rect x="0" y="0" width="16" height="12" fill="none" stroke="currentColor" strokeWidth="1"/>
+    <rect x="0" y="0" width="8" height="12" fill={isActive ? "currentColor" : "none"}/>
+  </svg>
+)
+
+const MiddlePanelIcon = ({ isActive }: { isActive: boolean }) => (
+  <svg width="16" height="12" viewBox="0 0 16 12" className="w-4 h-3">
+    <rect x="0" y="0" width="16" height="12" fill="none" stroke="currentColor" strokeWidth="1"/>
+    <rect x="5" y="0" width="6" height="12" fill={isActive ? "currentColor" : "none"}/>
+  </svg>
+)
+
+const RightPanelIcon = ({ isActive }: { isActive: boolean }) => (
+  <svg width="16" height="12" viewBox="0 0 16 12" className="w-4 h-3">
+    <rect x="0" y="0" width="16" height="12" fill="none" stroke="currentColor" strokeWidth="1"/>
+    <rect x="8" y="0" width="8" height="12" fill={isActive ? "currentColor" : "none"}/>
+  </svg>
+)
 
 export function Header({ 
   showProjects, 
@@ -20,42 +41,47 @@ export function Header({
 }: HeaderProps) {
   return (
     <div 
-      className="h-8 flex items-center justify-between px-4 border-b"
+      className="h-8 flex items-center justify-end px-4 border-b"
       style={{ 
         backgroundColor: '#1a1a1a',
         borderBottomColor: '#0a0a0a' // darker grey line
       }}
     >
-      <div className="text-xs text-gray-400 font-mono">
-        Context - Recursive Task Decomposition
-      </div>
-      
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <button
           onClick={onToggleProjects}
-          className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
+          className={`flex items-center justify-center w-6 h-5 rounded transition-colors ${
+            showProjects 
+              ? 'text-gray-400 hover:text-gray-300' 
+              : 'text-gray-500 hover:text-gray-400'
+          }`}
           title={`${showProjects ? 'Hide' : 'Show'} Projects Panel`}
         >
-          {showProjects ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-          <span>Projects</span>
+          <LeftPanelIcon isActive={showProjects} />
         </button>
         
         <button
           onClick={onToggleChart}
-          className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
+          className={`flex items-center justify-center w-6 h-5 rounded transition-colors ${
+            showChart 
+              ? 'text-gray-400 hover:text-gray-300' 
+              : 'text-gray-500 hover:text-gray-400'
+          }`}
           title={`${showChart ? 'Hide' : 'Show'} Chart Panel`}
         >
-          {showChart ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-          <span>Chart</span>
+          <MiddlePanelIcon isActive={showChart} />
         </button>
         
         <button
           onClick={onToggleChat}
-          className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
+          className={`flex items-center justify-center w-6 h-5 rounded transition-colors ${
+            showChat 
+              ? 'text-gray-400 hover:text-gray-300' 
+              : 'text-gray-500 hover:text-gray-400'
+          }`}
           title={`${showChat ? 'Hide' : 'Show'} Chat Panel`}
         >
-          {showChat ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-          <span>Chat</span>
+          <RightPanelIcon isActive={showChat} />
         </button>
       </div>
     </div>

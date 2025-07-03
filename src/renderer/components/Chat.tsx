@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Send, Loader2, Bot, User } from 'lucide-react'
+import { Loader2, Bot, User } from 'lucide-react'
 import { nanoid } from 'nanoid'
+import { ChatInput } from './ChatInput'
 
 interface Message {
   id: string
@@ -13,10 +14,29 @@ interface ChatProps {
   selectedProjectId: string | null
 }
 
+const models = [
+  { id: 'claude-4-sonnet', name: 'claude-4-sonnet', tier: 'MAX' },
+  { id: 'claude-3-sonnet', name: 'claude-3-sonnet', tier: 'PRO' },
+  { id: 'claude-3-haiku', name: 'claude-3-haiku', tier: 'FAST' },
+  { id: 'gpt-4', name: 'gpt-4', tier: 'MAX' },
+  { id: 'gpt-3.5-turbo', name: 'gpt-3.5-turbo', tier: 'FAST' },
+]
+
+const agents = [
+  { id: 'agent-1', name: 'Agent #1' },
+  { id: 'agent-2', name: 'Agent #2' },
+  { id: 'agent-3', name: 'Agent #3' },
+  { id: 'agent-4', name: 'Agent #4' },
+]
+
 export function Chat({ selectedProjectId }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedModel, setSelectedModel] = useState(models[0])
+  const [selectedAgent, setSelectedAgent] = useState(agents[0])
+  const [showModelDropdown, setShowModelDropdown] = useState(false)
+  const [showAgentDropdown, setShowAgentDropdown] = useState(false)
 
   const handleCommand = async (command: string, args: string[]) => {
     console.log('Executing command:', command, 'with args:', args)
@@ -31,18 +51,13 @@ export function Chat({ selectedProjectId }: ChatProps) {
         responseMessage = '✅ Task cloned successfully! A new clone has been created.'
         break
       case '/spawn':
-        const title = args.length > 0 ? args.join(' ') : 'New Task'
-        responseMessage = `✅ New task spawned successfully! Title: "${title}"`
+        responseMessage = `✅ New task spawned successfully!`
         break
       case '/exit':
-        if (confirm('Are you sure you want to delete this task?')) {
-          responseMessage = '✅ Task deleted successfully.'
-        } else {
-          responseMessage = '❌ Task deletion cancelled.'
-        }
+        responseMessage = '✅ Task folded back to parent successfully.'
         break
       default:
-        responseMessage = `❌ Unknown command: ${command}. Available commands: /clone, /spawn [title], /exit`
+        responseMessage = `❌ Unknown command: ${command}. Available commands: /clone, /spawn, /exit`
     }
 
     const assistantMessage: Message = {
@@ -90,7 +105,7 @@ export function Chat({ selectedProjectId }: ChatProps) {
     const assistantMessage: Message = {
       id: nanoid(),
       role: 'assistant',
-      content: `I received your message: "${inputText}". This is a mock response. In a real implementation, this would connect to an AI service.`,
+      content: `I received your message: "${inputText}". This is a mock response using ${selectedModel.name}. In a real implementation, this would connect to an AI service.`,
       timestamp: Date.now(),
     }
 
@@ -112,19 +127,6 @@ export function Chat({ selectedProjectId }: ChatProps) {
 
   return (
     <div className="h-full flex flex-col bg-[#1a1a1a]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a2a]">
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center">
-            <Bot className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <h2 className="font-medium text-[#e1e1e1] text-sm">AI Assistant</h2>
-            <span className="text-xs text-[#888]">Ready to help</span>
-          </div>
-        </div>
-      </div>
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-4 py-6">
@@ -141,8 +143,8 @@ export function Chat({ selectedProjectId }: ChatProps) {
                 <p className="text-sm font-medium mb-2 text-[#e1e1e1]">Available Commands:</p>
                 <div className="text-sm text-[#888] space-y-1">
                   <div><code className="text-blue-400">/clone</code> - Clone the current task</div>
-                  <div><code className="text-blue-400">/spawn [title]</code> - Create a new child task</div>
-                  <div><code className="text-blue-400">/exit</code> - Delete the current task</div>
+                  <div><code className="text-blue-400">/spawn</code> - Create a new child task</div>
+                  <div><code className="text-blue-400">/exit</code> - Fold task back to parent</div>
                 </div>
               </div>
             </div>
@@ -197,61 +199,13 @@ export function Chat({ selectedProjectId }: ChatProps) {
         </div>
       </div>
 
-      {/* Input */}
-      <div className="border-t border-[#2a2a2a] bg-[#1a1a1a] px-4 py-4">
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-          <div className="flex items-end gap-3">
-            <div className="flex-1 relative">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your message or use commands: /clone, /spawn [title], /exit"
-                className="w-full px-4 py-3 bg-[#2a2a2a] border border-[#3a3a3a] rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent resize-none text-sm min-h-[48px] max-h-32 text-[#e1e1e1] placeholder-[#888]"
-                disabled={isLoading}
-                rows={1}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSubmit(e as any)
-                  }
-                }}
-                style={{
-                  height: 'auto',
-                  minHeight: '48px',
-                }}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement
-                  target.style.height = 'auto'
-                  target.style.height = Math.min(target.scrollHeight, 128) + 'px'
-                }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={!input.trim() || isLoading}
-              className="w-10 h-10 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-colors"
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 text-white animate-spin" />
-              ) : (
-                <Send className="w-4 h-4 text-white" />
-              )}
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between mt-3 px-1">
-            <span className="text-xs text-[#888]">
-              Press Enter to send, Shift+Enter for new line
-            </span>
-            {messages.length > 0 && (
-              <span className="text-xs text-[#888]">
-                {messages.length} message{messages.length !== 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-        </form>
-      </div>
+      {/* Use the new ChatInput component */}
+      <ChatInput
+        input={input}
+        setInput={setInput}
+        isLoading={isLoading}
+        onSubmit={handleSubmit}
+      />
     </div>
   )
 } 

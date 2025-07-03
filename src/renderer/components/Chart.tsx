@@ -230,7 +230,6 @@ export function Chart({ selectedProjectId }: ChartProps) {
         nodeTypes={nodeTypes}
         connectionMode={ConnectionMode.Loose}
         fitView
-        attributionPosition="bottom-left"
         style={{ backgroundColor: '#2d2d2d' }}
       >
         <Background color="#4d4d4d" />

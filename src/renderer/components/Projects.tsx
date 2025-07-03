@@ -31,9 +31,10 @@ interface ProjectItemProps {
   isSelected: boolean
   onSelect: (projectId: string) => void
   onDelete: (projectId: string) => void
+  isCollapsed: boolean
 }
 
-function ProjectItem({ project, isSelected, onSelect, onDelete }: ProjectItemProps) {
+function ProjectItem({ project, isSelected, onSelect, onDelete, isCollapsed }: ProjectItemProps) {
   const [showActions, setShowActions] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(project.title)
@@ -81,16 +82,19 @@ function ProjectItem({ project, isSelected, onSelect, onDelete }: ProjectItemPro
     }
   }
 
+
+
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 cursor-pointer group transition-colors relative ${
+      className={`flex items-center px-4 py-3 cursor-pointer group transition-colors relative ${
         isSelected ? 'bg-blue-600' : 'hover:bg-[#2a2a2a]'
       }`}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
       onClick={() => onSelect(project.id)}
+      title={isCollapsed ? `${project.title} - ${project.description}` : undefined}
     >
-      {/* Project Avatar */}
+      {/* Project Avatar - always in same position */}
       <div
         className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-medium"
         style={{ backgroundColor: getStatusColor() }}
@@ -98,44 +102,43 @@ function ProjectItem({ project, isSelected, onSelect, onDelete }: ProjectItemPro
         {project.title.charAt(0).toUpperCase()}
       </div>
 
-      {/* Project Content */}
-      <div className="flex-1 min-w-0">
-        {isEditing ? (
-          <input
-            type="text"
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onBlur={handleSaveEdit}
-            onKeyDown={handleKeyDown}
-            className="w-full bg-transparent border-none outline-none text-white text-sm font-medium"
-            autoFocus
-          />
-        ) : (
-          <div>
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium truncate text-white">
-                {project.title}
+      {/* Project Content - only visible when not collapsed */}
+      {!isCollapsed && (
+        <div className="flex-1 min-w-0 ml-3">
+          {isEditing ? (
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onBlur={handleSaveEdit}
+              onKeyDown={handleKeyDown}
+              className="w-full bg-transparent border-none outline-none text-white text-sm font-medium"
+              autoFocus
+            />
+          ) : (
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium truncate text-white">
+                  {project.title}
+                </div>
+                <span className="text-xs ml-2 flex-shrink-0 text-gray-400">
+                  {formatDate(project.created_at)}
+                </span>
               </div>
-              <span className="text-xs ml-2 flex-shrink-0 text-gray-400">
-                {formatDate(project.created_at)}
-              </span>
+              {project.description && (
+                <div className="text-xs truncate text-gray-400">
+                  {project.description}
+                </div>
+              )}
             </div>
-            {project.description && (
-              <div className="text-xs truncate text-gray-400">
-                {project.description}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
-      {/* Status Indicator */}
-      <div className="flex items-center gap-1">
-        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor() }}></div>
-      </div>
 
-      {/* Actions Menu */}
-      {showActions && !isEditing && (
+
+      {/* Actions Menu - only visible when not collapsed */}
+      {!isCollapsed && showActions && !isEditing && (
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={(e) => {
@@ -159,6 +162,8 @@ function ProjectItem({ project, isSelected, onSelect, onDelete }: ProjectItemPro
           </button>
         </div>
       )}
+
+
     </div>
   )
 }
@@ -166,9 +171,10 @@ function ProjectItem({ project, isSelected, onSelect, onDelete }: ProjectItemPro
 interface ProjectsProps {
   selectedProjectId: string | null
   onSelectProject: (projectId: string | null) => void
+  isCollapsed?: boolean
 }
 
-export function Projects({ selectedProjectId, onSelectProject }: ProjectsProps) {
+export function Projects({ selectedProjectId, onSelectProject, isCollapsed = false }: ProjectsProps) {
   const handleDeleteProject = (projectId: string) => {
     if (confirm('Are you sure you want to delete this project?')) {
       console.log('Delete project:', projectId)
@@ -185,20 +191,25 @@ export function Projects({ selectedProjectId, onSelectProject }: ProjectsProps) 
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-[#2d2d2d]">
+    <div className="h-full overflow-y-auto bg-[#2d2d2d] transition-all duration-300">
       {mockProjects.length === 0 ? (
-        <div className="p-4 text-center">
-          <div className="text-gray-400 text-sm mb-3">No projects yet</div>
+        <div className={`transition-all duration-300 ${isCollapsed ? 'px-4 py-3' : 'p-4 text-center'}`}>
+          {!isCollapsed && <div className="text-gray-400 text-sm mb-3">No projects yet</div>}
           <button
             onClick={handleCreateProject}
-            className="inline-flex items-center gap-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg transition-colors"
+            className={`inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white transition-all duration-300 ${
+              isCollapsed 
+                ? 'w-8 h-8 rounded-full justify-center flex-shrink-0' 
+                : 'px-3 py-2 text-xs rounded-lg'
+            }`}
+            title={isCollapsed ? 'Create Project' : undefined}
           >
             <Plus className="w-3 h-3" />
-            Create Project
+            {!isCollapsed && <span className="transition-opacity duration-300">Create Project</span>}
           </button>
         </div>
       ) : (
-        <div className="py-1">
+        <div className={`transition-all duration-300 ${isCollapsed ? 'py-1' : 'py-1'}`}>
           {mockProjects.map((project) => (
             <ProjectItem
               key={project.id}
@@ -206,6 +217,7 @@ export function Projects({ selectedProjectId, onSelectProject }: ProjectsProps) 
               isSelected={selectedProjectId === project.id}
               onSelect={onSelectProject}
               onDelete={handleDeleteProject}
+              isCollapsed={isCollapsed}
             />
           ))}
         </div>

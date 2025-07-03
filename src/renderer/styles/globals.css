@@ -17,6 +17,9 @@
     --text-secondary: #a0a0a0;     /* Light gray - secondary text */
     --text-muted: #707070;         /* Medium gray - muted text */
     --accent: #606060;             /* Gray accent for interactive elements */
+    
+    /* Hide React Flow attribution */
+    --xy-attribution-background-color-default: transparent;
   }
 }
 
@@ -104,9 +107,17 @@
     border: 1px solid var(--border) !important;
   }
 
-  .react-flow__attribution {
-    background: rgba(45, 45, 45, 0.8) !important;
-    color: var(--text-muted) !important;
-    border: 1px solid var(--border) !important;
+  .react-flow__attribution,
+  .react-flow__attribution a,
+  .react-flow__panel.react-flow__attribution {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    display: none !important;
   }
 }
