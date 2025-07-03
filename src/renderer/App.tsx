@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { Projects } from './components/Projects'
 import { Chart } from './components/Chart'
@@ -6,14 +6,12 @@ import { Chat } from './components/Chat'
 import { Plus } from 'lucide-react'
 import { Footer } from './components/Footer'
 import { Header } from './components/Header'
+import { AppProvider, useApp } from './contexts/AppContext'
 
-function App() {
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
-  const [showProjects, setShowProjects] = useState(true)
-  const [showChart, setShowChart] = useState(true)
-  const [showChat, setShowChat] = useState(true)
-  const [projectsCollapsed, setProjectsCollapsed] = useState(false)
-  const [projectsPanelSize, setProjectsPanelSize] = useState(30)
+function AppContent() {
+  const { state, selectProject, updateUI } = useApp()
+  const { selectedProjectId, ui } = state
+  const { showProjects, showChart, showChat, projectsCollapsed, projectsPanelSize } = ui
   
   const COLLAPSE_THRESHOLD = 12 // Threshold below which panel snaps to collapsed state
   const COLLAPSED_SIZE = 4.5 // Size when collapsed - just enough for the circular icons
@@ -35,9 +33,9 @@ function App() {
         showProjects={showProjects}
         showChart={showChart}
         showChat={showChat}
-        onToggleProjects={() => setShowProjects(!showProjects)}
-        onToggleChart={() => setShowChart(!showChart)}
-        onToggleChat={() => setShowChat(!showChat)}
+        onToggleProjects={() => updateUI({ showProjects: !showProjects })}
+        onToggleChart={() => updateUI({ showChart: !showChart })}
+        onToggleChat={() => updateUI({ showChat: !showChat })}
       />
       
       {/* Main content area */}
@@ -54,7 +52,7 @@ function App() {
               onResize={(size) => {
                 if (size <= COLLAPSE_THRESHOLD) {
                   if (!projectsCollapsed) {
-                    setProjectsCollapsed(true)
+                    updateUI({ projectsCollapsed: true })
                     // Force snap to collapsed size - this breaks the drag
                     setTimeout(() => {
                       if (panelRef.current) {
@@ -64,10 +62,10 @@ function App() {
                   }
                 } else {
                   if (projectsCollapsed) {
-                    setProjectsCollapsed(false)
+                    updateUI({ projectsCollapsed: false })
                   }
                   if (!projectsCollapsed || size > COLLAPSE_THRESHOLD) {
-                    setProjectsPanelSize(size)
+                    updateUI({ projectsPanelSize: size })
                   }
                 }
               }}
@@ -97,7 +95,7 @@ function App() {
                       }`}
                       onClick={() => {
                         console.log('Create new project clicked')
-                        setSelectedProjectId('project-1') // Auto-select first project for demo
+                        selectProject('project-1') // Auto-select first project for demo
                       }}
                       title="Create New Project"
                     >
@@ -110,7 +108,7 @@ function App() {
                 <div className="flex-1 overflow-y-auto">
                   <Projects 
                     selectedProjectId={selectedProjectId}
-                    onSelectProject={setSelectedProjectId}
+                    onSelectProject={selectProject}
                     isCollapsed={projectsCollapsed}
                   />
                 </div>
@@ -151,6 +149,14 @@ function App() {
       {/* Footer spanning across all panels */}
       <Footer />
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
   )
 }
 

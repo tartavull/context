@@ -2,13 +2,8 @@ import React, { useState } from 'react'
 import { Loader2, Bot, User } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { ChatInput } from './ChatInput'
-
-interface Message {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  timestamp: number
-}
+import { useApp } from '../contexts/AppContext'
+import { Message } from '../types/app-state'
 
 interface ChatProps {
   selectedProjectId: string | null
@@ -30,7 +25,7 @@ const agents = [
 ]
 
 export function Chat({ selectedProjectId }: ChatProps) {
-  const [messages, setMessages] = useState<Message[]>([])
+  const { state, addMessage, cloneTask, spawnTask, getSelectedTask } = useApp()
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [selectedModel, setSelectedModel] = useState(models[0])
@@ -38,7 +33,12 @@ export function Chat({ selectedProjectId }: ChatProps) {
   const [showModelDropdown, setShowModelDropdown] = useState(false)
   const [showAgentDropdown, setShowAgentDropdown] = useState(false)
 
+  const selectedTask = getSelectedTask()
+  const messages = selectedTask?.conversation.messages || []
+
   const handleCommand = async (command: string, args: string[]) => {
+    if (!selectedProjectId || !selectedTask) return
+    
     console.log('Executing command:', command, 'with args:', args)
     
     // Simulate command execution
@@ -48,16 +48,20 @@ export function Chat({ selectedProjectId }: ChatProps) {
     
     switch (command) {
       case '/clone':
+        cloneTask(selectedProjectId, selectedTask.id)
         responseMessage = '✅ Task cloned successfully! A new clone has been created.'
         break
       case '/spawn':
-        responseMessage = `✅ New task spawned successfully!`
+        const title = args.join(' ') || 'New Task'
+        const description = `Spawned from ${selectedTask.title}`
+        spawnTask(selectedProjectId, selectedTask.id, title, description)
+        responseMessage = `✅ New task "${title}" spawned successfully!`
         break
       case '/exit':
         responseMessage = '✅ Task folded back to parent successfully.'
         break
       default:
-        responseMessage = `❌ Unknown command: ${command}. Available commands: /clone, /spawn, /exit`
+        responseMessage = `❌ Unknown command: ${command}. Available commands: /clone, /spawn [title], /exit`
     }
 
     const assistantMessage: Message = {
@@ -67,12 +71,12 @@ export function Chat({ selectedProjectId }: ChatProps) {
       timestamp: Date.now(),
     }
 
-    setMessages(prev => [...prev, assistantMessage])
+    addMessage(selectedProjectId, selectedTask.id, assistantMessage)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || isLoading) return
+    if (!input.trim() || isLoading || !selectedProjectId || !selectedTask) return
 
     const inputText = input.trim()
     console.log('Chat input:', inputText)
@@ -85,7 +89,7 @@ export function Chat({ selectedProjectId }: ChatProps) {
       timestamp: Date.now(),
     }
 
-    setMessages(prev => [...prev, userMessage])
+    addMessage(selectedProjectId, selectedTask.id, userMessage)
     setInput('')
 
     // Check if it's a command
@@ -109,7 +113,7 @@ export function Chat({ selectedProjectId }: ChatProps) {
       timestamp: Date.now(),
     }
 
-    setMessages(prev => [...prev, assistantMessage])
+    addMessage(selectedProjectId, selectedTask.id, assistantMessage)
     setIsLoading(false)
   }
 
@@ -125,8 +129,39 @@ export function Chat({ selectedProjectId }: ChatProps) {
     )
   }
 
+  if (!selectedTask) {
+    return (
+      <div className="h-full flex items-center justify-center bg-[#1a1a1a]">
+        <div className="text-center">
+          <Bot className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-[#e1e1e1] mb-2">No Task Selected</h3>
+          <p className="text-[#888] text-sm">Click on a task in the chart to view its conversation</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="h-full flex flex-col bg-[#1a1a1a]">
+      {/* Task Header */}
+      <div className="border-b border-[#3a3a3a] px-4 py-3 bg-[#2a2a2a]">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-3 h-3 rounded-full flex-shrink-0"
+            style={{ 
+              backgroundColor: selectedTask.status === 'completed' ? '#10B981' : 
+                             selectedTask.status === 'active' ? '#3B82F6' : 
+                             selectedTask.status === 'failed' ? '#EF4444' : '#6B7280'
+            }}
+          />
+          <h3 className="text-sm font-medium text-[#e1e1e1] truncate">{selectedTask.title}</h3>
+          <span className="text-xs text-[#888] capitalize">{selectedTask.nodeType}</span>
+        </div>
+        {selectedTask.description && (
+          <p className="text-xs text-[#888] mt-1 truncate">{selectedTask.description}</p>
+        )}
+      </div>
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto px-4 py-6">
@@ -143,7 +178,7 @@ export function Chat({ selectedProjectId }: ChatProps) {
                 <p className="text-sm font-medium mb-2 text-[#e1e1e1]">Available Commands:</p>
                 <div className="text-sm text-[#888] space-y-1">
                   <div><code className="text-blue-400">/clone</code> - Clone the current task</div>
-                  <div><code className="text-blue-400">/spawn</code> - Create a new child task</div>
+                  <div><code className="text-blue-400">/spawn [title]</code> - Create a new child task</div>
                   <div><code className="text-blue-400">/exit</code> - Fold task back to parent</div>
                 </div>
               </div>

@@ -11,42 +11,16 @@ import ReactFlow, {
   Position,
 } from 'react-flow-renderer'
 import { Trash2 } from 'lucide-react'
-
-// Mock data for UI display
-const mockTasks = [
-  {
-    id: 'task-1',
-    title: 'Build a Todo App',
-    description: 'Create a modern todo application',
-    status: 'active',
-    execution_mode: 'interactive',
-    nodeType: 'original',
-  },
-  {
-    id: 'task-2',
-    title: 'Design UI Components',
-    description: 'Create reusable components',
-    status: 'completed',
-    execution_mode: 'interactive',
-    nodeType: 'spawn',
-    parent_id: 'task-1',
-  },
-  {
-    id: 'task-3',
-    title: 'Implement State Management',
-    description: 'Set up state management',
-    status: 'active',
-    execution_mode: 'interactive',
-    nodeType: 'clone',
-    parent_id: 'task-1',
-  },
-]
+import { useApp } from '../contexts/AppContext'
+import { Task } from '../types/app-state'
 
 // Custom node component
 const TaskNode = ({ data, selected }: { data: any; selected: boolean }) => {
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation()
-    console.log('Delete task:', data.title)
+    if (data.onDelete) {
+      data.onDelete()
+    }
   }
 
   const getNodeColor = () => {
@@ -77,12 +51,14 @@ const TaskNode = ({ data, selected }: { data: any; selected: boolean }) => {
 
   return (
     <div
-      className={`px-4 py-3 shadow-lg rounded-lg border-2 min-w-[200px] ${
+      className={`px-4 py-3 shadow-lg rounded-lg border-2 flex flex-col ${
         selected ? 'border-[#a0a0a0]' : 'border-[#4d4d4d]'
       }`}
       style={{ 
         backgroundColor: '#2d2d2d',
-        borderColor: selected ? '#a0a0a0' : getNodeColor() 
+        borderColor: selected ? '#a0a0a0' : getNodeColor(),
+        width: '220px',
+        height: '140px'
       }}
     >
       <Handle 
@@ -91,6 +67,7 @@ const TaskNode = ({ data, selected }: { data: any; selected: boolean }) => {
         style={{ backgroundColor: '#a0a0a0', border: '2px solid #2d2d2d' }}
       />
       
+      {/* Header row */}
       <div className="flex items-center justify-between mb-2">
         <div
           className="w-3 h-3 rounded-full flex-shrink-0"
@@ -111,22 +88,26 @@ const TaskNode = ({ data, selected }: { data: any; selected: boolean }) => {
         </div>
       </div>
       
-      <div className="text-sm font-medium text-[#ffffff] mb-1 truncate">
-        {data.title}
+      {/* Content area - flexible height */}
+      <div className="flex-1 flex flex-col justify-center min-h-0">
+        <div className="text-sm font-medium text-[#ffffff] mb-1 line-clamp-2 leading-tight">
+          {data.title}
+        </div>
+        
+        {data.description && (
+          <div className="text-xs text-[#a0a0a0] line-clamp-2 leading-tight">
+            {data.description}
+          </div>
+        )}
       </div>
       
-      {data.description && (
-        <div className="text-xs text-[#a0a0a0] truncate">
-          {data.description}
-        </div>
-      )}
-      
-      <div className="flex items-center justify-between mt-2">
-        <span className="text-xs text-[#707070] capitalize">
+      {/* Footer row */}
+      <div className="flex items-center justify-between mt-2 pt-1 border-t border-[#4d4d4d]">
+        <span className="text-xs text-[#707070] capitalize truncate">
           {data.nodeType || 'task'}
         </span>
-        <span className="text-xs text-[#707070] capitalize">
-          {data.execution_mode}
+        <span className="text-xs text-[#707070] capitalize truncate">
+          {data.executionMode}
         </span>
       </div>
 
@@ -149,42 +130,54 @@ const nodeTypes: NodeTypes = {
 }
 
 export function Chart({ selectedProjectId }: ChartProps) {
+  const { state, selectTask, deleteTask, updateTask } = useApp()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
 
-  // Convert mock tasks to nodes and edges
+  // Get tasks for the selected project
+  const tasks = useMemo(() => {
+    if (!selectedProjectId || !state.projects[selectedProjectId]) {
+      return []
+    }
+    return Object.values(state.projects[selectedProjectId].tasks)
+  }, [selectedProjectId, state.projects])
+
+  // Convert tasks to nodes and edges
   const { flowNodes, flowEdges } = useMemo(() => {
     const flowNodes: Node[] = []
     const flowEdges: Edge[] = []
 
     // Create nodes
-    mockTasks.forEach((task, index) => {
+    tasks.forEach((task: Task) => {
       flowNodes.push({
         id: task.id,
         type: 'taskNode',
-        position: { 
-          x: (index % 4) * 250 + 50, 
-          y: Math.floor(index / 4) * 150 + 50 
-        },
+        position: task.position,
+        draggable: false, // Disable dragging
         data: {
           taskId: task.id,
           title: task.title,
           description: task.description,
           status: task.status,
-          execution_mode: task.execution_mode,
+          executionMode: task.executionMode,
           nodeType: task.nodeType,
+          onDelete: () => {
+            if (selectedProjectId) {
+              deleteTask(selectedProjectId, task.id)
+            }
+          },
         },
         selected: task.id === selectedId,
       })
     })
 
     // Create edges for parent-child relationships
-    mockTasks.forEach((task) => {
-      if (task.parent_id) {
+    tasks.forEach((task: Task) => {
+      if (task.parentId) {
         flowEdges.push({
-          id: `${task.parent_id}-${task.id}`,
-          source: task.parent_id,
+          id: `${task.parentId}-${task.id}`,
+          source: task.parentId,
           target: task.id,
           type: 'smoothstep',
           animated: task.status === 'active',
@@ -197,7 +190,7 @@ export function Chart({ selectedProjectId }: ChartProps) {
     })
 
     return { flowNodes, flowEdges }
-  }, [selectedId])
+  }, [selectedId, tasks, selectedProjectId, deleteTask])
 
   // Initialize nodes and edges
   React.useEffect(() => {
@@ -205,18 +198,31 @@ export function Chart({ selectedProjectId }: ChartProps) {
     setEdges(flowEdges)
   }, [flowNodes, flowEdges, setNodes, setEdges])
 
+
+
   const onNodeClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
       setSelectedId(node.id)
-      console.log('Selected task:', node.id)
+      selectTask(node.id)
     },
-    []
+    [selectTask]
   )
 
   const onPaneClick = useCallback(() => {
     setSelectedId(null)
-    console.log('Deselected task')
-  }, [])
+    selectTask(null)
+  }, [selectTask])
+
+  if (!selectedProjectId) {
+    return (
+      <div className="h-full w-full flex items-center justify-center" style={{ backgroundColor: '#1e1e1e' }}>
+        <div className="text-center">
+          <div className="text-lg font-medium text-[#e1e1e1] mb-2">No Project Selected</div>
+          <p className="text-[#888] text-sm">Select a project from the left panel to view its task tree</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="h-full w-full" style={{ backgroundColor: '#1e1e1e' }}>
@@ -229,6 +235,8 @@ export function Chart({ selectedProjectId }: ChartProps) {
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         connectionMode={ConnectionMode.Loose}
+        nodesDraggable={false}
+        nodesConnectable={false}
         fitView
         style={{ backgroundColor: '#2d2d2d' }}
       >

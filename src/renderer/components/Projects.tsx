@@ -1,33 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Folder, FolderOpen, FileText, Plus, MoreHorizontal, Trash2, Edit3 } from 'lucide-react'
-
-// Mock data for now
-const mockProjects = [
-  {
-    id: 'project-1',
-    title: 'Build Todo App',
-    description: 'Create a modern todo application with React',
-    status: 'active',
-    created_at: Date.now() - 86400000,
-  },
-  {
-    id: 'project-2', 
-    title: 'Design System',
-    description: 'Build a comprehensive design system',
-    status: 'pending',
-    created_at: Date.now() - 172800000,
-  },
-  {
-    id: 'project-3',
-    title: 'API Integration',
-    description: 'Integrate with external APIs',
-    status: 'completed',
-    created_at: Date.now() - 259200000,
-  }
-]
+import { useApp } from '../contexts/AppContext'
+import { Project } from '../types/app-state'
 
 interface ProjectItemProps {
-  project: any
+  project: Project
   isSelected: boolean
   onSelect: (projectId: string) => void
   onDelete: (projectId: string) => void
@@ -122,7 +99,7 @@ function ProjectItem({ project, isSelected, onSelect, onDelete, isCollapsed }: P
                   {project.title}
                 </div>
                 <span className="text-xs ml-2 flex-shrink-0 text-gray-400">
-                  {formatDate(project.created_at)}
+                  {formatDate(project.createdAt)}
                 </span>
               </div>
               {project.description && (
@@ -175,24 +152,26 @@ interface ProjectsProps {
 }
 
 export function Projects({ selectedProjectId, onSelectProject, isCollapsed = false }: ProjectsProps) {
+  const { state, deleteProject, createProject } = useApp()
+  const projects = Object.values(state.projects)
+
   const handleDeleteProject = (projectId: string) => {
     if (confirm('Are you sure you want to delete this project?')) {
-      console.log('Delete project:', projectId)
-      if (selectedProjectId === projectId) {
-        onSelectProject(null)
-      }
+      deleteProject(projectId)
     }
   }
 
   const handleCreateProject = () => {
-    console.log('Create new project')
-    // For now, just select the first project
-    onSelectProject('project-1')
+    const title = prompt('Enter project title:')
+    const description = prompt('Enter project description:')
+    if (title && description) {
+      createProject(title, description)
+    }
   }
 
   return (
     <div className="h-full overflow-y-auto bg-[#2d2d2d] transition-all duration-300">
-      {mockProjects.length === 0 ? (
+      {projects.length === 0 ? (
         <div className={`transition-all duration-300 ${isCollapsed ? 'px-4 py-3' : 'p-4 text-center'}`}>
           {!isCollapsed && <div className="text-gray-400 text-sm mb-3">No projects yet</div>}
           <button
@@ -210,7 +189,7 @@ export function Projects({ selectedProjectId, onSelectProject, isCollapsed = fal
         </div>
       ) : (
         <div className={`transition-all duration-300 ${isCollapsed ? 'py-1' : 'py-1'}`}>
-          {mockProjects.map((project) => (
+          {projects.map((project) => (
             <ProjectItem
               key={project.id}
               project={project}
