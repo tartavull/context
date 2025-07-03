@@ -58,7 +58,7 @@ The auto-update system is built using `electron-updater` and integrates with Git
 
 ### GitHub Releases Setup
 
-The system is configured to use GitHub releases from `tartavull/orchestrator`. The configuration in `package.json`:
+The system is configured to use GitHub releases from `tartavull/context`. The configuration in `package.json`:
 
 ```json
 {
@@ -67,7 +67,7 @@ The system is configured to use GitHub releases from `tartavull/orchestrator`. T
       {
         "provider": "github",
         "owner": "tartavull",
-        "repo": "orchestrator"
+        "repo": "context"
       }
     ]
   }

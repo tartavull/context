@@ -28,7 +28,7 @@ Welcome to the Context developer documentation. This directory contains guides a
 
 ### For Users
 1. See the main [README](../README.md) for features
-2. Check [releases](https://github.com/your-org/orchestrator/releases) for downloads
+2. Check [releases](https://github.com/your-org/context/releases) for downloads
 
 ## Key Concepts
 
@@ -53,8 +53,8 @@ Each task maintains its own conversation context to prevent degradation.
 
 ## Getting Help
 
-- **Issues**: [GitHub Issues](https://github.com/your-org/orchestrator/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/orchestrator/discussions)
+- **Issues**: [GitHub Issues](https://github.com/your-org/context/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/context/discussions)
 - **Email**: support@context.dev
 
 ## Contributing

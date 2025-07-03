@@ -12,8 +12,8 @@ Get Context running in under 5 minutes.
 
 ```bash
 # 1. Clone and enter directory
-git clone https://github.com/your-org/orchestrator.git
-cd orchestrator
+git clone https://github.com/your-org/context.git
+cd context
 
 # 2. Allow direnv (loads all dependencies via Nix)
 direnv allow

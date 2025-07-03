@@ -1,117 +1,12 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
+import { contextBridge } from 'electron'
 
-// Define the API exposed to the renderer process
+// Define the simplified API exposed to the renderer process
 const electronAPI = {
-  // AI SDK handlers
-  ai: {
-    streamChat: (messages: unknown[], options?: unknown) =>
-      ipcRenderer.invoke('ai:stream-chat', messages, options),
-    generateText: (prompt: string, options?: unknown) =>
-      ipcRenderer.invoke('ai:generate-text', prompt, options),
-    stopStream: (streamId: string) => ipcRenderer.send('ai:stop-stream', streamId),
-    onStreamData: (callback: (data: unknown) => void) => {
-      const subscription = (_: IpcRendererEvent, data: unknown) => callback(data)
-      ipcRenderer.on('ai:stream-data', subscription)
-      return () => ipcRenderer.removeListener('ai:stream-data', subscription)
-    },
-  },
-
-  // Task management
-  tasks: {
-    create: (task: unknown) => ipcRenderer.invoke('task:create', task),
-    update: (taskId: string, updates: unknown) =>
-      ipcRenderer.invoke('task:update', taskId, updates),
-    delete: (taskId: string) => ipcRenderer.invoke('task:delete', taskId),
-    get: (taskId: string) => ipcRenderer.invoke('task:get', taskId),
-    getAll: () => ipcRenderer.invoke('task:get-all'),
-    getChildren: (parentId: string) => ipcRenderer.invoke('task:get-children', parentId),
-    decompose: (taskId: string) => ipcRenderer.invoke('task:decompose', taskId),
-    execute: (taskId: string, mode: 'interactive' | 'autonomous') =>
-      ipcRenderer.invoke('task:execute', taskId, mode),
-  },
-
-  // Prompt management
-  prompts: {
-    getLibrary: () => ipcRenderer.invoke('prompts:get-library'),
-    savePrompt: (prompt: unknown) => ipcRenderer.invoke('prompts:save', prompt),
-    getMetrics: (promptId: string) => ipcRenderer.invoke('prompts:get-metrics', promptId),
-    testPrompt: (promptId: string, testData: unknown) =>
-      ipcRenderer.invoke('prompts:test', promptId, testData),
-  },
-
-  // Settings
-  settings: {
-    get: (key: string) => ipcRenderer.invoke('settings:get', key),
-    set: (key: string, value: unknown) => ipcRenderer.invoke('settings:set', key, value),
-  },
-
-  // App menu events
-  onMenuAction: (callback: (action: string) => void) => {
-    const events = ['menu:new-task', 'menu:open-task', 'menu:preferences']
-    const subscriptions = events.map((event) => {
-      const handler = () => callback(event.replace('menu:', ''))
-      ipcRenderer.on(event, handler)
-      return () => ipcRenderer.removeListener(event, handler)
-    })
-    return () => subscriptions.forEach((unsub) => unsub())
-  },
-
   // Platform info
   platform: process.platform,
 
-  // Message management
-  messages: {
-    getByTask: (taskId: string) => ipcRenderer.invoke('messages:get-by-task', taskId),
-    getWithContext: (taskId: string) => ipcRenderer.invoke('messages:get-with-context', taskId),
-    create: (message: unknown) => ipcRenderer.invoke('messages:create', message),
-    deleteByTask: (taskId: string) => ipcRenderer.invoke('messages:delete-by-task', taskId),
-  },
-
-  // App info
-  getVersion: () => ipcRenderer.invoke('app:get-version'),
-
-  // Update management
-  update: {
-    check: () => ipcRenderer.invoke('update:check'),
-    download: () => ipcRenderer.invoke('update:download'),
-    install: () => ipcRenderer.invoke('update:install'),
-    getAutoEnabled: () => ipcRenderer.invoke('update:get-auto-enabled'),
-    setAutoEnabled: (enabled: boolean) => ipcRenderer.invoke('update:set-auto-enabled', enabled),
-    getCheckInterval: () => ipcRenderer.invoke('update:get-check-interval'),
-    setCheckInterval: (hours: number) => ipcRenderer.invoke('update:set-check-interval', hours),
-  },
-
-  // Update event listeners
-  onUpdateChecking: (callback: () => void) => {
-    const handler = () => callback()
-    ipcRenderer.on('update:checking', handler)
-    return () => ipcRenderer.removeListener('update:checking', handler)
-  },
-  onUpdateAvailable: (callback: (info: unknown) => void) => {
-    const handler = (_: IpcRendererEvent, info: unknown) => callback(info)
-    ipcRenderer.on('update:available', handler)
-    return () => ipcRenderer.removeListener('update:available', handler)
-  },
-  onUpdateNotAvailable: (callback: () => void) => {
-    const handler = () => callback()
-    ipcRenderer.on('update:not-available', handler)
-    return () => ipcRenderer.removeListener('update:not-available', handler)
-  },
-  onUpdateError: (callback: (error: string) => void) => {
-    const handler = (_: IpcRendererEvent, error: string) => callback(error)
-    ipcRenderer.on('update:error', handler)
-    return () => ipcRenderer.removeListener('update:error', handler)
-  },
-  onUpdateDownloadProgress: (callback: (progress: unknown) => void) => {
-    const handler = (_: IpcRendererEvent, progress: unknown) => callback(progress)
-    ipcRenderer.on('update:download-progress', handler)
-    return () => ipcRenderer.removeListener('update:download-progress', handler)
-  },
-  onUpdateDownloaded: (callback: (info: unknown) => void) => {
-    const handler = (_: IpcRendererEvent, info: unknown) => callback(info)
-    ipcRenderer.on('update:downloaded', handler)
-    return () => ipcRenderer.removeListener('update:downloaded', handler)
-  },
+  // App info (static for UI-only version)
+  getVersion: () => Promise.resolve('0.1.2-ui'),
 }
 
 // Expose the API to the renderer process

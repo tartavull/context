@@ -125,7 +125,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: orchestrator-${{ matrix.platform }}-${{ matrix.arch }}
+          name: context-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
             release/*.dmg
             release/*.AppImage

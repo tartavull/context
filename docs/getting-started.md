@@ -37,8 +37,8 @@ If you prefer not to use Nix, install these manually:
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/orchestrator.git
-cd orchestrator
+git clone https://github.com/your-org/context.git
+cd context
 ```
 
 ### Step 2: Setup Development Environment
@@ -115,7 +115,7 @@ Packages will be created in the `release/` directory.
 ## Project Structure
 
 ```
-orchestrator/
+context/
 ├── src/                      # Source code
 │   ├── main/                # Electron main process
 │   │   ├── index.ts        # Entry point, window management

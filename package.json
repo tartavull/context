@@ -1,7 +1,7 @@
 {
-  "name": "orchestrator",
+  "name": "context",
   "version": "0.1.2",
-  "description": "Recursive Task Decomposition for Optimal LLM Performance",
+  "description": "Task Management UI - Frontend Only",
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "concurrently -k \"pnpm dev:main\" \"pnpm dev:renderer\" \"sleep 3 && pnpm dev:electron\"",
@@ -21,13 +21,12 @@
     "electron",
     "react",
     "typescript",
-    "ai",
-    "orchestrator"
+    "ui",
+    "task-management"
   ],
-  "author": "Orchestrator Team",
+      "author": "Context Team",
   "license": "MIT",
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.9",
     "@types/node": "^20.11.24",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
@@ -49,10 +48,6 @@
     "vite": "^5.1.4"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^0.0.24",
-    "@ai-sdk/openai": "^0.0.35",
-    "@ai-sdk/react": "^0.0.62",
-    "@ai-sdk/ui-utils": "^0.0.46",
     "@radix-ui/react-context-menu": "^2.1.5",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
@@ -64,16 +59,10 @@
     "@radix-ui/react-separator": "^1.0.3",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-tabs": "^1.0.4",
-
     "@radix-ui/react-tooltip": "^1.0.7",
-    "@tanstack/react-query": "^5.24.1",
-    "ai": "^3.0.15",
-    "better-sqlite3": "^9.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^3.3.1",
-    "electron-store": "^8.1.0",
-    "electron-updater": "^6.1.8",
     "framer-motion": "^11.0.6",
     "lucide-react": "^0.344.0",
     "nanoid": "^5.0.6",
@@ -94,8 +83,8 @@
     "zustand": "^4.5.1"
   },
   "build": {
-    "appId": "com.orchestrator.app",
-    "productName": "Orchestrator",
+          "appId": "com.context.app",
+      "productName": "Context UI",
     "directories": {
       "output": "release"
     },
@@ -103,13 +92,6 @@
       "dist/**/*",
       "node_modules/**/*",
       "package.json"
-    ],
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "tartavull",
-        "repo": "orchestrator"
-      }
     ],
     "mac": {
       "category": "public.app-category.developer-tools",

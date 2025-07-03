@@ -316,7 +316,7 @@ The future of LLM applications lies not in trying to fix the multi-turn problem 
 
 ## Get Involved
 
-We're building Context in the open. Check out the [GitHub repository](https://github.com/tartavull/orchestrator) to follow our progress, contribute ideas, or build upon this concept.
+We're building Context in the open. Check out the [GitHub repository](https://github.com/tartavull/context) to follow our progress, contribute ideas, or build upon this concept.
 
 ---
 
@@ -326,4 +326,4 @@ We're building Context in the open. Check out the [GitHub repository](https://gi
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/tartavull/orchestrator/blob/main/LICENSE) file for details. 
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/tartavull/context/blob/main/LICENSE) file for details. 

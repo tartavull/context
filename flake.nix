@@ -1,5 +1,5 @@
 {
-  description = "Orchestrator - Recursive Task Decomposition Electron App";
+  description = "Context - Recursive Task Decomposition Electron App";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -88,7 +88,7 @@
           ] ++ electronDeps ++ systemDeps;
           
           shellHook = ''
-            echo "🚀 Orchestrator Development Environment"
+            echo "🚀 Context Development Environment"
             echo "📦 Node.js: ${nodejs.version}"
             echo "⚡ Electron: Latest"
             echo ""
