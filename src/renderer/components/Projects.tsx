@@ -8,17 +8,19 @@ interface ProjectItemProps {
   isSelected: boolean
   onSelect: (projectId: string) => void
   onDelete: (projectId: string) => void
+  onUpdate: (projectId: string, updates: Partial<Project>) => void
   isCollapsed: boolean
 }
 
-function ProjectItem({ project, isSelected, onSelect, onDelete, isCollapsed }: ProjectItemProps) {
+function ProjectItem({ project, isSelected, onSelect, onDelete, onUpdate, isCollapsed }: ProjectItemProps) {
   const [showActions, setShowActions] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(project.title === 'New Project')
   const [editTitle, setEditTitle] = useState(project.title)
 
   const handleSaveEdit = () => {
     if (editTitle.trim() && editTitle !== project.title) {
       console.log('Update project title:', editTitle)
+      onUpdate(project.id, { title: editTitle.trim() })
     }
     setIsEditing(false)
   }
@@ -152,7 +154,7 @@ interface ProjectsProps {
 }
 
 export function Projects({ selectedProjectId, onSelectProject, isCollapsed = false }: ProjectsProps) {
-  const { state, deleteProject, createProject } = useApp()
+  const { state, deleteProject, createProject, updateProject } = useApp()
   const projects = Object.values(state.projects)
 
   const handleDeleteProject = (projectId: string) => {
@@ -162,10 +164,15 @@ export function Projects({ selectedProjectId, onSelectProject, isCollapsed = fal
   }
 
   const handleCreateProject = () => {
-    const title = prompt('Enter project title:')
-    const description = prompt('Enter project description:')
-    if (title && description) {
-      createProject(title, description)
+    console.log('handleCreateProject called')
+    console.log('createProject function:', createProject)
+    try {
+      // Create a new project with placeholder values and immediately put it in edit mode
+      console.log('About to call createProject...')
+      createProject('New Project', 'Project description')
+      console.log('Project created successfully')
+    } catch (error) {
+      console.error('Error creating project:', error)
     }
   }
 
@@ -196,6 +203,7 @@ export function Projects({ selectedProjectId, onSelectProject, isCollapsed = fal
               isSelected={selectedProjectId === project.id}
               onSelect={onSelectProject}
               onDelete={handleDeleteProject}
+              onUpdate={updateProject}
               isCollapsed={isCollapsed}
             />
           ))}

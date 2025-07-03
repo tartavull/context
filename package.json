@@ -15,7 +15,11 @@
     "package": "electron-builder",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 100",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,md}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,md}\"",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report"
   },
   "keywords": [
     "electron",
@@ -24,9 +28,10 @@
     "ui",
     "task-management"
   ],
-      "author": "Context Team",
+  "author": "Context Team",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.53.2",
     "@types/node": "^20.11.24",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
@@ -60,6 +65,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-tabs": "^1.0.4",
     "@radix-ui/react-tooltip": "^1.0.7",
+    "@tanstack/react-query": "^5.81.5",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^3.3.1",
@@ -73,18 +79,18 @@
     "react-markdown": "^9.0.1",
     "react-resizable-panels": "^2.0.13",
     "react-syntax-highlighter": "^15.5.0",
+    "rehype-highlight": "^7.0.0",
+    "rehype-katex": "^7.0.0",
     "remark-gfm": "^4.0.0",
     "remark-math": "^6.0.0",
-    "rehype-katex": "^7.0.0",
-    "rehype-highlight": "^7.0.0",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.22.4",
     "zustand": "^4.5.1"
   },
   "build": {
-          "appId": "com.context.app",
-      "productName": "Context UI",
+    "appId": "com.context.app",
+    "productName": "Context UI",
     "directories": {
       "output": "release"
     },
@@ -115,4 +121,4 @@
       "allowToChangeInstallationDirectory": true
     }
   }
-} 
+}

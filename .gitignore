@@ -54,3 +54,8 @@ app/
 # Nix
 result
 result-* 
+# Playwright
+playwright-report/
+test-results/
+tests/screenshots/
+

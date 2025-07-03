@@ -9,7 +9,7 @@ import { Header } from './components/Header'
 import { AppProvider, useApp } from './contexts/AppContext'
 
 function AppContent() {
-  const { state, selectProject, updateUI } = useApp()
+  const { state, selectProject, updateUI, createProject } = useApp()
   const { selectedProjectId, ui } = state
   const { showProjects, showChart, showChat, projectsCollapsed, projectsPanelSize } = ui
   
@@ -94,8 +94,8 @@ function AppContent() {
                         projectsCollapsed ? 'w-8 h-8' : 'w-6 h-6'
                       }`}
                       onClick={() => {
-                        console.log('Create new project clicked')
-                        selectProject('project-1') // Auto-select first project for demo
+                        console.log('Create new project clicked from header')
+                        createProject('New Project', 'Project description')
                       }}
                       title="Create New Project"
                     >
