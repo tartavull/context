@@ -4,15 +4,6 @@
   <img src="logo.png" alt="Context Logo" width="128" height="128">
 </div>
 
-A macOS application for managing and visualizing project context.
-
-## Features
-
-- **Projects Panel**: Manage and organize your projects
-- **Chart View**: Visualize project data and metrics
-- **Chat Interface**: Interactive chat functionality
-- **Responsive UI**: Adaptive interface with resizable panels
-
 ## Requirements
 
 - macOS 15.4 or later
