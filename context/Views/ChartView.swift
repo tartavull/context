@@ -6,7 +6,7 @@ struct ChartView: View {
     
     var body: some View {
         ZStack {
-            Color.clear
+            Color(red: 27/255, green: 27/255, blue: 27/255)
                 .ignoresSafeArea()
             
             if let projectId = selectedProjectId,
@@ -74,7 +74,7 @@ struct TaskTreeView: View {
             .offset(panOffset)
             .clipped()
         }
-        .background(Color.clear)
+        .background(Color(red: 27/255, green: 27/255, blue: 27/255))
         .onTapGesture(count: 2) {
             // Double tap to reset zoom and pan
             withAnimation(.easeInOut(duration: 0.3)) {
