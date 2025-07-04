@@ -43,6 +43,9 @@ struct ContentView: View {
                                 .offset(x: -1.5) // Move 1.5 pixels to the left
                         }
                         .ignoresSafeArea(.all, edges: .top)
+                        .accessibilityElement()
+                        .accessibilityIdentifier("projects-panel-resize-handle")
+                        .accessibilityLabel("Projects Panel Resize Handle")
                         .gesture(
                             DragGesture()
                                 .onChanged { value in
@@ -138,6 +141,9 @@ struct ContentView: View {
                     .animation(.easeInOut(duration: 0.15), value: toggleButtonHovered)
             }
             .buttonStyle(PlainButtonStyle())
+            .accessibilityElement()
+            .accessibilityIdentifier("projects-panel-toggle-button")
+            .accessibilityLabel("Toggle Projects Panel")
             .onHover { hovering in
                 toggleButtonHovered = hovering
             }

@@ -80,6 +80,9 @@ struct ProjectsView: View {
             Spacer(minLength: 0)
         }
         .frame(maxHeight: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("projects-panel")
+        .accessibilityLabel("Projects Panel")
         .background(
             BlurView(material: .hudWindow, blendingMode: .behindWindow)
                 .ignoresSafeArea(.all, edges: .top)
