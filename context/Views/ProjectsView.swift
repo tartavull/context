@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct ProjectsView: View {
     @EnvironmentObject var appState: AppStateManager
@@ -33,7 +34,7 @@ struct ProjectsView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(Color.black.opacity(0.3))
+            .background(BlurView(material: .hudWindow, blendingMode: .behindWindow))
             .overlay(
                 Rectangle()
                     .fill(Color.white.opacity(0.1))
@@ -80,9 +81,9 @@ struct ProjectsView: View {
                     }
                 }
             }
-            .background(Color.black.opacity(0.1))
+            .background(BlurView(material: .hudWindow, blendingMode: .behindWindow))
         }
-        .background(Color.black.opacity(0.15))
+        .background(BlurView(material: .hudWindow, blendingMode: .behindWindow))
         .overlay(
             Rectangle()
                 .fill(Color.white.opacity(0.1))
@@ -320,6 +321,29 @@ struct ProjectItemView: View {
             formatter.dateFormat = "MMM d"
             return formatter.string(from: date)
         }
+    }
+}
+
+struct BlurView: NSViewRepresentable {
+    let material: NSVisualEffectView.Material
+    let blendingMode: NSVisualEffectView.BlendingMode
+    
+    init(material: NSVisualEffectView.Material = .hudWindow, blendingMode: NSVisualEffectView.BlendingMode = .behindWindow) {
+        self.material = material
+        self.blendingMode = blendingMode
+    }
+    
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let effectView = NSVisualEffectView()
+        effectView.material = material
+        effectView.blendingMode = blendingMode
+        effectView.state = .active
+        return effectView
+    }
+    
+    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
+        nsView.blendingMode = blendingMode
     }
 }
 
