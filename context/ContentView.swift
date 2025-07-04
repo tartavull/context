@@ -120,7 +120,7 @@ struct ContentView: View {
             .buttonStyle(PlainButtonStyle())
             .position(
                 x: appState.state.ui.showProjects ? projectsPanelWidth - 20 : 90,
-                y: -20
+                y: -19
             )
             .zIndex(1000)
             .help(appState.state.ui.showProjects ? "Hide Projects Panel" : "Show Projects Panel"),
