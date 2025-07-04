@@ -1,9 +1,0 @@
-packages:
-  - .
-
-ignoredBuiltDependencies:
-  - electron
-  - esbuild
-
-onlyBuiltDependencies:
-  - better-sqlite3
