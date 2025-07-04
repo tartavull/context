@@ -6,7 +6,32 @@ class AppStateManager: ObservableObject {
     @Published var state: AppState
     
     init() {
-        self.state = AppState.sample
+        self.state = AppState()
+        
+        // Auto-select first project or create empty project if none exists
+        DispatchQueue.main.async {
+            self.initializeProjectSelection()
+        }
+    }
+    
+    // MARK: - Project Selection Initialization
+    
+    func initializeProjectSelection() {
+        if state.projects.isEmpty {
+            // No projects exist, create an empty project
+            createProject(title: "New Project", description: "Get started with your first project")
+        } else if state.selectedProjectId == nil {
+            // Projects exist but none selected, select the first one
+            let sortedProjects = state.projects.values.sorted { $0.createdAt < $1.createdAt }
+            if let firstProject = sortedProjects.first {
+                selectProject(firstProject.id)
+                
+                // Also select the root task if available
+                if let rootTaskId = firstProject.rootTaskIds.first {
+                    state.selectedTaskId = rootTaskId
+                }
+            }
+        }
     }
     
     // MARK: - Project Management
@@ -24,6 +49,11 @@ class AppStateManager: ObservableObject {
         let newProject = Project(title: title, description: description)
         state.projects[newProject.id] = newProject
         state.selectedProjectId = newProject.id
+        
+        // Auto-select the root task
+        if let rootTaskId = newProject.rootTaskIds.first {
+            state.selectedTaskId = rootTaskId
+        }
     }
     
     func updateProject(projectId: String, updates: [String: Any]) {
@@ -49,6 +79,23 @@ class AppStateManager: ObservableObject {
         if state.selectedProjectId == projectId {
             state.selectedProjectId = nil
             state.selectedTaskId = nil
+            
+            // Auto-select another project or create a new one
+            if state.projects.isEmpty {
+                // No projects left, create a new empty project
+                createProject(title: "New Project", description: "Get started with your first project")
+            } else {
+                // Select the first available project
+                let sortedProjects = state.projects.values.sorted { $0.createdAt < $1.createdAt }
+                if let firstProject = sortedProjects.first {
+                    selectProject(firstProject.id)
+                    
+                    // Also select the root task if available
+                    if let rootTaskId = firstProject.rootTaskIds.first {
+                        state.selectedTaskId = rootTaskId
+                    }
+                }
+            }
         }
     }
     
@@ -207,15 +254,9 @@ class AppStateManager: ObservableObject {
     // MARK: - UI State Management
     
     func updateUI(_ updates: [String: Any]) {
-        if let showProjects = updates["showProjects"] as? Bool {
-            state.ui.showProjects = showProjects
-        }
-        if let showChart = updates["showChart"] as? Bool {
-            state.ui.showChart = showChart
-        }
-        if let showChat = updates["showChat"] as? Bool {
-            state.ui.showChat = showChat
-        }
+        // showProjects is always true - no toggle needed
+        // showChart is always true - no toggle needed
+        // showChat is always true - no toggle needed
         if let projectsCollapsed = updates["projectsCollapsed"] as? Bool {
             state.ui.projectsCollapsed = projectsCollapsed
         }

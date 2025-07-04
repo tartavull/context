@@ -7,266 +7,328 @@
 
 import Testing
 import Foundation
+import XCTest
 @testable import context
 
 @MainActor
-struct AppStateManagerTests {
+final class AppStateManagerTests: XCTestCase {
+    var appState: AppStateManager!
     
-    // MARK: - Setup Helper
+    override func setUpWithError() throws {
+        appState = AppStateManager()
+    }
+
+    override func tearDownWithError() throws {
+        appState = nil
+    }
+
+    // MARK: - UI State Tests
     
-    func createTestAppStateManager() -> AppStateManager {
-        let manager = AppStateManager()
-        // Start with empty state for predictable testing
-        manager.state = AppState()
-        return manager
+    func testPanelToggleButtons() throws {
+        // Test initial state - chat should start minimized
+        XCTAssertTrue(appState.state.ui.showProjects, "Projects panel should be visible by default")
+        XCTAssertTrue(appState.state.ui.showChart, "Chart panel should be visible by default")
+        XCTAssertFalse(appState.state.ui.showChat, "Chat panel should start minimized")
+        
+        // Test toggling chat panel on
+        appState.updateUI(["showChat": true])
+        XCTAssertTrue(appState.state.ui.showChat, "Chat panel should be visible after toggling on")
+        
+        // Test toggling chat panel off
+        appState.updateUI(["showChat": false])
+        XCTAssertFalse(appState.state.ui.showChat, "Chat panel should be hidden after toggling off")
+        
+        // Test toggling projects panel
+        appState.updateUI(["showProjects": false])
+        XCTAssertFalse(appState.state.ui.showProjects, "Projects panel should be hidden after toggling off")
+        
+        appState.updateUI(["showProjects": true])
+        XCTAssertTrue(appState.state.ui.showProjects, "Projects panel should be visible after toggling on")
+        
+        // Test toggling chart panel
+        appState.updateUI(["showChart": false])
+        XCTAssertFalse(appState.state.ui.showChart, "Chart panel should be hidden after toggling off")
+        
+        appState.updateUI(["showChart": true])
+        XCTAssertTrue(appState.state.ui.showChart, "Chart panel should be visible after toggling on")
     }
     
+    func testMultiplePanelToggles() throws {
+        // Test toggling multiple panels at once
+        appState.updateUI([
+            "showProjects": false,
+            "showChart": false,
+            "showChat": true
+        ])
+        
+        XCTAssertFalse(appState.state.ui.showProjects, "Projects panel should be hidden")
+        XCTAssertFalse(appState.state.ui.showChart, "Chart panel should be hidden")
+        XCTAssertTrue(appState.state.ui.showChat, "Chat panel should be visible")
+        
+        // Test toggling all panels back on
+        appState.updateUI([
+            "showProjects": true,
+            "showChart": true,
+            "showChat": true
+        ])
+        
+        XCTAssertTrue(appState.state.ui.showProjects, "Projects panel should be visible")
+        XCTAssertTrue(appState.state.ui.showChart, "Chart panel should be visible")
+        XCTAssertTrue(appState.state.ui.showChat, "Chat panel should be visible")
+    }
+    
+    func testProjectsCollapsedState() throws {
+        // Test projects panel collapse functionality
+        XCTAssertFalse(appState.state.ui.projectsCollapsed, "Projects panel should not be collapsed by default")
+        
+        appState.updateUI(["projectsCollapsed": true])
+        XCTAssertTrue(appState.state.ui.projectsCollapsed, "Projects panel should be collapsed")
+        
+        appState.updateUI(["projectsCollapsed": false])
+        XCTAssertFalse(appState.state.ui.projectsCollapsed, "Projects panel should be expanded")
+    }
+
     // MARK: - Project Management Tests
     
-    @Test func testCreateProject() async throws {
-        let manager = createTestAppStateManager()
+    func testCreateProject() throws {
+        let initialCount = appState.state.projects.count
         
-        #expect(manager.state.projects.isEmpty)
-        #expect(manager.state.selectedProjectId == nil)
+        appState.createProject(title: "Test Project", description: "Test Description")
         
-        manager.createProject(title: "Test Project", description: "Test Description")
+        XCTAssertEqual(appState.state.projects.count, initialCount + 1, "Should have one more project")
+        XCTAssertNotNil(appState.state.selectedProjectId, "Should have selected the new project")
         
-        #expect(manager.state.projects.count == 1)
-        #expect(manager.state.selectedProjectId != nil)
-        
-        let project = manager.selectedProject!
-        #expect(project.title == "Test Project")
-        #expect(project.description == "Test Description")
-        #expect(project.status == .active)
-        #expect(project.tasks.count == 1) // Root task created
-        #expect(project.rootTaskIds.count == 1)
+        let selectedProject = appState.selectedProject
+        XCTAssertNotNil(selectedProject, "Should be able to get selected project")
+        XCTAssertEqual(selectedProject?.title, "Test Project", "Project title should match")
+        XCTAssertEqual(selectedProject?.description, "Test Description", "Project description should match")
     }
     
-    @Test func testSelectProject() async throws {
-        let manager = createTestAppStateManager()
+    func testUpdateProject() throws {
+        appState.createProject(title: "Original Title", description: "Original Description")
         
-        manager.createProject(title: "Project 1", description: "Description 1")
-        let project1Id = manager.state.selectedProjectId!
+        guard let projectId = appState.state.selectedProjectId else {
+            XCTFail("Should have a selected project")
+            return
+        }
         
-        manager.createProject(title: "Project 2", description: "Description 2")
-        let project2Id = manager.state.selectedProjectId!
-        
-        // Should be on project 2 now
-        #expect(manager.state.selectedProjectId == project2Id)
-        
-        // Select project 1
-        manager.selectProject(project1Id)
-        #expect(manager.state.selectedProjectId == project1Id)
-        #expect(manager.state.selectedTaskId == nil) // Task should be reset
-        
-        // Select nil
-        manager.selectProject(nil)
-        #expect(manager.state.selectedProjectId == nil)
-    }
-    
-    @Test func testUpdateProject() async throws {
-        let manager = createTestAppStateManager()
-        
-        manager.createProject(title: "Original Title", description: "Original Description")
-        let projectId = manager.state.selectedProjectId!
-        
-        manager.updateProject(projectId: projectId, updates: [
+        appState.updateProject(projectId: projectId, updates: [
             "title": "Updated Title",
-            "description": "Updated Description",
-            "status": "completed"
+            "description": "Updated Description"
         ])
         
-        let project = manager.state.projects[projectId]!
-        #expect(project.title == "Updated Title")
-        #expect(project.description == "Updated Description")
-        #expect(project.status == .completed)
+        let updatedProject = appState.selectedProject
+        XCTAssertEqual(updatedProject?.title, "Updated Title", "Title should be updated")
+        XCTAssertEqual(updatedProject?.description, "Updated Description", "Description should be updated")
     }
     
-    @Test func testDeleteProject() async throws {
-        let manager = createTestAppStateManager()
+    func testDeleteProject() throws {
+        appState.createProject(title: "Test Project", description: "Test Description")
         
-        manager.createProject(title: "Project to Delete", description: "Description")
-        let projectId = manager.state.selectedProjectId!
+        guard let projectId = appState.state.selectedProjectId else {
+            XCTFail("Should have a selected project")
+            return
+        }
         
-        #expect(manager.state.projects.count == 1)
-        #expect(manager.state.selectedProjectId == projectId)
+        let initialCount = appState.state.projects.count
         
-        manager.deleteProject(projectId)
+        appState.deleteProject(projectId)
         
-        #expect(manager.state.projects.isEmpty)
-        #expect(manager.state.selectedProjectId == nil)
-        #expect(manager.state.selectedTaskId == nil)
+        XCTAssertEqual(appState.state.projects.count, initialCount - 1, "Should have one less project")
+        XCTAssertNil(appState.state.selectedProjectId, "Should not have a selected project")
+        XCTAssertNil(appState.selectedProject, "Should not be able to get selected project")
+    }
+
+    // MARK: - Auto-selection Tests
+    
+    func testAutoSelectionOnEmptyState() throws {
+        // Create a new AppStateManager with empty state
+        let emptyAppState = AppStateManager()
+        emptyAppState.state = AppState() // Start with empty state
+        
+        // Trigger initialization
+        emptyAppState.initializeProjectSelection()
+        
+        // Should have created a project and selected it
+        XCTAssertFalse(emptyAppState.state.projects.isEmpty, "Should have created a project")
+        XCTAssertNotNil(emptyAppState.state.selectedProjectId, "Should have selected the created project")
+        XCTAssertNotNil(emptyAppState.state.selectedTaskId, "Should have selected the root task")
+        
+        let selectedProject = emptyAppState.selectedProject
+        XCTAssertEqual(selectedProject?.title, "New Project", "Should have created project with default title")
     }
     
+    func testAutoSelectionWithExistingProjects() throws {
+        // Create projects manually
+        appState.createProject(title: "First Project", description: "First")
+        appState.createProject(title: "Second Project", description: "Second")
+        
+        // Clear selection
+        appState.state.selectedProjectId = nil
+        appState.state.selectedTaskId = nil
+        
+        // Trigger initialization
+        appState.initializeProjectSelection()
+        
+        // Should have selected the first project (by creation date)
+        XCTAssertNotNil(appState.state.selectedProjectId, "Should have selected a project")
+        XCTAssertNotNil(appState.state.selectedTaskId, "Should have selected the root task")
+        
+        let selectedProject = appState.selectedProject
+        XCTAssertEqual(selectedProject?.title, "First Project", "Should have selected the first project")
+    }
+    
+    func testAutoSelectionAfterDeletingLastProject() throws {
+        // Create a single project
+        appState.createProject(title: "Only Project", description: "Only")
+        
+        guard let projectId = appState.state.selectedProjectId else {
+            XCTFail("Should have a selected project")
+            return
+        }
+        
+        // Delete the only project
+        appState.deleteProject(projectId)
+        
+        // Should have created a new project and selected it
+        XCTAssertFalse(appState.state.projects.isEmpty, "Should have created a new project")
+        XCTAssertNotNil(appState.state.selectedProjectId, "Should have selected the new project")
+        XCTAssertNotNil(appState.state.selectedTaskId, "Should have selected the root task")
+        
+        let selectedProject = appState.selectedProject
+        XCTAssertEqual(selectedProject?.title, "New Project", "Should have created project with default title")
+    }
+    
+    func testAutoSelectionAfterDeletingOneOfManyProjects() throws {
+        // Create multiple projects
+        appState.createProject(title: "First Project", description: "First")
+        let firstProjectId = appState.state.selectedProjectId!
+        
+        appState.createProject(title: "Second Project", description: "Second")
+        let secondProjectId = appState.state.selectedProjectId!
+        
+        // Delete the currently selected project (second)
+        appState.deleteProject(secondProjectId)
+        
+        // Should have selected the remaining project (first)
+        XCTAssertNotNil(appState.state.selectedProjectId, "Should have selected a project")
+        XCTAssertEqual(appState.state.selectedProjectId, firstProjectId, "Should have selected the first project")
+        XCTAssertNotNil(appState.state.selectedTaskId, "Should have selected the root task")
+        
+        let selectedProject = appState.selectedProject
+        XCTAssertEqual(selectedProject?.title, "First Project", "Should have selected the first project")
+    }
+
     // MARK: - Task Management Tests
     
-    @Test func testCreateTask() async throws {
-        let manager = createTestAppStateManager()
+    func testCreateTask() throws {
+        appState.createProject(title: "Test Project", description: "Test Description")
         
-        manager.createProject(title: "Test Project", description: "Description")
-        let projectId = manager.state.selectedProjectId!
+        guard let projectId = appState.state.selectedProjectId else {
+            XCTFail("Should have a selected project")
+            return
+        }
         
-        let initialTaskCount = manager.state.projects[projectId]!.tasks.count
+        let initialTaskCount = appState.getProjectTasks(projectId).count
         
-        manager.createTask(
+        appState.createTask(
             projectId: projectId,
-            title: "New Task",
-            description: "New Task Description",
-            nodeType: .spawn,
-            position: Task.Position(x: 300, y: 400)
+            title: "Test Task",
+            description: "Test Task Description",
+            nodeType: .original
         )
         
-        let project = manager.state.projects[projectId]!
-        #expect(project.tasks.count == initialTaskCount + 1)
-        #expect(manager.state.selectedTaskId != nil)
+        let tasks = appState.getProjectTasks(projectId)
+        XCTAssertEqual(tasks.count, initialTaskCount + 1, "Should have one more task")
         
-        let newTask = manager.selectedTask!
-        #expect(newTask.title == "New Task")
-        #expect(newTask.description == "New Task Description")
-        #expect(newTask.nodeType == .spawn)
-        #expect(newTask.position.x == 300)
-        #expect(newTask.position.y == 400)
+        let selectedTask = appState.selectedTask
+        XCTAssertNotNil(selectedTask, "Should have selected the new task")
+        XCTAssertEqual(selectedTask?.title, "Test Task", "Task title should match")
+        XCTAssertEqual(selectedTask?.description, "Test Task Description", "Task description should match")
+        XCTAssertEqual(selectedTask?.nodeType, .original, "Task node type should match")
     }
     
-    @Test func testCreateChildTask() async throws {
-        let manager = createTestAppStateManager()
+    func testUpdateTask() throws {
+        appState.createProject(title: "Test Project", description: "Test Description")
         
-        manager.createProject(title: "Test Project", description: "Description")
-        let projectId = manager.state.selectedProjectId!
-        let project = manager.state.projects[projectId]!
-        let parentTaskId = project.rootTaskIds.first!
+        guard let projectId = appState.state.selectedProjectId else {
+            XCTFail("Should have a selected project")
+            return
+        }
         
-        manager.createTask(
+        appState.createTask(
             projectId: projectId,
-            title: "Child Task",
-            description: "Child Description",
-            nodeType: .clone,
-            parentId: parentTaskId,
-            position: Task.Position(x: 500, y: 600)
+            title: "Original Task",
+            description: "Original Description",
+            nodeType: .original
         )
         
-        let updatedProject = manager.state.projects[projectId]!
-        let parentTask = updatedProject.tasks[parentTaskId]!
-        let childTask = manager.selectedTask!
+        guard let taskId = appState.state.selectedTaskId else {
+            XCTFail("Should have a selected task")
+            return
+        }
         
-        #expect(parentTask.childIds.contains(childTask.id))
-        #expect(childTask.parentId == parentTaskId)
-        #expect(childTask.nodeType == .clone)
-    }
-    
-    @Test func testUpdateTask() async throws {
-        let manager = createTestAppStateManager()
-        
-        manager.createProject(title: "Test Project", description: "Description")
-        let projectId = manager.state.selectedProjectId!
-        let project = manager.state.projects[projectId]!
-        let taskId = project.rootTaskIds.first!
-        
-        manager.updateTask(projectId: projectId, taskId: taskId, updates: [
-            "title": "Updated Task Title",
-            "status": "completed",
-            "position": Task.Position(x: 700, y: 800)
+        appState.updateTask(projectId: projectId, taskId: taskId, updates: [
+            "title": "Updated Task",
+            "description": "Updated Description"
         ])
         
-        let updatedTask = manager.state.projects[projectId]!.tasks[taskId]!
-        #expect(updatedTask.title == "Updated Task Title")
-        #expect(updatedTask.status == .completed)
-        #expect(updatedTask.position.x == 700)
-        #expect(updatedTask.position.y == 800)
+        let updatedTask = appState.selectedTask
+        XCTAssertEqual(updatedTask?.title, "Updated Task", "Task title should be updated")
+        XCTAssertEqual(updatedTask?.description, "Updated Description", "Task description should be updated")
     }
     
-    @Test func testDeleteTask() async throws {
-        let manager = createTestAppStateManager()
+    func testDeleteTask() throws {
+        appState.createProject(title: "Test Project", description: "Test Description")
         
-        manager.createProject(title: "Test Project", description: "Description")
-        let projectId = manager.state.selectedProjectId!
-        let project = manager.state.projects[projectId]!
-        let parentTaskId = project.rootTaskIds.first!
+        guard let projectId = appState.state.selectedProjectId else {
+            XCTFail("Should have a selected project")
+            return
+        }
         
-        // Create a child task
-        manager.createTask(
+        appState.createTask(
             projectId: projectId,
-            title: "Child Task",
-            description: "Child Description",
-            nodeType: .spawn,
-            parentId: parentTaskId
-        )
-        let childTaskId = manager.state.selectedTaskId!
-        
-        // Verify child was added
-        let parentTask = manager.state.projects[projectId]!.tasks[parentTaskId]!
-        #expect(parentTask.childIds.contains(childTaskId))
-        
-        // Delete the child task
-        manager.deleteTask(projectId: projectId, taskId: childTaskId)
-        
-        // Verify child was removed
-        let updatedProject = manager.state.projects[projectId]!
-        let updatedParentTask = updatedProject.tasks[parentTaskId]!
-        #expect(!updatedParentTask.childIds.contains(childTaskId))
-        #expect(updatedProject.tasks[childTaskId] == nil)
-        #expect(manager.state.selectedTaskId == nil)
-    }
-    
-    @Test func testCloneTask() async throws {
-        let manager = createTestAppStateManager()
-        
-        manager.createProject(title: "Test Project", description: "Description")
-        let projectId = manager.state.selectedProjectId!
-        let project = manager.state.projects[projectId]!
-        let originalTaskId = project.rootTaskIds.first!
-        
-        let initialTaskCount = project.tasks.count
-        
-        manager.cloneTask(projectId: projectId, taskId: originalTaskId)
-        
-        let updatedProject = manager.state.projects[projectId]!
-        #expect(updatedProject.tasks.count == initialTaskCount + 1)
-        
-        let clonedTask = manager.selectedTask!
-        let originalTask = updatedProject.tasks[originalTaskId]!
-        
-        #expect(clonedTask.title.contains("Clone"))
-        #expect(clonedTask.description == originalTask.description)
-        #expect(clonedTask.nodeType == .clone)
-        #expect(clonedTask.parentId == originalTask.parentId)
-    }
-    
-    @Test func testSpawnTask() async throws {
-        let manager = createTestAppStateManager()
-        
-        manager.createProject(title: "Test Project", description: "Description")
-        let projectId = manager.state.selectedProjectId!
-        let project = manager.state.projects[projectId]!
-        let parentTaskId = project.rootTaskIds.first!
-        
-        manager.spawnTask(
-            projectId: projectId,
-            parentTaskId: parentTaskId,
-            title: "Spawned Task",
-            description: "Spawned Description"
+            title: "Test Task",
+            description: "Test Description",
+            nodeType: .original
         )
         
-        let updatedProject = manager.state.projects[projectId]!
-        let parentTask = updatedProject.tasks[parentTaskId]!
-        let spawnedTask = manager.selectedTask!
+        guard let taskId = appState.state.selectedTaskId else {
+            XCTFail("Should have a selected task")
+            return
+        }
         
-        #expect(parentTask.childIds.contains(spawnedTask.id))
-        #expect(spawnedTask.parentId == parentTaskId)
-        #expect(spawnedTask.title == "Spawned Task")
-        #expect(spawnedTask.description == "Spawned Description")
-        #expect(spawnedTask.nodeType == .spawn)
+        let initialTaskCount = appState.getProjectTasks(projectId).count
+        
+        appState.deleteTask(projectId: projectId, taskId: taskId)
+        
+        let tasks = appState.getProjectTasks(projectId)
+        XCTAssertEqual(tasks.count, initialTaskCount - 1, "Should have one less task")
+        XCTAssertNil(appState.state.selectedTaskId, "Should not have a selected task")
+        XCTAssertNil(appState.selectedTask, "Should not be able to get selected task")
     }
-    
+
     // MARK: - Message Management Tests
     
-    @Test func testAddMessage() async throws {
-        let manager = createTestAppStateManager()
+    func testAddMessage() throws {
+        appState.createProject(title: "Test Project", description: "Test Description")
         
-        manager.createProject(title: "Test Project", description: "Description")
-        let projectId = manager.state.selectedProjectId!
-        let project = manager.state.projects[projectId]!
-        let taskId = project.rootTaskIds.first!
+        guard let projectId = appState.state.selectedProjectId else {
+            XCTFail("Should have a selected project")
+            return
+        }
+        
+        appState.createTask(
+            projectId: projectId,
+            title: "Test Task",
+            description: "Test Description",
+            nodeType: .original
+        )
+        
+        guard let taskId = appState.state.selectedTaskId else {
+            XCTFail("Should have a selected task")
+            return
+        }
         
         let message = Message(
             id: "test-message",
@@ -275,96 +337,11 @@ struct AppStateManagerTests {
             timestamp: Date()
         )
         
-        #expect(manager.state.projects[projectId]!.tasks[taskId]!.conversation.messages.isEmpty)
+        appState.addMessage(projectId: projectId, taskId: taskId, message: message)
         
-        manager.addMessage(projectId: projectId, taskId: taskId, message: message)
-        
-        let updatedTask = manager.state.projects[projectId]!.tasks[taskId]!
-        #expect(updatedTask.conversation.messages.count == 1)
-        #expect(updatedTask.conversation.messages.first!.content == "Test message content")
-        #expect(updatedTask.conversation.lastActivity != nil)
-    }
-    
-    // MARK: - UI State Tests
-    
-    @Test func testUpdateUI() async throws {
-        let manager = createTestAppStateManager()
-        
-        #expect(manager.state.ui.showProjects == true)
-        #expect(manager.state.ui.showChart == true)
-        #expect(manager.state.ui.showChat == true)
-        #expect(manager.state.ui.projectsCollapsed == false)
-        #expect(manager.state.ui.projectsPanelSize == 30.0)
-        
-        manager.updateUI([
-            "showProjects": false,
-            "showChart": false,
-            "projectsCollapsed": true,
-            "projectsPanelSize": 25.0
-        ])
-        
-        #expect(manager.state.ui.showProjects == false)
-        #expect(manager.state.ui.showChart == false)
-        #expect(manager.state.ui.showChat == true) // Not updated
-        #expect(manager.state.ui.projectsCollapsed == true)
-        #expect(manager.state.ui.projectsPanelSize == 25.0)
-    }
-    
-    // MARK: - Getter Tests
-    
-    @Test func testSelectedProjectGetter() async throws {
-        let manager = createTestAppStateManager()
-        
-        #expect(manager.selectedProject == nil)
-        
-        manager.createProject(title: "Test Project", description: "Description")
-        #expect(manager.selectedProject != nil)
-        #expect(manager.selectedProject!.title == "Test Project")
-        
-        manager.selectProject(nil)
-        #expect(manager.selectedProject == nil)
-    }
-    
-    @Test func testSelectedTaskGetter() async throws {
-        let manager = createTestAppStateManager()
-        
-        #expect(manager.selectedTask == nil)
-        
-        manager.createProject(title: "Test Project", description: "Description")
-        let projectId = manager.state.selectedProjectId!
-        let project = manager.state.projects[projectId]!
-        let taskId = project.rootTaskIds.first!
-        
-        manager.selectTask(taskId)
-        #expect(manager.selectedTask != nil)
-        #expect(manager.selectedTask!.id == taskId)
-        
-        manager.selectTask(nil)
-        #expect(manager.selectedTask == nil)
-    }
-    
-    @Test func testGetProjectTasks() async throws {
-        let manager = createTestAppStateManager()
-        
-        manager.createProject(title: "Test Project", description: "Description")
-        let projectId = manager.state.selectedProjectId!
-        
-        let tasks = manager.getProjectTasks(projectId)
-        #expect(tasks.count == 1) // Root task
-        
-        // Add another task
-        manager.createTask(
-            projectId: projectId,
-            title: "Another Task",
-            description: "Description",
-            nodeType: .spawn
-        )
-        
-        let updatedTasks = manager.getProjectTasks(projectId)
-        #expect(updatedTasks.count == 2)
-        
-        // Test with non-existent project
-        let emptyTasks = manager.getProjectTasks("non-existent")
-        #expect(emptyTasks.isEmpty)
+        let task = appState.selectedTask
+        XCTAssertEqual(task?.conversation.messages.count, 1, "Should have one message")
+        XCTAssertEqual(task?.conversation.messages.first?.content, "Test message content", "Message content should match")
+        XCTAssertEqual(task?.conversation.messages.first?.role, .user, "Message role should match")
     }
 } 

@@ -10,9 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var appState = AppStateManager()
     @State private var projectsPanelWidth: CGFloat = 300
-    @State private var chartPanelWidth: CGFloat = 500
     @State private var isResizingProjects = false
-    @State private var isResizingChart = false
     
     private let minPanelWidth: CGFloat = 200
     private let collapsedPanelWidth: CGFloat = 60
@@ -22,7 +20,6 @@ struct ContentView: View {
         VStack(spacing: 0) {
             // Header
             HeaderView()
-                .environmentObject(appState)
             
             // Main content area
             GeometryReader { geometry in
@@ -32,11 +29,11 @@ struct ContentView: View {
                         ProjectsView(isCollapsed: appState.state.ui.projectsCollapsed)
                             .environmentObject(appState)
                             .frame(width: appState.state.ui.projectsCollapsed ? collapsedPanelWidth : projectsPanelWidth)
-                            .background(Color(hex: "#2d2d2d"))
+                            .background(Color.black)
                             .animation(.easeInOut(duration: 0.2), value: appState.state.ui.projectsCollapsed)
                         
                         // Resize handle for projects panel
-                        if !appState.state.ui.projectsCollapsed && (appState.state.ui.showChart || appState.state.ui.showChat) {
+                        if !appState.state.ui.projectsCollapsed && appState.state.ui.showChart {
                             Rectangle()
                                 .fill(isResizingProjects ? Color(hex: "#5a5a5a") : Color(hex: "#3d3d3d"))
                                 .frame(width: 1)
@@ -74,46 +71,35 @@ struct ContentView: View {
                         }
                     }
                     
-                    // Chart Panel
+                    // Chart Panel with Chat Overlay
                     if appState.state.ui.showChart {
-                        ChartView(selectedProjectId: appState.state.selectedProjectId)
-                            .environmentObject(appState)
-                            .frame(width: calculateChartWidth(geometry: geometry))
-                            .background(Color(hex: "#2d2d2d"))
-                        
-                        // Resize handle for chart panel
-                        if appState.state.ui.showChat {
-                            Rectangle()
-                                .fill(isResizingChart ? Color(hex: "#5a5a5a") : Color(hex: "#3d3d3d"))
-                                .frame(width: 1)
-                                .contentShape(Rectangle())
-                                .gesture(
-                                    DragGesture()
-                                        .onChanged { value in
-                                            isResizingChart = true
-                                            chartPanelWidth = max(minPanelWidth, chartPanelWidth + value.translation.width)
-                                        }
-                                        .onEnded { _ in
-                                            isResizingChart = false
-                                        }
-                                )
-                                .onHover { hovering in
-                                    if hovering {
-                                        NSCursor.resizeLeftRight.set()
-                                    } else {
-                                        NSCursor.arrow.set()
-                                    }
+                        ZStack {
+                            // Chart Panel (background)
+                            ChartView(selectedProjectId: appState.state.selectedProjectId)
+                                .environmentObject(appState)
+                                .frame(maxWidth: .infinity)
+                                .background(Color.black)
+                            
+                            // Chat Panel (transparent overlay)
+                            if appState.state.ui.showChat {
+                                HStack {
+                                    Spacer()
+                                    
+                                    ChatView(selectedProjectId: appState.state.selectedProjectId)
+                                        .environmentObject(appState)
+                                        .frame(width: 400)
+                                        .background(Color.black.opacity(0.75))
+                                        .cornerRadius(12)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                        )
+                                        .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+                                        .padding(.trailing, 20)
+                                        .padding(.vertical, 20)
                                 }
-                                .animation(.easeInOut(duration: 0.1), value: isResizingChart)
+                            }
                         }
-                    }
-                    
-                    // Chat Panel
-                    if appState.state.ui.showChat {
-                        ChatView(selectedProjectId: appState.state.selectedProjectId)
-                            .environmentObject(appState)
-                            .frame(maxWidth: .infinity)
-                            .background(Color(hex: "#1a1a1a"))
                     }
                 }
             }
@@ -121,8 +107,9 @@ struct ContentView: View {
             // Footer
             FooterView()
         }
-        .background(Color(hex: "#1e1e1e"))
+        .background(Color.black)
         .preferredColorScheme(.dark)
+        .ignoresSafeArea(.all, edges: .top)
         .onAppear {
             // Set initial panel width based on UI state
             projectsPanelWidth = appState.state.ui.projectsPanelSize * 10 // Convert percentage to pixels approximation
@@ -135,20 +122,7 @@ struct ContentView: View {
         }
     }
     
-    private func calculateChartWidth(geometry: GeometryProxy) -> CGFloat {
-        let totalWidth = geometry.size.width
-        let projectsWidth = appState.state.ui.showProjects ? 
-            (appState.state.ui.projectsCollapsed ? collapsedPanelWidth : projectsPanelWidth) : 0
-        let chatMinWidth: CGFloat = appState.state.ui.showChat ? 300 : 0
-        
-        let availableWidth = totalWidth - projectsWidth - chatMinWidth - 2 // 2px for resize handles
-        
-        if appState.state.ui.showChat {
-            return max(minPanelWidth, min(chartPanelWidth, availableWidth))
-        } else {
-            return availableWidth
-        }
-    }
+
 }
 
 #Preview {

@@ -133,6 +133,15 @@ struct ChatContentView: View {
         )
     }
     
+    private var statusColor: Color {
+        switch task.status {
+        case .pending: return .yellow
+        case .active: return .blue
+        case .completed: return .green
+        case .failed: return .red
+        }
+    }
+    
     private var messagesView: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
@@ -210,55 +219,46 @@ struct ChatContentView: View {
                 }
             }
         }
-        .padding(16)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(Color(hex: "#2a2a2a"))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color(hex: "#3a3a3a"), lineWidth: 1)
-        )
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
     private var loadingView: some View {
-        HStack {
+        HStack(alignment: .top, spacing: 12) {
+            // Assistant avatar
             Image(systemName: "message.circle")
                 .font(.system(size: 28))
                 .foregroundColor(.blue)
+                .frame(width: 28, height: 28)
             
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
+            // Loading indicator
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
                     ProgressView()
                         .scaleEffect(0.8)
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    
                     Text("Thinking...")
                         .font(.system(size: 14))
                         .foregroundColor(.gray)
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color(hex: "#2a2a2a"))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(hex: "#3a3a3a"), lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
-            .padding(12)
-            .background(Color(hex: "#2a2a2a"))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(hex: "#3a3a3a"), lineWidth: 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .frame(maxWidth: .infinity * 0.75, alignment: .leading)
             
             Spacer()
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-    }
-    
-    private var statusColor: Color {
-        switch task.status {
-        case .completed:
-            return Color.green
-        case .active:
-            return Color.blue
-        case .failed:
-            return Color.red
-        default:
-            return Color.gray
-        }
     }
     
     private func handleSubmit() {

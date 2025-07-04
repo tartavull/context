@@ -33,10 +33,10 @@ struct ProjectsView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(Color(hex: "#2d2d2d"))
+            .background(.ultraThinMaterial)
             .overlay(
                 Rectangle()
-                    .fill(Color(hex: "#3d3d3d"))
+                    .fill(Color.white.opacity(0.1))
                     .frame(height: 1),
                 alignment: .bottom
             )
@@ -105,12 +105,12 @@ struct ProjectsView: View {
                     }
                 }
             }
-            .background(Color(hex: "#2d2d2d"))
+            .background(.ultraThinMaterial)
         }
-        .background(Color(hex: "#2d2d2d"))
+        .background(.ultraThinMaterial)
         .overlay(
             Rectangle()
-                .fill(Color(hex: "#3d3d3d"))
+                .fill(Color.white.opacity(0.1))
                 .frame(width: 1),
             alignment: .trailing
         )
@@ -268,7 +268,11 @@ struct ProjectItemView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(isSelected ? Color.blue : Color.clear)
+        .background(
+            isSelected ? 
+                Color.accentColor.opacity(0.2) : 
+                Color.clear
+        )
         .contentShape(Rectangle())
         .onTapGesture {
             if !isEditing {

@@ -115,9 +115,9 @@ struct Project: Identifiable, Codable {
 // MARK: - UI State
 
 struct UIState: Codable {
-    var showProjects: Bool = true
-    var showChart: Bool = true
-    var showChat: Bool = true
+    var showProjects: Bool = true // Always show projects panel
+    var showChart: Bool = true // Always show chart panel
+    var showChat: Bool = true // Always show chat panel
     var projectsCollapsed: Bool = false
     var projectsPanelSize: Double = 30.0
 }

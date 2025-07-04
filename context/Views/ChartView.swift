@@ -6,29 +6,13 @@ struct ChartView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "#2d2d2d")
+            Color.black
                 .ignoresSafeArea()
             
             if let projectId = selectedProjectId,
                let project = appState.state.projects[projectId] {
                 TaskTreeView(project: project)
-            } else {
-                // No project selected state
-                VStack(spacing: 16) {
-                    Image(systemName: "rectangle.3.group")
-                        .font(.system(size: 48))
-                        .foregroundColor(.gray)
-                    
-                    Text("No Project Selected")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(.white)
-                    
-                    Text("Select a project from the left panel to view its task tree")
-                        .font(.system(size: 14))
-                        .foregroundColor(.gray)
-                        .multilineTextAlignment(.center)
-                }
-            }
+            } 
         }
         .overlay(
             Rectangle()
@@ -43,9 +27,21 @@ struct TaskTreeView: View {
     @EnvironmentObject var appState: AppStateManager
     let project: Project
     
+    @State private var zoomScale: CGFloat = 1.0
+    @State private var lastMagnification: CGFloat = 1.0
+    @State private var panOffset: CGSize = .zero
+    @State private var basePanOffset: CGSize = .zero
+    
     var body: some View {
-        ScrollView([.horizontal, .vertical]) {
+        GeometryReader { geometry in
             ZStack {
+                // Grid background
+                GridBackgroundView(
+                    panOffset: panOffset,
+                    zoomScale: zoomScale,
+                    viewSize: geometry.size
+                )
+                
                 // Draw connections first (behind nodes)
                 ForEach(Array(project.tasks.values), id: \.id) { task in
                     ForEach(task.childIds, id: \.self) { childId in
@@ -67,15 +63,74 @@ struct TaskTreeView: View {
                         onSelect: { appState.selectTask(task.id) },
                         onDelete: { appState.deleteTask(projectId: project.id, taskId: task.id) }
                     )
-                    .position(x: task.position.x + 110, y: task.position.y + 70) // Center the node
+                    .position(
+                        x: task.position.x + 110 + geometry.size.width / 2,
+                        y: task.position.y + 70 + geometry.size.height / 2
+                    )
                 }
             }
-            .frame(width: max(1200, maxX + 300), height: max(800, maxY + 200))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .scaleEffect(zoomScale)
+            .offset(panOffset)
+            .clipped()
         }
-        .background(Color(hex: "#2d2d2d"))
+        .background(Color.black)
+        .onTapGesture(count: 2) {
+            // Double tap to reset zoom and pan
+            withAnimation(.easeInOut(duration: 0.3)) {
+                zoomScale = 1.0
+                panOffset = .zero
+                basePanOffset = .zero
+            }
+        }
         .onTapGesture {
             appState.selectTask(nil)
         }
+        .gesture(
+            SimultaneousGesture(
+                MagnificationGesture()
+                    .onChanged { value in
+                        let delta = value / lastMagnification
+                        lastMagnification = value
+                        let newScale = zoomScale * delta
+                        zoomScale = max(0.25, min(4.0, newScale))
+                    }
+                    .onEnded { _ in
+                        lastMagnification = 1.0
+                    },
+                DragGesture()
+                    .onChanged { value in
+                        panOffset = CGSize(
+                            width: basePanOffset.width + value.translation.width,
+                            height: basePanOffset.height + value.translation.height
+                        )
+                    }
+                    .onEnded { _ in
+                        basePanOffset = panOffset
+                    }
+            )
+        )
+                .background(
+            // Invisible view to capture scroll events
+            ScrollWheelCaptureView { deltaY, deltaX, modifierFlags in
+                if modifierFlags.contains(.command) {
+                    let zoomFactor = 1.0 + (deltaY * 0.01)
+                    let newScale = zoomScale * zoomFactor
+                    withAnimation(.easeInOut(duration: 0.1)) {
+                        zoomScale = max(0.25, min(4.0, newScale))
+                    }
+                } else {
+                    // Regular scroll for panning
+                    let newOffset = CGSize(
+                        width: panOffset.width + deltaX * 2,
+                        height: panOffset.height + deltaY * 2
+                    )
+                    panOffset = newOffset
+                    basePanOffset = newOffset
+                }
+            }
+        )
+
     }
     
     private var maxX: CGFloat {
@@ -84,6 +139,90 @@ struct TaskTreeView: View {
     
     private var maxY: CGFloat {
         project.tasks.values.map { $0.position.y }.max() ?? 0
+    }
+}
+
+// Helper view to capture scroll wheel events
+struct ScrollWheelCaptureView: NSViewRepresentable {
+    let onScrollWheel: (CGFloat, CGFloat, NSEvent.ModifierFlags) -> Void
+    
+    func makeNSView(context: Context) -> NSView {
+        let view = ScrollWheelView()
+        view.onScrollWheel = onScrollWheel
+        return view
+    }
+    
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+class ScrollWheelView: NSView {
+    var onScrollWheel: ((CGFloat, CGFloat, NSEvent.ModifierFlags) -> Void)?
+    
+    override func scrollWheel(with event: NSEvent) {
+        onScrollWheel?(event.deltaY, event.deltaX, event.modifierFlags)
+        super.scrollWheel(with: event)
+    }
+    
+    override var acceptsFirstResponder: Bool {
+        return true
+    }
+    
+    override func becomeFirstResponder() -> Bool {
+        return true
+    }
+}
+
+struct GridBackgroundView: View {
+    let panOffset: CGSize
+    let zoomScale: CGFloat
+    let viewSize: CGSize
+    
+    private let gridSpacing: CGFloat = 50
+    private let dotSize: CGFloat = 2
+    
+    var body: some View {
+        Canvas { context, size in
+            // Calculate the effective grid spacing with zoom
+            let scaledSpacing = gridSpacing * zoomScale
+            
+            // Calculate the grid offset to create an infinite grid
+            // The grid should appear to extend infinitely in all directions
+            let offsetX = panOffset.width.truncatingRemainder(dividingBy: scaledSpacing)
+            let offsetY = panOffset.height.truncatingRemainder(dividingBy: scaledSpacing)
+            
+            // Calculate the range of grid indices we need to draw
+            let extraDots = 3 // Extra dots beyond visible area for smooth scrolling
+            let minX = -scaledSpacing * CGFloat(extraDots)
+            let maxX = size.width + scaledSpacing * CGFloat(extraDots)
+            let minY = -scaledSpacing * CGFloat(extraDots)
+            let maxY = size.height + scaledSpacing * CGFloat(extraDots)
+            
+            // Calculate starting indices based on the offset
+            let startCol = Int(floor((minX - offsetX) / scaledSpacing))
+            let endCol = Int(ceil((maxX - offsetX) / scaledSpacing))
+            let startRow = Int(floor((minY - offsetY) / scaledSpacing))
+            let endRow = Int(ceil((maxY - offsetY) / scaledSpacing))
+            
+            // Draw dots in an infinite grid pattern
+            for col in startCol...endCol {
+                for row in startRow...endRow {
+                    let x = CGFloat(col) * scaledSpacing + offsetX
+                    let y = CGFloat(row) * scaledSpacing + offsetY
+                    
+                    // Draw the dot
+                    context.fill(
+                        Path(ellipseIn: CGRect(
+                            x: x - dotSize/2,
+                            y: y - dotSize/2,
+                            width: dotSize,
+                            height: dotSize
+                        )),
+                        with: .color(.white.opacity(0.3))
+                    )
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -169,7 +308,7 @@ struct TaskNodeView: View {
             )
         }
         .frame(width: 220, height: 140)
-        .background(Color(hex: "#2d2d2d"))
+        .background(Color.black)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(isSelected ? Color(hex: "#a0a0a0") : nodeTypeColor, lineWidth: 2)

@@ -15,7 +15,7 @@ struct FooterView: View {
         }
         .padding(.horizontal, 16)
         .frame(height: 32)
-        .background(Color(hex: "#1a1a1a"))
+        .background(Color.black)
         .overlay(
             Rectangle()
                 .fill(Color(hex: "#0a0a0a"))
