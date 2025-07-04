@@ -81,7 +81,3 @@ We welcome contributions! The project is currently focused on:
 2. Task decomposition algorithms
 3. Enhanced user experience features
 4. Performance optimizations
-
----
-
-*This documentation reflects the current native macOS implementation. The app has evolved from an Electron prototype to a native Swift application optimized for macOS.* 

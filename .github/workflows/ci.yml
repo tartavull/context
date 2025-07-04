@@ -57,6 +57,9 @@ jobs:
           -derivedDataPath DerivedData
     
     - name: Run all tests with coverage
+      env:
+        NSUnbufferedIO: YES
+        CODE_SIGNING_ALLOWED: NO
       run: |
         xcodebuild test \
           -project context.xcodeproj \
@@ -66,6 +69,7 @@ jobs:
           -derivedDataPath DerivedData \
           -enableCodeCoverage YES \
           -resultBundlePath TestResults.xcresult \
+          -quiet \
           | xcpretty --report junit --output test-results.xml
       continue-on-error: true
     
