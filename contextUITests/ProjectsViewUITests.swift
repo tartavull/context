@@ -57,7 +57,14 @@ final class ProjectsViewUITests: XCTestCase {
         let hasProjects = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Todo' OR label CONTAINS 'Design' OR label CONTAINS 'API'")).count > 0
         
         if !hasProjects {
-            let hasEmptyState = emptyStateIndicators.first { $0.firstMatch.exists } != nil
+            let hasEmptyState = emptyStateIndicators.contains { element in
+                if let textElement = element as? XCUIElementQuery {
+                    return textElement.firstMatch.exists
+                } else if let textElement = element as? XCUIElement {
+                    return textElement.exists
+                }
+                return false
+            }
             XCTAssertTrue(hasEmptyState, "Should show empty state when no projects exist")
         }
     }
