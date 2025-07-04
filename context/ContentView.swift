@@ -29,7 +29,7 @@ struct ContentView: View {
                         ProjectsView(isCollapsed: appState.state.ui.projectsCollapsed)
                             .environmentObject(appState)
                             .frame(width: appState.state.ui.projectsCollapsed ? collapsedPanelWidth : projectsPanelWidth)
-                            .background(Color.black)
+                            .background(Color.clear)
                             .animation(.easeInOut(duration: 0.2), value: appState.state.ui.projectsCollapsed)
                         
                         // Resize handle for projects panel
@@ -78,7 +78,7 @@ struct ContentView: View {
                             ChartView(selectedProjectId: appState.state.selectedProjectId)
                                 .environmentObject(appState)
                                 .frame(maxWidth: .infinity)
-                                .background(Color.black)
+                                .background(Color.clear)
                             
                             // Chat Panel (transparent overlay)
                             if appState.state.ui.showChat {
@@ -103,11 +103,8 @@ struct ContentView: View {
                     }
                 }
             }
-            
-            // Footer
-            FooterView()
         }
-        .background(Color.black)
+        .background(Color.clear)
         .preferredColorScheme(.dark)
         .ignoresSafeArea(.all, edges: .top)
         .onAppear {

@@ -33,7 +33,7 @@ struct ProjectsView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(.ultraThinMaterial)
+            .background(Color.black.opacity(0.3))
             .overlay(
                 Rectangle()
                     .fill(Color.white.opacity(0.1))
@@ -75,39 +75,14 @@ struct ProjectsView: View {
                         .padding(16)
                     } else {
                         ForEach(Array(appState.state.projects.values), id: \.id) { project in
-                            ProjectItemView(
-                                project: project,
-                                isSelected: appState.state.selectedProjectId == project.id,
-                                isCollapsed: isCollapsed,
-                                isEditing: isEditing == project.id,
-                                editTitle: editTitle,
-                                onSelect: { 
-                                    if isEditing != project.id {
-                                        appState.selectProject(project.id) 
-                                    }
-                                },
-                                onEdit: { 
-                                    startEditing(project: project)
-                                },
-                                onSaveEdit: { newTitle in
-                                    saveEdit(project: project, newTitle: newTitle)
-                                },
-                                onCancelEdit: {
-                                    cancelEdit()
-                                },
-                                onDelete: { 
-                                    deleteProject(project.id)
-                                },
-                                onTitleChange: { editTitle = $0 }
-                            )
-                            .focused($isTextFieldFocused, equals: isEditing == project.id)
+                            projectItemView(for: project)
                         }
                     }
                 }
             }
-            .background(.ultraThinMaterial)
+            .background(Color.black.opacity(0.1))
         }
-        .background(.ultraThinMaterial)
+        .background(Color.black.opacity(0.15))
         .overlay(
             Rectangle()
                 .fill(Color.white.opacity(0.1))
@@ -121,6 +96,35 @@ struct ProjectsView: View {
                 }
             }
         }
+    }
+    
+    private func projectItemView(for project: Project) -> some View {
+        ProjectItemView(
+            project: project,
+            isSelected: appState.state.selectedProjectId == project.id,
+            isCollapsed: isCollapsed,
+            isEditing: isEditing == project.id,
+            editTitle: editTitle,
+            onSelect: { 
+                if isEditing != project.id {
+                    appState.selectProject(project.id) 
+                }
+            },
+            onEdit: { 
+                startEditing(project: project)
+            },
+            onSaveEdit: { newTitle in
+                saveEdit(project: project, newTitle: newTitle)
+            },
+            onCancelEdit: {
+                cancelEdit()
+            },
+            onDelete: { 
+                deleteProject(project.id)
+            },
+            onTitleChange: { editTitle = $0 }
+        )
+        .focused($isTextFieldFocused, equals: isEditing == project.id)
     }
     
     private func createNewProject() {
