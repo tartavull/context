@@ -4,82 +4,96 @@ Get Context running in under 5 minutes.
 
 ## Prerequisites
 
-- Git
-- Nix package manager ([install](https://nixos.org/download.html))
-- direnv ([install](https://direnv.net/docs/installation.html))
+- **macOS 15.4+** (native macOS app)
+- **Xcode 16.0+** (includes Swift 6.0)
+- **Git** (for cloning)
 
 ## Setup
 
 ```bash
-# 1. Clone and enter directory
-git clone https://github.com/your-org/context.git
+# 1. Clone the repository
+git clone https://github.com/tartavull/context.git
 cd context
 
-# 2. Allow direnv (loads all dependencies via Nix)
-direnv allow
+# 2. Open in Xcode
+open context.xcodeproj
 
-# 3. Install Node packages
-pnpm install
-
-# 4. Add your API keys
-echo "OPENAI_API_KEY=your-key-here" >> .env.local
-echo "ANTHROPIC_API_KEY=your-key-here" >> .env.local
-
-# 5. Start the app
-pnpm dev
+# 3. Build and run (Cmd+R in Xcode)
+# Or from terminal:
+xcodebuild -project context.xcodeproj -scheme context build
 ```
 
 ## What You'll See
 
-1. **Electron window** opens with split-pane interface
-2. **Left pane**: Task tree (create/organize tasks)
-3. **Right pane**: Chat interface for selected task
+1. **Native macOS window** with split-pane interface
+2. **Left pane**: Projects and task tree navigation
+3. **Center pane**: Visual task chart representation
+4. **Right pane**: Chat interface for selected task (overlay)
 
 ## First Steps
 
-1. Click **"Create New Task"** or **"New Task"** button
-2. Select the task in the tree
-3. Start chatting to execute or decompose the task
-4. Watch as complex tasks are broken down automatically
+1. **Explore Sample Data**: The app launches with sample projects and tasks
+2. **Navigate Projects**: Click projects in the left sidebar
+3. **Select Tasks**: Click on task nodes to view their conversations
+4. **Create New**: Use the "+" button to add projects or tasks
+5. **View Conversations**: Each task has its own chat history
+
+## Key Features (Current)
+
+- **Project Management**: Create and organize multiple projects
+- **Task Hierarchy**: Tree-structured task organization
+- **Visual Layout**: Interactive task chart with automatic positioning
+- **Conversation History**: Each task maintains its own message thread
+- **Native Performance**: Optimized SwiftUI interface
 
 ## Key Commands
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Build for production |
-| `pnpm package` | Create distributable |
-| `Cmd/Ctrl + ,` | Open preferences |
-| `Cmd/Ctrl + N` | New task |
+| `Cmd+R` (Xcode) | Build and run |
+| `Cmd+.` (Xcode) | Stop running app |
+| Sidebar toggle | Show/hide projects panel |
+| Task selection | Switch between task conversations |
 
 ## Troubleshooting
 
-**"command not found: direnv"**
+**"Cannot open project"**
+- Ensure you have Xcode 16.0+ installed
+- Verify macOS 15.4+ compatibility
+
+**Build errors**
 ```bash
-# Install direnv first
-nix-env -iA nixpkgs.direnv
-# Then hook it to your shell (see direnv docs)
+# Clean build folder in Xcode
+Product → Clean Build Folder
+
+# Or from terminal
+rm -rf ~/Library/Developer/Xcode/DerivedData
 ```
 
-**"Cannot find module"**
-```bash
-# Reload environment and reinstall
-direnv reload
-pnpm install
-```
-
-**Port already in use**
-```bash
-# Kill process on port 5173
-lsof -ti:5173 | xargs kill -9
-```
+**App crashes on launch**
+- Check Xcode console for error messages
+- Verify all Swift files compile without errors
 
 ## Next Steps
 
-- Read the full [Getting Started Guide](./getting-started.md)
-- Explore the [Architecture](./architecture.md)
-- Check out the [original concept](./concept.md)
+- **Understand the Code**: Explore `AppStateManager.swift` for state management
+- **Read Architecture**: Check the [Architecture Guide](./architecture.md)
+- **Study the Vision**: Review the [original concept](./concept.md)
+- **Plan Contributions**: AI integration is the next major milestone
+
+## Current Status
+
+✅ **Completed**: Native macOS app with SwiftUI interface  
+✅ **Completed**: Project and task management  
+✅ **Completed**: Visual task tree representation  
+✅ **Completed**: Conversation data models  
+
+🚧 **In Progress**: AI integration and task decomposition  
+🚧 **Planned**: Autonomous task execution  
+🚧 **Planned**: Multi-model LLM support  
 
 ---
 
-Need help? Open an issue on GitHub! 
+**Note**: This is a native Swift app, not an Electron application. The current version focuses on the UI foundation and state management, with AI features planned for future releases.
+
+Need help? Check the [Getting Started Guide](./getting-started.md) for detailed setup instructions! 

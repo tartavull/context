@@ -132,59 +132,53 @@ flowchart LR
 
 <div class="mermaid">
 flowchart LR
-    subgraph UI["User Interface"]
+    subgraph UI["User Interface (SwiftUI)"]
         A[Task Tree View]
-        B[Chat/Canvas Editor]
+        B[Chat View]
+        C[Chart View]
     end
     
-    subgraph OL["Orchestration Layer"]
-        C[Task Decomposer]
-        D[Execution Manager<br/>Mode Selection]
-        E[Context Isolation]
+    subgraph SM["State Management"]
+        D[AppStateManager]
+        E[Project Models]
+        F[Task Models]
     end
     
-    subgraph PF["Prompt Factory Layer"]
-        F[Prompt Library & Versioning]
-        G[Performance Tracking & Analytics]
-        H[A/B Testing Infrastructure]
+    subgraph AI["AI Integration"]
+        G[LLM API Calls]
+        H[Conversation Management]
+        I[Task Decomposition]
     end
     
-    subgraph LLM["LLM Interface Layer"]
-        I[Short, Focused Conversations]
-    end
-    
-    UI --> OL
-    OL --> PF
-    PF --> LLM
+    UI --> SM
+    SM --> AI
     
     style UI fill:#e6f3ff
-    style OL fill:#fff0e6
-    style PF fill:#f0e6ff
-    style LLM fill:#e6ffe6
+    style SM fill:#fff0e6
+    style AI fill:#e6ffe6
 </div>
 
 ### Technology Stack
 
-- **Frontend**: Electron + React for rich visual interface and cross-platform support
-- **AI Integration**: Vercel AI SDK for streaming responses and tool-calling
-- **State Management**: Centralized task tree state with Zustand
-- **Storage**: SQLite for task history and prompt versioning
-- **Styling**: Tailwind CSS for modern, responsive design
-- **Development**: TypeScript for type safety and better developer experience
+- **Frontend**: SwiftUI for native macOS interface with optimal performance
+- **State Management**: ObservableObject with @Published properties for reactive updates
+- **Architecture**: MVVM pattern with centralized AppStateManager
+- **Platform**: Native macOS app with system integration
+- **Development**: Swift 6.0 with modern concurrency features
 
 ## Implementation Roadmap
 
-### Phase 1: MVP
-- Basic chat that can spawn chats
-- Simple parent-child relationships
-- Manual task creation
-- Core decomposition prompts
+### Phase 1: MVP ✅
+- Basic task tree visualization
+- Project and task management
+- Native macOS interface
+- Core data models
 
-### Phase 2: Visual & Interactive
-- Tree visualization component
-- Real-time status tracking
+### Phase 2: AI Integration (In Progress)
+- LLM API integration
+- Conversation management
+- Task decomposition logic
 - Interactive vs autonomous execution modes
-- Basic prompt performance tracking
 
 ### Phase 3: Intelligence Layer
 - Smart decomposition with dependency detection
@@ -303,7 +297,7 @@ While these projects share similar insights about task decomposition, Context di
 
 - **Explicit focus on context degradation** - Built specifically to address the 39% performance drop in multi-turn conversations
 - **Interactive/Autonomous hybrid execution** - Allows selective user intervention at the task level
-- **Continuous prompt improvement system** - Built-in mechanisms for identifying and improving flaky prompts
+- **Native macOS integration** - Optimized for the macOS ecosystem with system-level features
 - **Visual task tree interface** - Real-time visualization and navigation of the decomposition hierarchy
 
 The convergence of multiple independent projects on similar architectures validates the core insight: keeping LLM conversations short and focused through recursive decomposition is a fundamental pattern for building reliable AI systems.

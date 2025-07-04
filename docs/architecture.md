@@ -1,313 +1,268 @@
 # Context Architecture
 
-This document describes the technical architecture of the Context application, including design decisions, component interactions, and implementation details.
+This document describes the technical architecture of the Context application, a native macOS app built with SwiftUI that implements recursive task decomposition to optimize LLM interactions.
 
 ## Overview
 
-Context is built as an Electron desktop application that implements recursive task decomposition to optimize LLM interactions. The architecture is designed to:
+Context is built as a native macOS application using SwiftUI that implements recursive task decomposition to optimize LLM interactions. The architecture is designed to:
 
 1. **Prevent context degradation** by keeping conversations short and focused
 2. **Enable parallel task execution** through isolated task contexts
 3. **Provide visual task management** with a hierarchical tree interface
-4. **Secure API credentials** by handling AI operations in the main process
+4. **Leverage native macOS features** for optimal performance and integration
 
 ## High-Level Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    User Interface                        │
+│                    SwiftUI Views                        │
 │  ┌──────────────────┐    ┌──────────────────────────┐  │
-│  │ Task Tree View   │    │   Chat/Canvas View       │  │
-│  │ (Hierarchical)   │    │   (Active Task)          │  │
+│  │ ProjectsView     │    │   ContentView            │  │
+│  │ (Task Tree)      │    │   ├─ ChartView           │  │
+│  │                  │    │   └─ ChatView            │  │
 │  └──────────────────┘    └──────────────────────────┘  │
 └─────────────────────────────────────────────────────────┘
-                            │ IPC
+                            │ @Published
 ┌─────────────────────────────────────────────────────────┐
-│                    Main Process                          │
+│                 AppStateManager                         │
 │  ┌────────────────┐  ┌─────────────┐  ┌─────────────┐  │
-│  │ Window Manager │  │ AI Handlers │  │Task Manager │  │
+│  │ Project CRUD   │  │ Task CRUD   │  │Message CRUD │  │
 │  └────────────────┘  └─────────────┘  └─────────────┘  │
 │           │                  │                │          │
 │  ┌────────────────────────────────────────────────────┐ │
-│  │              SQLite Database                        │ │
-│  │  Tasks | Conversations | Prompts | Metrics         │ │
+│  │              In-Memory Data Models                 │ │
+│  │  AppState | Projects | Tasks | Messages           │ │
 │  └────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ## Core Components
 
-### 1. Electron Main Process (`src/main/`)
+### 1. SwiftUI Views (`context/Views/`)
 
-The main process manages the application lifecycle and handles sensitive operations:
+The user interface is built with SwiftUI views that provide a native macOS experience:
 
-#### Window Management (`index.ts`)
-- Creates and manages BrowserWindow instances
-- Handles application menu and shortcuts
-- Manages deep linking (`context://` protocol)
-- Configures security policies
+#### ContentView.swift
+- Main application layout with split-pane design
+- Manages panel visibility and sizing
+- Coordinates between ProjectsView, ChartView, and ChatView
+- Handles window toolbar and navigation
 
-#### AI Handlers (`ai-handlers.ts`)
-- Integrates with Vercel AI SDK
-- Manages streaming responses
-- Handles multiple AI providers (OpenAI, Anthropic)
-- Protects API keys from renderer exposure
+#### ProjectsView.swift
+- Displays hierarchical task tree
+- Handles project and task selection
+- Provides task creation and management UI
+- Supports drag-and-drop operations
 
-```typescript
-// Example: Streaming AI response
-ipcMain.handle('ai:stream-chat', async (event, messages, options) => {
-  const result = await streamText({
-    model: openai('gpt-4-turbo-preview'),
-    messages,
-    abortSignal: abortController.signal
-  })
-  
-  // Stream chunks back to renderer
-  for await (const chunk of result.textStream) {
-    event.sender.send('ai:stream-data', { streamId, data: chunk })
-  }
-})
-```
+#### ChartView.swift
+- Visual representation of task relationships
+- Interactive task node manipulation
+- Real-time status updates
+- Zoom and pan capabilities
 
-#### Task Handlers (`task-handlers.ts`)
-- CRUD operations for tasks
-- Manages task hierarchy
-- Handles task decomposition logic
-- Coordinates execution modes
+#### ChatView.swift
+- Conversation interface for selected tasks
+- Message display with role-based styling
+- Input handling and message composition
+- Streaming response support (planned)
 
-#### Database Layer (`database.ts`)
-- SQLite for persistent storage
-- Schema management and migrations
-- Prepared statements for performance
-- Transaction support
+### 2. State Management (`context/AppStateManager.swift`)
 
-### 2. Renderer Process (`src/renderer/`)
+The app uses a centralized state management approach with SwiftUI's reactive architecture:
 
-The renderer runs the React application in a sandboxed browser environment:
-
-#### Component Architecture
-```
-App.tsx (Root)
-├── TaskTreeView.tsx
-│   └── TaskNode.tsx (Recursive)
-└── ChatView.tsx
-    ├── MessageList.tsx
-    └── InputArea.tsx
-```
-
-#### State Management (`store/taskStore.ts`)
-Uses Zustand for client-side state:
-- Task hierarchy cache
-- Selected task tracking
-- Optimistic updates
-- Derived state (children, path)
-
-#### IPC Communication
-Secure communication through preload script:
-```typescript
-// Type-safe IPC calls
-const result = await window.electron.tasks.create({
-  title: 'New Task',
-  executionMode: 'interactive'
-})
-```
-
-### 3. Preload Script (`src/main/preload.ts`)
-
-Acts as a secure bridge between main and renderer:
-- Exposes limited, safe APIs
-- Validates IPC messages
-- Provides type definitions
-- Prevents direct Node.js access
-
-## Data Model
-
-### Task Structure
-```typescript
-interface Task {
-  id: string                    // Unique identifier
-  parent_id: string | null      // Hierarchical relationship
-  title: string                 // Display name
-  description: string           // Detailed description
-  status: TaskStatus            // pending|active|completed|failed
-  execution_mode: ExecutionMode // interactive|autonomous
-  created_at: number            // Unix timestamp
-  updated_at: number            // Unix timestamp
-  completed_at: number | null   // Completion timestamp
-  metadata: any                 // Flexible data storage
+#### AppStateManager
+```swift
+@MainActor
+class AppStateManager: ObservableObject {
+    @Published var state: AppState
+    
+    // Project Management
+    func createProject(title: String, description: String)
+    func updateProject(projectId: String, updates: [String: Any])
+    func deleteProject(_ projectId: String)
+    
+    // Task Management
+    func createTask(projectId: String, title: String, ...)
+    func updateTask(projectId: String, taskId: String, ...)
+    func deleteTask(projectId: String, taskId: String)
+    
+    // Message Management
+    func addMessage(projectId: String, taskId: String, message: Message)
 }
 ```
 
-### Database Schema
-```sql
--- Core task hierarchy
-CREATE TABLE tasks (
-  id TEXT PRIMARY KEY,
-  parent_id TEXT REFERENCES tasks(id),
-  title TEXT NOT NULL,
-  status TEXT DEFAULT 'pending',
-  execution_mode TEXT DEFAULT 'interactive',
-  -- ... timestamps and metadata
-);
+#### Reactive Updates
+- Uses `@Published` properties for automatic UI updates
+- SwiftUI views observe state changes through `@StateObject` and `@EnvironmentObject`
+- All state mutations happen on the main actor for thread safety
 
--- Conversation history per task
-CREATE TABLE conversations (
-  id TEXT PRIMARY KEY,
-  task_id TEXT REFERENCES tasks(id),
-  messages TEXT NOT NULL, -- JSON array
-  -- ... timestamps
-);
+### 3. Data Models (`context/Models.swift`)
 
--- Prompt templates with versioning
-CREATE TABLE prompts (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  template TEXT NOT NULL,
-  version INTEGER DEFAULT 1,
-  parent_version_id TEXT,
-  -- ... metadata
-);
+The app uses a hierarchical data structure optimized for task decomposition:
+
+#### Core Models
+```swift
+struct AppState: Codable {
+    var projects: [String: Project]
+    var selectedProjectId: String?
+    var selectedTaskId: String?
+    var ui: UIState
+}
+
+struct Project: Identifiable, Codable {
+    let id: String
+    var title: String
+    var description: String
+    var status: ProjectStatus
+    var tasks: [String: Task]
+    var rootTaskIds: [String]
+    // ... timestamps
+}
+
+struct Task: Identifiable, Codable {
+    let id: String
+    var title: String
+    var description: String
+    var status: TaskStatus
+    var nodeType: NodeType
+    var executionMode: ExecutionMode
+    var parentId: String?
+    var childIds: [String]
+    var position: Position
+    var conversation: Conversation
+    // ... timestamps
+}
+
+struct Message: Identifiable, Codable {
+    let id: String
+    let role: MessageRole
+    let content: String
+    let timestamp: Date
+}
 ```
 
 ## Key Design Patterns
 
-### 1. Task Decomposition Strategy
+### 1. MVVM Architecture
 
-The system uses a recursive decomposition approach:
+The app follows the Model-View-ViewModel pattern:
+- **Model**: Data structures in `Models.swift`
+- **View**: SwiftUI views in `Views/` directory
+- **ViewModel**: `AppStateManager` acts as the central view model
 
+### 2. Reactive State Management
+
+```swift
+// State changes automatically trigger UI updates
+appState.createTask(projectId: projectId, title: "New Task", ...)
+// ↓ @Published property changes
+// ↓ SwiftUI views automatically re-render
 ```
-Initial Request → Decomposer → Decision
-                                  ↓
-                    ┌─────────────┴─────────────┐
-                    │                           │
-                 EXECUTE                    DECOMPOSE
-                (Simple)                    (Complex)
-                    │                           │
-                 Do Task                 Create Subtasks
-                                               ↓
-                                     Recurse for each
-```
 
-### 2. Context Isolation
+### 3. Task Hierarchy Management
 
-Each task maintains its own conversation context:
+Tasks are organized in a tree structure with:
+- Parent-child relationships via `parentId` and `childIds`
+- Root tasks tracked in project's `rootTaskIds`
+- Automatic layout calculation for visual positioning
+
+### 4. Context Isolation
+
+Each task maintains its own conversation:
 - Prevents context pollution between tasks
-- Allows parallel execution
+- Allows parallel execution (planned)
 - Enables focused, short conversations
 - Maintains optimal LLM performance
 
-### 3. Execution Modes
+## Data Flow
 
-**Interactive Mode**:
-- User participates in the conversation
-- Suitable for design decisions, reviews
-- Allows mid-execution corrections
+### 1. User Interaction Flow
+```
+User Input → SwiftUI View → AppStateManager → Data Model Update → @Published → UI Refresh
+```
 
-**Autonomous Mode**:
-- Runs without user intervention
-- Best for well-defined, repetitive tasks
-- Can escalate to interactive if needed
+### 2. Task Creation Flow
+```
+User Creates Task → AppStateManager.createTask() → Update Project.tasks → 
+Calculate Layout → Update UI State → SwiftUI Re-renders
+```
 
-### 4. Streaming Architecture
-
-Supports real-time AI responses:
-1. Main process initiates stream
-2. Chunks sent via IPC events
-3. Renderer updates UI incrementally
-4. Abort capability for user control
-
-## Security Considerations
-
-### API Key Protection
-- Keys stored in `.env.local` (gitignored)
-- Never exposed to renderer process
-- All AI calls proxied through main process
-
-### Process Isolation
-- Context isolation enabled
-- Node integration disabled
-- Preload script validates all IPC
-- Content Security Policy enforced
-
-### Data Privacy
-- Local SQLite database
-- No cloud storage by default
-- User controls all data
+### 3. Message Flow (Planned)
+```
+User Message → ChatView → AppStateManager.addMessage() → 
+AI Processing → Response Streaming → UI Updates
+```
 
 ## Performance Optimizations
 
-### 1. Lazy Loading
-- Tasks loaded on demand
-- Virtual scrolling for large trees
-- Component code splitting
+### 1. SwiftUI Optimizations
+- Efficient use of `@Published` to minimize unnecessary re-renders
+- View identity management with stable IDs
+- Lazy loading for large task trees
 
-### 2. Database Optimization
-- Indexed foreign keys
-- Prepared statements
-- Write-ahead logging (WAL mode)
-- Batch operations where possible
+### 2. Memory Management
+- In-memory data storage for fast access
+- Automatic memory cleanup for unused views
+- Efficient data structures for hierarchical relationships
 
-### 3. Render Optimization
-- React.memo for expensive components
-- Virtualized lists
-- Debounced updates
-- Optimistic UI updates
-
-## Extension Points
-
-### 1. AI Provider Plugins
-```typescript
-interface AIProvider {
-  name: string
-  generateText(prompt: string, options: any): Promise<string>
-  streamText(messages: any[], options: any): AsyncIterable<string>
-}
-```
-
-### 2. Task Executors
-Custom executors for specific task types:
-- Code generation executor
-- Research executor
-- Review executor
-
-### 3. Export/Import Formats
-- JSON for task trees
-- Markdown for conversations
-- CSV for metrics
+### 3. Layout Calculation
+- Optimized tree layout algorithm
+- Minimal recalculation on changes
+- Cached position calculations
 
 ## Future Enhancements
 
-### Planned Features
-1. **Multi-model orchestration**: Route tasks to optimal models
-2. **Collaborative features**: Real-time multi-user support
-3. **Plugin system**: Custom task types and executors
-4. **Cloud sync**: Optional encrypted backup
-5. **Mobile companion**: View and manage tasks on mobile
+### Planned AI Integration
+1. **LLM API Integration**: Direct API calls to OpenAI, Anthropic, etc.
+2. **Streaming Responses**: Real-time AI response streaming
+3. **Task Decomposition**: Automatic task breakdown logic
+4. **Autonomous Execution**: Background task processing
 
-### Technical Improvements
-1. **WebRTC for streaming**: Better real-time performance
-2. **Vector database**: Semantic search over task history
-3. **GraphQL API**: More flexible data fetching
-4. **Web Workers**: Offload heavy computations
+### Native macOS Features
+1. **Menu Bar Integration**: Quick access and status updates
+2. **Spotlight Integration**: Search across all tasks and conversations
+3. **Shortcuts Support**: Automation and workflow integration
+4. **iCloud Sync**: Cross-device synchronization (optional)
+
+### Performance Improvements
+1. **Core Data Integration**: Persistent storage for large datasets
+2. **Background Processing**: Async task execution
+3. **Memory Optimization**: Efficient handling of large task trees
+4. **Search Indexing**: Fast full-text search capabilities
 
 ## Development Guidelines
 
 ### Code Organization
-- Feature-based structure in renderer
-- Domain-based structure in main
-- Shared types in dedicated directory
+```
+context/
+├── contextApp.swift          # App entry point
+├── ContentView.swift         # Main layout
+├── AppStateManager.swift     # State management
+├── Models.swift             # Data models
+└── Views/
+    ├── ProjectsView.swift   # Project/task tree
+    ├── ChartView.swift      # Visual task representation
+    └── ChatView.swift       # Conversation interface
+```
 
-### Testing Strategy
-- Unit tests for business logic
-- Integration tests for IPC
-- E2E tests for critical paths
+### SwiftUI Best Practices
+- Use `@StateObject` for owned state
+- Use `@EnvironmentObject` for shared state
+- Prefer `@Published` over manual state updates
+- Keep views focused and composable
 
-### Performance Monitoring
-- Track conversation lengths
-- Monitor task completion rates
-- Measure prompt effectiveness
-- Analyze usage patterns
+### State Management Rules
+- All mutations happen in `AppStateManager`
+- Use immutable data structures where possible
+- Maintain referential integrity in task relationships
+- Validate data consistency on state changes
+
+### Testing Strategy (Planned)
+- Unit tests for `AppStateManager` methods
+- SwiftUI view testing with ViewInspector
+- Integration tests for data flow
+- UI automation tests for critical paths
 
 ---
 
-This architecture is designed to scale with the complexity of tasks while maintaining the core principle: keeping LLM conversations short and focused for optimal performance. 
+This architecture leverages SwiftUI's reactive nature and macOS's native capabilities to create a performant, maintainable application that scales with task complexity while maintaining the core principle of keeping LLM conversations short and focused. 

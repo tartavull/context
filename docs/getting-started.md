@@ -1,6 +1,6 @@
 # Getting Started with Context
 
-This guide will walk you through setting up and running the Context application, a recursive task decomposition system for optimal LLM performance.
+This guide will walk you through setting up and running the Context application, a native macOS app for recursive task decomposition and optimal LLM performance.
 
 ## Table of Contents
 
@@ -16,298 +16,250 @@ This guide will walk you through setting up and running the Context application,
 
 ### Required Software
 
-1. **Nix Package Manager** (Recommended)
-   - Install from [nixos.org](https://nixos.org/download.html)
-   - Provides reproducible development environment
-   
-2. **direnv** (Recommended)
-   - Install: `nix-env -iA nixpkgs.direnv`
-   - Hook to shell: [direnv.net/docs/hook.html](https://direnv.net/docs/hook.html)
+1. **macOS 15.4 or later**
+   - Context is a native macOS application
+   - Requires recent macOS for SwiftUI features
 
-### Alternative Setup (without Nix)
+2. **Xcode 16.0 or later**
+   - Download from Mac App Store or Apple Developer portal
+   - Includes Swift 6.0 compiler and SwiftUI tools
 
-If you prefer not to use Nix, install these manually:
-- Node.js 20.x or later
-- pnpm 8.x or later
-- Python 3.x (for node-gyp)
-- Build tools (gcc, make)
+3. **Git**
+   - For cloning the repository
+   - Usually pre-installed on macOS
 
 ## Installation
 
 ### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/context.git
+git clone https://github.com/tartavull/context.git
 cd context
 ```
 
-### Step 2: Setup Development Environment
-
-#### With Nix + direnv (Recommended):
+### Step 2: Open in Xcode
 
 ```bash
-# Allow direnv to load the Nix environment
-direnv allow
-
-# This automatically loads all required dependencies
+# Open the Xcode project
+open context.xcodeproj
 ```
 
-#### Without Nix:
+Alternatively, you can:
+- Launch Xcode
+- Choose "Open a project or file"
+- Navigate to the `context.xcodeproj` file
 
-```bash
-# Install pnpm if not already installed
-npm install -g pnpm
-```
+### Step 3: Configure Signing (if needed)
 
-### Step 3: Install Node Dependencies
-
-```bash
-pnpm install
-```
-
-### Step 4: Configure API Keys
-
-Create a `.env.local` file in the root directory:
-
-```bash
-# Copy the template
-cp .env.local.example .env.local
-
-# Edit with your API keys
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-```
+If you plan to run on your device:
+1. Select the project in Xcode's navigator
+2. Choose your target under "Targets"
+3. In the "Signing & Capabilities" tab
+4. Select your Apple Developer account or team
 
 ## Running the Application
 
 ### Development Mode
 
-```bash
-# Start the development server with hot reload
-pnpm dev
-```
+1. **In Xcode**: Press `Cmd+R` or click the "Run" button
+2. **From Terminal**: 
+   ```bash
+   xcodebuild -project context.xcodeproj -scheme context build
+   ```
 
-This command:
-- Starts the Electron main process
-- Launches the Vite dev server for the renderer
-- Enables hot module replacement
-- Opens developer tools
+The app will launch with:
+- Split-pane interface
+- Sample projects and tasks (for demonstration)
+- Full task tree visualization
 
-### Production Build
-
-```bash
-# Build the application
-pnpm build
-
-# Run the built application
-pnpm start
-```
-
-### Package for Distribution
+### Building for Distribution
 
 ```bash
-# Create distributable packages
-pnpm package
-```
+# Build for release
+xcodebuild -project context.xcodeproj -scheme context -configuration Release build
 
-Packages will be created in the `release/` directory.
+# Archive for distribution
+xcodebuild -project context.xcodeproj -scheme context archive
+```
 
 ## Project Structure
 
 ```
 context/
-├── src/                      # Source code
-│   ├── main/                # Electron main process
-│   │   ├── index.ts        # Entry point, window management
-│   │   ├── preload.ts      # Secure bridge between main/renderer
-│   │   ├── database.ts     # SQLite database setup
-│   │   ├── ai-handlers.ts  # AI SDK integration (Vercel AI)
-│   │   └── task-handlers.ts # Task CRUD operations
-│   │
-│   ├── renderer/            # React application (runs in browser context)
-│   │   ├── main.tsx        # React entry point
-│   │   ├── App.tsx         # Main app component
-│   │   ├── components/     # React components
-│   │   │   ├── TaskTreeView.tsx  # Hierarchical task display
-│   │   │   └── ChatView.tsx      # AI chat interface
-│   │   ├── store/          # State management
-│   │   │   └── taskStore.ts      # Zustand store for tasks
-│   │   ├── styles/         # CSS and styling
-│   │   └── types/          # TypeScript definitions
-│   │
-│   └── shared/             # Shared code between main/renderer
+├── context.xcodeproj/           # Xcode project file
+├── context/                     # Main app source
+│   ├── contextApp.swift        # App entry point (@main)
+│   ├── ContentView.swift       # Main UI layout
+│   ├── AppStateManager.swift   # Centralized state management
+│   ├── Models.swift            # Data models (Project, Task, Message)
+│   ├── Assets.xcassets/        # App icons and assets
+│   └── Views/                  # SwiftUI view components
+│       ├── ProjectsView.swift  # Task tree sidebar
+│       ├── ChartView.swift     # Visual task representation
+│       └── ChatView.swift      # Conversation interface
 │
-├── assets/                 # Application assets (icons, etc.)
-├── doc/                    # Project documentation
-├── docs/                   # Developer guides
-│
-├── flake.nix              # Nix environment definition
-├── package.json           # Node.js dependencies
-├── tsconfig.json          # TypeScript configuration
-├── vite.config.ts         # Vite bundler config
-├── tailwind.config.js     # Tailwind CSS config
-└── .env.local             # Local environment variables (not in git)
+├── contextTests/               # Unit tests
+├── contextUITests/             # UI automation tests
+├── docs/                       # Documentation
+└── README.md                   # Project overview
 ```
 
 ### Key Files Explained
 
-- **`src/main/index.ts`**: Creates the Electron window, handles app lifecycle
-- **`src/main/preload.ts`**: Exposes safe APIs to the renderer process
-- **`src/renderer/App.tsx`**: Main UI with split-pane layout
-- **`flake.nix`**: Defines the complete development environment
+- **`contextApp.swift`**: App entry point with `@main` attribute
+- **`ContentView.swift`**: Main split-pane layout with panels
+- **`AppStateManager.swift`**: ObservableObject managing all app state
+- **`Models.swift`**: Core data structures for projects, tasks, and messages
+- **`Views/`**: SwiftUI view components for different app sections
 
 ## Key Concepts
 
-### 1. Process Separation
+### 1. SwiftUI Architecture
 
-Electron uses two types of processes:
+Context uses SwiftUI's declarative UI framework:
 
-- **Main Process**: Node.js environment with full system access
-  - Manages windows
-  - Handles file system
-  - Runs AI SDK operations
-  - Protects API keys
+- **Views**: Define what the UI looks like
+- **State**: Data that can change over time
+- **Bindings**: Connect views to state changes
 
-- **Renderer Process**: Chromium browser environment
-  - Runs the React UI
-  - Communicates via IPC
-  - No direct system access
+### 2. Reactive State Management
 
-### 2. Secure Communication
+```swift
+// AppStateManager is an ObservableObject
+@StateObject private var appState = AppStateManager()
 
-```typescript
-// In preload.ts - Safe API exposure
-contextBridge.exposeInMainWorld('electron', {
-  ai: {
-    streamChat: (messages) => ipcRenderer.invoke('ai:stream-chat', messages),
-    // ... other methods
-  }
-})
-
-// In renderer - Using the API
-const result = await window.electron.ai.streamChat(messages)
+// Views automatically update when @Published properties change
+@Published var state: AppState
 ```
 
-### 3. Task Hierarchy
+### 3. Project and Task Hierarchy
 
-Tasks are organized in a tree structure:
-- Each task can have multiple subtasks
-- Tasks can be executed interactively or autonomously
-- Context is isolated per task to prevent degradation
+- **Projects**: Top-level containers for related tasks
+- **Tasks**: Individual work items organized in a tree structure
+- **Messages**: Conversation history for each task
 
-### 4. State Management
+### 4. Task Types and Modes
 
-- **Zustand** for client-side state
-- **SQLite** for persistent storage
-- **React Query** for server state (future)
+- **Node Types**: Original, Clone, Spawn (different creation methods)
+- **Execution Modes**: Interactive (user-guided) vs Autonomous (AI-driven)
+- **Status**: Pending, Active, Completed, Failed
 
 ## Development Workflow
 
 ### 1. Making UI Changes
 
-Edit files in `src/renderer/`:
-- Components will hot reload automatically
-- Tailwind classes are available globally
-- Use the custom scrollbar utility classes
+Edit SwiftUI views in the `Views/` directory:
+- Changes are reflected immediately with Xcode's live preview
+- Use `Cmd+R` to rebuild and test
+- SwiftUI's declarative syntax makes UI updates straightforward
 
-### 2. Adding New IPC Handlers
+### 2. Adding New Features
 
-1. Define the handler in `src/main/`:
-```typescript
-// In appropriate handler file
-ipcMain.handle('my:action', async (event, arg) => {
-  // Implementation
-})
+1. **Update Models**: Add new properties to data structures in `Models.swift`
+2. **Update State Manager**: Add methods to `AppStateManager.swift`
+3. **Update Views**: Modify or create SwiftUI views
+4. **Test**: Use Xcode's testing tools
+
+### 3. Working with State
+
+All state changes should go through `AppStateManager`:
+```swift
+// Good: Use AppStateManager methods
+appState.createTask(projectId: projectId, title: "New Task", ...)
+
+// Avoid: Direct state manipulation
+// appState.state.projects[projectId].tasks[taskId] = newTask
 ```
 
-2. Expose in `src/main/preload.ts`:
-```typescript
-myFeature: {
-  doAction: (arg) => ipcRenderer.invoke('my:action', arg)
-}
-```
+### 4. Adding New Views
 
-3. Add types in `src/renderer/types/electron.d.ts`
-
-### 3. Working with the Database
-
-The SQLite database is initialized in `src/main/database.ts`:
-- Tables are created on first run
-- Database is stored in user's app data directory
-- Use prepared statements for queries
-
-### 4. Styling Guidelines
-
-- Use Tailwind utility classes
-- Custom colors defined in `tailwind.config.js`
-- Support both light and dark modes
-- Keep components responsive
+1. Create a new Swift file in the `Views/` directory
+2. Define a SwiftUI view conforming to the `View` protocol
+3. Use `@EnvironmentObject` to access `AppStateManager`
+4. Add the view to the appropriate parent view
 
 ## Troubleshooting
 
 ### Common Issues
 
 #### "Cannot find module" errors
+- Ensure you're opening `context.xcodeproj`, not individual files
+- Clean build folder: `Product` → `Clean Build Folder` in Xcode
+
+#### App won't launch
+- Check macOS version compatibility (15.4+)
+- Verify Xcode version (16.0+)
+- Check console for error messages
+
+#### State not updating
+- Ensure you're using `@Published` properties
+- Check that views use `@StateObject` or `@EnvironmentObject`
+- Verify state changes happen on the main actor
+
+#### Build errors
 ```bash
-# Ensure all dependencies are installed
-pnpm install
+# Clean derived data
+rm -rf ~/Library/Developer/Xcode/DerivedData
 
-# If using Nix, reload the environment
-direnv reload
-```
-
-#### Electron not starting
-```bash
-# Check if port 5173 is in use (Vite dev server)
-lsof -i :5173
-
-# Kill the process if needed
-kill -9 <PID>
-```
-
-#### API errors
-- Verify `.env.local` has valid API keys
-- Check console for detailed error messages
-- Ensure you have credits/access for the AI providers
-
-#### Build errors with native modules
-```bash
-# Rebuild native modules for Electron
-pnpm rebuild
+# Restart Xcode
 ```
 
 ### Debug Mode
 
-Set environment variables for debugging:
-```bash
-# Enable Electron logging
-ELECTRON_ENABLE_LOGGING=1 pnpm dev
+Enable debugging features:
+1. In Xcode: `Product` → `Scheme` → `Edit Scheme`
+2. Select "Run" and go to "Arguments"
+3. Add environment variables or launch arguments as needed
 
-# Enable Node debugging
-NODE_OPTIONS='--inspect' pnpm dev
-```
+### Performance Issues
 
-### Logs Location
-
-- **Development**: Check the terminal and DevTools console
-- **Production**: 
-  - macOS: `~/Library/Logs/context/`
-  - Linux: `~/.config/context/logs/`
-  - Windows: `%USERPROFILE%\AppData\Roaming\context\logs\`
+- Use Xcode's Instruments to profile performance
+- Check for retain cycles with the Memory Graph Debugger
+- Monitor state update frequency
 
 ## Next Steps
 
-1. Read the [Architecture Guide](./architecture.md) for deeper understanding
-2. Check [Contributing Guidelines](../CONTRIBUTING.md) to submit changes
-3. Explore the [original concept](./concept.md) for feature ideas
+1. **Explore the UI**: Navigate between projects and tasks
+2. **Study the Code**: Examine how SwiftUI views connect to state
+3. **Read Architecture**: Check [Architecture Guide](./architecture.md)
+4. **Contribute**: See [Contributing Guidelines](../CONTRIBUTING.md) (when available)
+5. **Understand the Vision**: Read the [original concept](./concept.md)
 
 ## Getting Help
 
-- Check existing issues on GitHub
-- Read the error messages carefully - they often contain the solution
-- The Nix flake includes all necessary system dependencies
-- Join our Discord community (link in main README)
+- **Xcode Issues**: Check Apple's developer documentation
+- **SwiftUI Questions**: Apple's SwiftUI tutorials and documentation
+- **Project Issues**: Open an issue on GitHub
+- **General Questions**: Check existing documentation in `/docs`
+
+## Development Tips
+
+### Xcode Shortcuts
+- `Cmd+R`: Run/build the app
+- `Cmd+.`: Stop running app
+- `Cmd+Shift+K`: Clean build folder
+- `Cmd+Option+P`: Resume SwiftUI preview
+
+### SwiftUI Preview
+Use Xcode's preview feature for rapid iteration:
+```swift
+#Preview {
+    ContentView()
+        .environmentObject(AppStateManager())
+}
+```
+
+### State Debugging
+Add breakpoints in `AppStateManager` methods to track state changes:
+```swift
+func createTask(...) {
+    print("Creating task: \(title)")  // Debug output
+    // ... implementation
+}
+```
 
 ---
 
-Happy coding! 🚀 
+Welcome to Context development! 🚀
+
+The native macOS app provides a solid foundation for implementing the recursive task decomposition vision. The current version focuses on the UI and state management, with AI integration planned for future releases. 
