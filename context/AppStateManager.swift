@@ -254,9 +254,15 @@ class AppStateManager: ObservableObject {
     // MARK: - UI State Management
     
     func updateUI(_ updates: [String: Any]) {
-        // showProjects is always true - no toggle needed
-        // showChart is always true - no toggle needed
-        // showChat is always true - no toggle needed
+        if let showProjects = updates["showProjects"] as? Bool {
+            state.ui.showProjects = showProjects
+        }
+        if let showChart = updates["showChart"] as? Bool {
+            state.ui.showChart = showChart
+        }
+        if let showChat = updates["showChat"] as? Bool {
+            state.ui.showChat = showChat
+        }
         if let projectsCollapsed = updates["projectsCollapsed"] as? Bool {
             state.ui.projectsCollapsed = projectsCollapsed
         }

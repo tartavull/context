@@ -22,19 +22,15 @@ struct ProjectsView: View {
                 Button(action: {
                     createNewProject()
                 }) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 12, weight: .medium))
+                    NewConversationIcon()
                         .foregroundColor(.white)
                         .frame(width: isCollapsed ? 32 : 24, height: isCollapsed ? 32 : 24)
-                        .background(Color.blue)
-                        .clipShape(Circle())
                 }
                 .buttonStyle(PlainButtonStyle())
                 .help("Create New Project")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(BlurView(material: .hudWindow, blendingMode: .behindWindow))
             .overlay(
                 Rectangle()
                     .fill(Color.white.opacity(0.1))
@@ -58,8 +54,8 @@ struct ProjectsView: View {
                                 createNewProject()
                             }) {
                                 HStack {
-                                    Image(systemName: "plus")
-                                        .font(.system(size: 12))
+                                    NewConversationIcon()
+                                        .foregroundColor(.white)
                                     if !isCollapsed {
                                         Text("Create Project")
                                             .font(.system(size: 12))
@@ -68,8 +64,6 @@ struct ProjectsView: View {
                                 .foregroundColor(.white)
                                 .padding(.horizontal, isCollapsed ? 0 : 12)
                                 .padding(.vertical, 8)
-                                .background(Color.blue)
-                                .clipShape(RoundedRectangle(cornerRadius: isCollapsed ? 16 : 6))
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
@@ -81,15 +75,16 @@ struct ProjectsView: View {
                     }
                 }
             }
-            .background(BlurView(material: .hudWindow, blendingMode: .behindWindow))
+            
+            // Add a spacer to push content to top and ensure background fills remaining space
+            Spacer(minLength: 0)
         }
-        .background(BlurView(material: .hudWindow, blendingMode: .behindWindow))
-        .overlay(
-            Rectangle()
-                .fill(Color.white.opacity(0.1))
-                .frame(width: 1),
-            alignment: .trailing
+        .frame(maxHeight: .infinity)
+        .background(
+            BlurView(material: .hudWindow, blendingMode: .behindWindow)
+                .ignoresSafeArea(.all, edges: .top)
         )
+
         .onChange(of: isEditing) { _, newValue in
             if newValue != nil {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -344,6 +339,16 @@ struct BlurView: NSViewRepresentable {
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
         nsView.material = material
         nsView.blendingMode = blendingMode
+    }
+}
+
+// New conversation icon (iMessage-style) - moved from HeaderView
+struct NewConversationIcon: View {
+    var body: some View {
+        // Pencil/edit icon
+        Image(systemName: "square.and.pencil")
+            .font(.system(size: 15, weight: .medium))
+            .foregroundColor(.gray)
     }
 }
 
