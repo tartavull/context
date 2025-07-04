@@ -4,27 +4,11 @@
   <img src="logo.png" alt="Context Logo" width="128" height="128">
 </div>
 
-## Requirements
+A native macOS application for recursive task decomposition and optimal LLM performance.
 
-- macOS 15.4 or later
-- Xcode 16.0 or later
-- Swift 6.0
+## Documentation
 
-## Building
-
-1. Clone the repository
-2. Open `context.xcodeproj` in Xcode
-3. Build and run the project
-
-## Architecture
-
-The app follows a clean SwiftUI architecture with:
-
-- `AppStateManager`: Centralized state management
-- `ContentView`: Main application layout
-- `ProjectsView`: Project management interface
-- `ChartView`: Data visualization
-- `ChatView`: Interactive chat interface
+For setup instructions, architecture details, and development guides, see the [documentation](./docs/).
 
 ## License
 
