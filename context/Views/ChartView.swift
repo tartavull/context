@@ -44,14 +44,14 @@ struct TaskTreeView: View {
                 
                 // Draw connections first (behind nodes)
                 ForEach(Array(project.tasks.values), id: \.id) { task in
-                    ForEach(task.childIds, id: \.self) { childId in
-                        if let childTask = project.tasks[childId] {
-                            TaskConnectionView(
-                                from: task.position,
-                                to: childTask.position,
-                                isActive: task.status == .active || childTask.status == .active
-                            )
-                        }
+                    ForEach(task.childIds.compactMap { childId in
+                        project.tasks[childId]
+                    }, id: \.id) { childTask in
+                        TaskConnectionView(
+                            from: task.position,
+                            to: childTask.position,
+                            isActive: task.status == .active || childTask.status == .active
+                        )
                     }
                 }
                 

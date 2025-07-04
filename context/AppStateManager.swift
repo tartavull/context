@@ -101,10 +101,23 @@ class AppStateManager: ObservableObject {
     
     // MARK: - Task Management
     
-    func createTask(projectId: String, title: String, description: String, nodeType: Task.NodeType, parentId: String? = nil, position: Task.Position = Task.Position(x: 100, y: 100)) {
+    func createTask(
+        projectId: String, 
+        title: String, 
+        description: String, 
+        nodeType: Task.NodeType, 
+        parentId: String? = nil, 
+        position: Task.Position = Task.Position(x: 100, y: 100)
+    ) {
         guard var project = state.projects[projectId] else { return }
         
-        let newTask = Task(title: title, description: description, nodeType: nodeType, parentId: parentId, position: position)
+        let newTask = Task(
+            title: title, 
+            description: description, 
+            nodeType: nodeType, 
+            parentId: parentId, 
+            position: position
+        )
         
         // Update parent task's childIds if this is a child task
         if let parentId = parentId, var parentTask = project.tasks[parentId] {
@@ -346,10 +359,8 @@ class AppStateManager: ObservableObject {
             levels[level].append(taskId)
             
             // Add children to queue
-            for childId in task.childIds {
-                if !visited.contains(childId) {
-                    queue.append((taskId: childId, level: level + 1))
-                }
+            for childId in task.childIds where !visited.contains(childId) {
+                queue.append((taskId: childId, level: level + 1))
             }
         }
         

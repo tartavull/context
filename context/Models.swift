@@ -9,8 +9,8 @@ struct Message: Identifiable, Codable {
     let timestamp: Date
     
     enum MessageRole: String, Codable, CaseIterable {
-        case user = "user"
-        case assistant = "assistant"
+        case user
+        case assistant
     }
 }
 
@@ -41,21 +41,21 @@ struct Task: Identifiable, Codable {
     var updatedAt: Date
     
     enum TaskStatus: String, Codable, CaseIterable {
-        case pending = "pending"
-        case active = "active"
-        case completed = "completed"
-        case failed = "failed"
+        case pending
+        case active
+        case completed
+        case failed
     }
     
     enum NodeType: String, Codable, CaseIterable {
-        case original = "original"
-        case clone = "clone"
-        case spawn = "spawn"
+        case original
+        case clone
+        case spawn
     }
     
     enum ExecutionMode: String, Codable, CaseIterable {
-        case interactive = "interactive"
-        case autonomous = "autonomous"
+        case interactive
+        case autonomous
     }
     
     struct Position: Codable {
@@ -63,7 +63,8 @@ struct Task: Identifiable, Codable {
         var y: Double
     }
     
-    init(title: String, description: String, nodeType: NodeType = .original, parentId: String? = nil, position: Position = Position(x: 0, y: 0)) {
+    init(title: String, description: String, nodeType: NodeType = .original, 
+         parentId: String? = nil, position: Position = Position(x: 0, y: 0)) {
         self.id = "task-\(Int(Date().timeIntervalSince1970))-\(UUID().uuidString.prefix(9))"
         self.title = title
         self.description = description
@@ -90,10 +91,10 @@ struct Project: Identifiable, Codable {
     var updatedAt: Date
     
     enum ProjectStatus: String, Codable, CaseIterable {
-        case active = "active"
-        case pending = "pending"
-        case completed = "completed"
-        case failed = "failed"
+        case active
+        case pending
+        case completed
+        case failed
     }
     
     init(title: String, description: String) {
@@ -103,7 +104,11 @@ struct Project: Identifiable, Codable {
         self.status = .active
         
         // Create root task
-        let rootTask = Task(title: title, description: description, position: Task.Position(x: 50, y: 200))
+        let rootTask = Task(
+            title: title, 
+            description: description, 
+            position: Task.Position(x: 50, y: 200)
+        )
         self.tasks = [rootTask.id: rootTask]
         self.rootTaskIds = [rootTask.id]
         
@@ -145,9 +150,18 @@ extension AppState {
         var state = AppState()
         
         // Create sample projects
-        let project1 = Project(title: "Build Todo App", description: "Create a modern todo application with React")
-        let project2 = Project(title: "Design System", description: "Build a comprehensive design system")
-        let project3 = Project(title: "API Integration", description: "Integrate with external APIs")
+        let project1 = Project(
+            title: "Build Todo App", 
+            description: "Create a modern todo application with React"
+        )
+        let project2 = Project(
+            title: "Design System", 
+            description: "Build a comprehensive design system"
+        )
+        let project3 = Project(
+            title: "API Integration", 
+            description: "Integrate with external APIs"
+        )
         
         // Add sample tasks to project 1
         var updatedProject1 = project1
@@ -193,7 +207,8 @@ extension AppState {
             let sampleMessage2 = Message(
                 id: UUID().uuidString,
                 role: .assistant,
-                content: "Great! I'll help you build a modern todo app. Let's start by planning the components and state management.",
+                content: "Great! I'll help you build a modern todo app. " +
+                         "Let's start by planning the components and state management.",
                 timestamp: Date().addingTimeInterval(-3500)
             )
             
@@ -210,7 +225,8 @@ extension AppState {
             let designMessage2 = Message(
                 id: UUID().uuidString,
                 role: .assistant,
-                content: "Absolutely! Let's create a TodoItem component, TodoList, and AddTodo form. I'll use modern React patterns.",
+                content: "Absolutely! Let's create a TodoItem component, TodoList, and AddTodo form. " +
+                         "I'll use modern React patterns.",
                 timestamp: Date().addingTimeInterval(-2900)
             )
             
@@ -227,7 +243,8 @@ extension AppState {
             let stateMessage2 = Message(
                 id: UUID().uuidString,
                 role: .assistant,
-                content: "For this todo app, I recommend using React's Context API with useReducer for state management. It's perfect for this scale.",
+                content: "For this todo app, I recommend using React's Context API with useReducer " +
+                         "for state management. It's perfect for this scale.",
                 timestamp: Date().addingTimeInterval(-1700)
             )
             
@@ -256,7 +273,8 @@ extension AppState {
             let apiMessage2 = Message(
                 id: UUID().uuidString,
                 role: .assistant,
-                content: "I'll help you set up proper API integration with fetch, error handling, and loading states.",
+                content: "I'll help you set up proper API integration with fetch, error handling, " +
+                         "and loading states.",
                 timestamp: Date().addingTimeInterval(-259100)
             )
             

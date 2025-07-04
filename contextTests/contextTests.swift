@@ -8,10 +8,10 @@
 import XCTest
 @testable import context
 
-final class contextTests: XCTestCase {
+final class ContextTests: XCTestCase {
     
     func testAppExists() {
         // This is a minimal test to ensure the test target compiles
-        XCTAssertNotNil(contextApp.self, "App should exist")
+        XCTAssertNotNil(ContextApp.self, "App should exist")
     }
-} 
+}

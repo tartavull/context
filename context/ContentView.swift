@@ -125,12 +125,13 @@ struct ContentView: View {
                         projectsPanelWidth = defaultPanelWidth
                     }
                 }
-            }) {
+            }, label: {
                 Image(systemName: "sidebar.leading")
                     .font(.system(size: 18, weight: .light))
                     .foregroundColor(
-                        toggleButtonShine ? .white : 
-                        (toggleButtonHovered ? Color(red: 180/255, green: 180/255, blue: 180/255) : Color(red: 135/255, green: 135/255, blue: 135/255))
+                        toggleButtonShine ? .white :
+                        (toggleButtonHovered ? Color(red: 180/255, green: 180/255, blue: 180/255) : 
+                         Color(red: 135/255, green: 135/255, blue: 135/255))
                     )
                     .frame(width: 32, height: 24)
                     .background(
@@ -139,7 +140,7 @@ struct ContentView: View {
                     )
                     .animation(.easeInOut(duration: 0.3).repeatCount(1, autoreverses: true), value: toggleButtonShine)
                     .animation(.easeInOut(duration: 0.15), value: toggleButtonHovered)
-            }
+            })
             .buttonStyle(PlainButtonStyle())
             .accessibilityElement()
             .accessibilityIdentifier("projects-panel-toggle-button")

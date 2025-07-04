@@ -1,0 +1,313 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release'
+        required: true
+        default: 'v1.0.0'
+
+env:
+  DERIVED_DATA_PATH: DerivedData
+
+jobs:
+  build-release:
+    name: Build Release
+    runs-on: macos-15
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Show build environment
+      run: |
+        echo "macOS version:"
+        sw_vers
+        echo "Xcode version:"
+        xcodebuild -version
+        echo "Swift version:"
+        swift --version
+    
+    - name: Install xcpretty
+      run: |
+        if ! which xcpretty >/dev/null; then
+          echo "Installing xcpretty..."
+          gem install xcpretty
+        else
+          echo "xcpretty already installed"
+        fi
+    
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Developer/Xcode/DerivedData
+          ~/.swiftpm
+          .build
+        key: ${{ runner.os }}-spm-release-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+    
+    # Import signing certificate securely
+    - name: Import signing certificate
+      env:
+        APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+        APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      run: |
+        # Create temporary keychain
+        KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain"
+        KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+        
+        # Create and setup keychain
+        security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+        security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+        security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+        
+        # Import certificate
+        echo "$APPLE_CERTIFICATE_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+        security import "$RUNNER_TEMP/certificate.p12" \
+          -k "$KEYCHAIN_PATH" \
+          -P "$APPLE_CERTIFICATE_PASSWORD" \
+          -T /usr/bin/codesign \
+          -T /usr/bin/security
+        
+        # Set keychain as default
+        security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed s/\"//g)
+        
+        # Enable codesigning from keychain
+        security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+        
+        # Store keychain info for later steps
+        echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> $GITHUB_ENV
+        echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> $GITHUB_ENV
+        
+        # Clean up certificate file
+        rm "$RUNNER_TEMP/certificate.p12"
+    
+    # Find signing identity
+    - name: Find signing identity
+      run: |
+        SIGNING_IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | grep "Developer ID Application" | head -1 | grep -o '"[^"]*"' | sed 's/"//g')
+        if [ -z "$SIGNING_IDENTITY" ]; then
+          echo "❌ No Developer ID Application certificate found!"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+          exit 1
+        fi
+        echo "✅ Found signing identity: $SIGNING_IDENTITY"
+        echo "SIGNING_IDENTITY=$SIGNING_IDENTITY" >> $GITHUB_ENV
+    
+    - name: Build Release (arm64)
+      run: |
+        set -o pipefail
+        if which xcpretty >/dev/null; then
+          xcodebuild -project context.xcodeproj \
+            -scheme context \
+            -destination 'platform=macOS,arch=arm64' \
+            -configuration Release \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
+            CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_STYLE=Manual \
+            ARCHS=arm64 \
+            VALID_ARCHS=arm64 \
+            clean build | xcpretty
+        else
+          xcodebuild -project context.xcodeproj \
+            -scheme context \
+            -destination 'platform=macOS,arch=arm64' \
+            -configuration Release \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
+            CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_STYLE=Manual \
+            ARCHS=arm64 \
+            VALID_ARCHS=arm64 \
+            clean build
+        fi
+    
+    - name: Build Release (x86_64)
+      run: |
+        set -o pipefail
+        if which xcpretty >/dev/null; then
+          xcodebuild -project context.xcodeproj \
+            -scheme context \
+            -destination 'platform=macOS,arch=x86_64' \
+            -configuration Release \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }}-x86 \
+            CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_STYLE=Manual \
+            ARCHS=x86_64 \
+            VALID_ARCHS=x86_64 \
+            clean build | xcpretty
+        else
+          xcodebuild -project context.xcodeproj \
+            -scheme context \
+            -destination 'platform=macOS,arch=x86_64' \
+            -configuration Release \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }}-x86 \
+            CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_STYLE=Manual \
+            ARCHS=x86_64 \
+            VALID_ARCHS=x86_64 \
+            clean build
+        fi
+    
+    - name: Create Universal Binary
+      run: |
+        # Find the app bundles
+        ARM64_APP=$(find ${{ env.DERIVED_DATA_PATH }}/Build/Products/Release -name "*.app" -type d | head -1)
+        X86_APP=$(find ${{ env.DERIVED_DATA_PATH }}-x86/Build/Products/Release -name "*.app" -type d | head -1)
+        
+        if [ -z "$ARM64_APP" ] || [ -z "$X86_APP" ]; then
+          echo "Could not find app bundles"
+          echo "ARM64_APP: $ARM64_APP"
+          echo "X86_APP: $X86_APP"
+          exit 1
+        fi
+        
+        echo "Found ARM64 app: $ARM64_APP"
+        echo "Found x86_64 app: $X86_APP"
+        
+        # Create output directory
+        mkdir -p release
+        
+        # Copy ARM64 version as base
+        cp -R "$ARM64_APP" release/
+        APP_NAME=$(basename "$ARM64_APP")
+        UNIVERSAL_APP="release/$APP_NAME"
+        
+        # Get the executable name (usually same as app name without .app)
+        EXECUTABLE_NAME=$(basename "$APP_NAME" .app)
+        
+        # Create universal binary
+        lipo -create \
+          "$ARM64_APP/Contents/MacOS/$EXECUTABLE_NAME" \
+          "$X86_APP/Contents/MacOS/$EXECUTABLE_NAME" \
+          -output "$UNIVERSAL_APP/Contents/MacOS/$EXECUTABLE_NAME"
+        
+        # Verify the universal binary
+        echo "Universal binary info:"
+        lipo -info "$UNIVERSAL_APP/Contents/MacOS/$EXECUTABLE_NAME"
+        
+        echo "UNIVERSAL_APP=$UNIVERSAL_APP" >> $GITHUB_ENV
+        echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+    
+    # Re-sign the universal binary
+    - name: Sign Universal Binary
+      run: |
+        echo "🔐 Signing universal binary..."
+        
+        # Sign the app bundle
+        codesign --force --deep --sign "$SIGNING_IDENTITY" \
+          --options runtime \
+          "$UNIVERSAL_APP"
+        
+        # Verify signature
+        echo "✅ Verifying signature..."
+        codesign --verify --verbose "$UNIVERSAL_APP"
+        echo "ℹ️ Note: spctl assessment will fail until notarization is complete"
+        spctl --assess --verbose "$UNIVERSAL_APP" || echo "Expected: App not yet notarized"
+    
+    # Notarize the app
+    - name: Notarize App
+      env:
+        APPLE_ID_USERNAME: ${{ secrets.APPLE_ID_USERNAME }}
+        APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      run: |
+        echo "📝 Creating ZIP for notarization..."
+        cd release
+        zip -r "../context-notarization.zip" "$APP_NAME"
+        cd ..
+        
+        echo "🚀 Submitting for notarization..."
+        xcrun notarytool submit "context-notarization.zip" \
+          --apple-id "$APPLE_ID_USERNAME" \
+          --password "$APPLE_ID_PASSWORD" \
+          --team-id "$APPLE_TEAM_ID" \
+          --wait \
+          --timeout 30m
+        
+        echo "✅ Stapling notarization ticket..."
+        xcrun stapler staple "$UNIVERSAL_APP"
+        
+        # Verify notarization
+        echo "🔍 Verifying notarization..."
+        xcrun stapler validate "$UNIVERSAL_APP"
+        spctl --assess --verbose "$UNIVERSAL_APP"
+    
+    # Create final release archive
+    - name: Create Release Archive
+      run: |
+        cd release
+        zip -r "../context-signed.zip" "$APP_NAME"
+        cd ..
+        
+        echo "Created signed and notarized archive: context-signed.zip"
+    
+    - name: Get version from tag
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.tag }}"
+        else
+          VERSION=${GITHUB_REF#refs/tags/}
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+    
+    - name: Create Release
+      run: |
+        gh release create ${{ steps.version.outputs.version }} \
+          --title "Context ${{ steps.version.outputs.version }}" \
+          --notes "## Context ${{ steps.version.outputs.version }}
+        
+        ### 📦 Downloads
+        - **Signed & Notarized Universal Binary**: \`context-signed.zip\`
+        
+        ### 🔧 Installation
+        1. Download \`context-signed.zip\`
+        2. Unzip the file
+        3. Move \`Context.app\` to your Applications folder
+        4. Double-click to launch - no security warnings! ✅
+        
+        ### ✅ Security
+        This build is **code signed** and **notarized by Apple**:
+        - ✅ Signed with Developer ID Application certificate
+        - ✅ Notarized by Apple's notary service
+        - ✅ Hardened Runtime enabled
+        - ✅ No Gatekeeper warnings
+        
+        ### 🚀 What's New
+        - Built from commit: ${{ github.sha }}
+        - Universal binary supports both Intel and Apple Silicon Macs
+        - Release configuration for optimal performance
+        - Full macOS security compliance" \
+          context-signed.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    # Clean up keychain
+    - name: Clean up keychain
+      if: always()
+      run: |
+        if [ -f "$KEYCHAIN_PATH" ]; then
+          security delete-keychain "$KEYCHAIN_PATH"
+        fi
+    
+    - name: Upload Release Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-artifacts
+        path: |
+          release/
+          context-signed.zip
+        retention-days: 30 

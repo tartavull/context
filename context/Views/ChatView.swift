@@ -90,9 +90,10 @@ struct ChatContentView: View {
                 isLoading: $isLoading,
                 selectedModel: $selectedModel,
                 showModelDropdown: $showModelDropdown,
-                models: models,
-                onSubmit: handleSubmit
-            )
+                models: models
+            ) {
+                handleSubmit()
+            }
         }
     }
     
@@ -173,7 +174,8 @@ struct ChatContentView: View {
                 .font(.system(size: 20, weight: .medium))
                 .foregroundColor(.white)
             
-            Text("Ask questions, request help, or use commands to manage your project")
+            Text("Ask questions, request help, or use commands " +
+                 "to manage your project")
                 .font(.system(size: 14))
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
@@ -305,14 +307,20 @@ struct ChatContentView: View {
                 case "/spawn":
                     let title = args.joined(separator: " ").isEmpty ? "New Task" : args.joined(separator: " ")
                     let description = "Spawned from \(task.title)"
-                    appState.spawnTask(projectId: projectId, parentTaskId: task.id, title: title, description: description)
+                    appState.spawnTask(
+                        projectId: projectId, 
+                        parentTaskId: task.id, 
+                        title: title, 
+                        description: description
+                    )
                     responseMessage = "✅ New task \"\(title)\" spawned successfully!"
                     
                 case "/exit":
                     responseMessage = "✅ Task folded back to parent successfully."
                     
                 default:
-                    responseMessage = "❌ Unknown command: \(commandName). Available commands: /clone, /spawn [title], /exit"
+                    responseMessage = "❌ Unknown command: \(commandName). " +
+                                    "Available commands: /clone, /spawn [title], /exit"
                 }
                 
                 let assistantMessage = Message(
@@ -336,7 +344,8 @@ struct ChatContentView: View {
                 let assistantMessage = Message(
                     id: UUID().uuidString,
                     role: .assistant,
-                    content: "I received your message: \"\(message)\". This is a mock response using \(selectedModel). In a real implementation, this would connect to an AI service.",
+                    content: "I received your message: \"\(message)\". This is a mock response " +
+                             "using \(selectedModel). In a real implementation, this would connect to an AI service.",
                     timestamp: Date()
                 )
                 
@@ -346,246 +355,3 @@ struct ChatContentView: View {
         }
     }
 }
-
-struct MessageView: View {
-    let message: Message
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            if message.role == .assistant {
-                // Assistant avatar
-                Image(systemName: "message.circle")
-                    .font(.system(size: 28))
-                    .foregroundColor(.blue)
-                    .frame(width: 28, height: 28)
-            } else {
-                Spacer()
-            }
-            
-            // Message content
-            VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 4) {
-                Text(message.content)
-                    .font(.system(size: 14))
-                    .foregroundColor(message.role == .user ? .white : .white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(message.role == .user ? Color.blue : Color(hex: "#2a2a2a"))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(message.role == .user ? Color.clear : Color(hex: "#3a3a3a"), lineWidth: 1)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-            }
-            .frame(maxWidth: .infinity * 0.75, alignment: message.role == .user ? .trailing : .leading)
-            
-            if message.role == .user {
-                // User avatar
-                Image(systemName: "person.circle")
-                    .font(.system(size: 28))
-                    .foregroundColor(.gray)
-                    .frame(width: 28, height: 28)
-            } else {
-                Spacer()
-            }
-        }
-    }
-}
-
-struct ChatInputView: View {
-    @Binding var inputText: String
-    @Binding var isLoading: Bool
-    @Binding var selectedModel: String
-    @Binding var showModelDropdown: Bool
-    let models: [(String, String)]
-    let onSubmit: () -> Void
-    
-    @State private var textHeight: CGFloat = 48
-    @FocusState private var isTextFieldFocused: Bool
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            Rectangle()
-                .fill(Color(hex: "#2a2a2a"))
-                .frame(height: 1)
-            
-            VStack(spacing: 0) {
-                // Main input area
-                HStack(alignment: .bottom, spacing: 0) {
-                    // Text input container
-                    VStack(spacing: 0) {
-                        // Text input area
-                        HStack(alignment: .bottom, spacing: 12) {
-                            // Expandable text input
-                            ZStack(alignment: .topLeading) {
-                                // Background
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color(hex: "#2a2a2a"))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .stroke(Color(hex: "#3a3a3a"), lineWidth: 1)
-                                    )
-                                    .frame(height: max(48, textHeight))
-                                
-                                // Text input
-                                TextField("Type your message here...", text: $inputText, axis: .vertical)
-                                    .textFieldStyle(PlainTextFieldStyle())
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.white)
-                                    .disabled(isLoading)
-                                    .focused($isTextFieldFocused)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 14)
-                                    .background(Color.clear)
-                                    .onSubmit {
-                                        if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                            onSubmit()
-                                        }
-                                    }
-                                    .onChange(of: inputText) { _, newValue in
-                                        updateTextHeight(for: newValue)
-                                    }
-                            }
-                            
-                            // Send button
-                            Button(action: {
-                                if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                    onSubmit()
-                                }
-                            }) {
-                                Image(systemName: isLoading ? "hourglass" : "arrow.up")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.white)
-                                    .frame(width: 24, height: 24)
-                                    .background(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray.opacity(0.3) : Color.blue)
-                                    .clipShape(Circle())
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading)
-                        }
-                        
-                        // Bottom controls
-                        HStack {
-                            // Model selector
-                            modelSelectorView
-                            
-                            Spacer()
-                            
-                            // Additional controls
-                            HStack(spacing: 8) {
-                                Button(action: {
-                                    // Image upload functionality placeholder
-                                }) {
-                                    Image(systemName: "photo")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.gray)
-                                        .frame(width: 24, height: 24)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .help("Attach Image")
-                                
-                                Button(action: {
-                                    // Additional options placeholder
-                                }) {
-                                    Image(systemName: "ellipsis")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.gray)
-                                        .frame(width: 24, height: 24)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                .help("More Options")
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
-                .background(Color(hex: "#1a1a1a"))
-            }
-        }
-        .onAppear {
-            isTextFieldFocused = true
-        }
-    }
-    
-    private func updateTextHeight(for text: String) {
-        // Calculate height based on text content
-        let font = NSFont.systemFont(ofSize: 14)
-        let size = CGSize(width: 300, height: CGFloat.greatestFiniteMagnitude) // Approximate width
-        let boundingRect = text.boundingRect(
-            with: size,
-            options: [.usesLineFragmentOrigin, .usesFontLeading],
-            attributes: [.font: font],
-            context: nil
-        )
-        
-        let newHeight = max(48, min(128, boundingRect.height + 28)) // Add padding
-        textHeight = newHeight
-    }
-    
-    private var modelSelectorView: some View {
-        Button(action: {
-            showModelDropdown.toggle()
-        }) {
-            HStack(spacing: 4) {
-                Text(selectedModel)
-                    .font(.system(size: 12))
-                    .foregroundColor(.white)
-                
-                if let tier = models.first(where: { $0.0 == selectedModel })?.1 {
-                    Text(tier)
-                        .font(.system(size: 10))
-                        .foregroundColor(.gray)
-                }
-                
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 8))
-                    .foregroundColor(.gray)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color(hex: "#3a3a3a"))
-            .clipShape(RoundedRectangle(cornerRadius: 4))
-        }
-        .buttonStyle(PlainButtonStyle())
-        .popover(isPresented: $showModelDropdown) {
-            modelDropdownView
-        }
-    }
-    
-    private var modelDropdownView: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(models, id: \.0) { model, tier in
-                Button(action: {
-                    selectedModel = model
-                    showModelDropdown = false
-                }) {
-                    HStack {
-                        Text(model)
-                            .font(.system(size: 12))
-                            .foregroundColor(.white)
-                        
-                        Spacer()
-                        
-                        Text(tier)
-                            .font(.system(size: 10))
-                            .foregroundColor(.gray)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(selectedModel == model ? Color(hex: "#3a3a3a") : Color.clear)
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-        }
-        .frame(minWidth: 200)
-        .background(Color(hex: "#2a2a2a"))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color(hex: "#3a3a3a"), lineWidth: 1)
-        )
-    }
-} 

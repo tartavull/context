@@ -1,0 +1,263 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  DERIVED_DATA_PATH: DerivedData
+
+jobs:
+  # Build and basic validation
+  build:
+    name: Build
+    runs-on: macos-15
+    
+    outputs:
+      build-success: ${{ steps.build.outcome == 'success' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Show build environment
+      run: |
+        echo "macOS version:"
+        sw_vers
+        echo "Xcode version:"
+        xcodebuild -version
+        echo "Swift version:"
+        swift --version
+    
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Developer/Xcode/DerivedData
+          ~/.swiftpm
+          .build
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+    
+    - name: Install xcpretty
+      run: |
+        if ! which xcpretty >/dev/null; then
+          echo "Installing xcpretty..."
+          gem install xcpretty
+        else
+          echo "xcpretty already installed"
+        fi
+    
+    - name: Build project
+      id: build
+      run: |
+        set -o pipefail
+        if which xcpretty >/dev/null; then
+          xcodebuild -project context.xcodeproj \
+            -scheme context \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
+            CODE_SIGNING_ALLOWED=NO \
+            clean build | xcpretty
+        else
+          xcodebuild -project context.xcodeproj \
+            -scheme context \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
+            CODE_SIGNING_ALLOWED=NO \
+            clean build
+        fi
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: build-artifacts
+        path: |
+          ${{ env.DERIVED_DATA_PATH }}/Build/Products/
+          *.log
+        retention-days: 7
+
+  # Unit tests (depends on build)
+  unit-tests:
+    name: Unit Tests
+    runs-on: macos-15
+    needs: build
+    if: needs.build.outputs.build-success == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install xcpretty
+      run: |
+        if ! which xcpretty >/dev/null; then
+          echo "Installing xcpretty..."
+          gem install xcpretty
+        else
+          echo "xcpretty already installed"
+        fi
+    
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Developer/Xcode/DerivedData
+          ~/.swiftpm
+          .build
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+    
+    - name: Run unit tests
+      run: |
+        set -o pipefail
+        if which xcpretty >/dev/null; then
+          xcodebuild -project context.xcodeproj \
+            -scheme context \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
+            -only-testing:contextTests \
+            CODE_SIGNING_ALLOWED=NO \
+            test | xcpretty --test --color
+        else
+          xcodebuild -project context.xcodeproj \
+            -scheme context \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
+            -only-testing:contextTests \
+            CODE_SIGNING_ALLOWED=NO \
+            test
+        fi
+    
+    - name: Upload unit test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: unit-test-results
+        path: |
+          ${{ env.DERIVED_DATA_PATH }}/Logs/Test/
+          *.xml
+        retention-days: 7
+
+  # UI tests (depends on build, runs in parallel with unit tests)
+  ui-tests:
+    name: UI Tests
+    runs-on: macos-15
+    needs: build
+    if: needs.build.outputs.build-success == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install xcpretty
+      run: |
+        if ! which xcpretty >/dev/null; then
+          echo "Installing xcpretty..."
+          gem install xcpretty
+        else
+          echo "xcpretty already installed"
+        fi
+    
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/Library/Developer/Xcode/DerivedData
+          ~/.swiftpm
+          .build
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+    
+    - name: Run UI tests
+      run: |
+        set -o pipefail
+        if which xcpretty >/dev/null; then
+          xcodebuild -project context.xcodeproj \
+            -scheme context \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
+            -only-testing:contextUITests \
+            CODE_SIGNING_ALLOWED=NO \
+            test | xcpretty --test --color
+        else
+          xcodebuild -project context.xcodeproj \
+            -scheme context \
+            -destination 'platform=macOS' \
+            -configuration Debug \
+            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
+            -only-testing:contextUITests \
+            CODE_SIGNING_ALLOWED=NO \
+            test
+        fi
+    
+    - name: Upload UI test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ui-test-results
+        path: |
+          ${{ env.DERIVED_DATA_PATH }}/Logs/Test/
+          *.xml
+        retention-days: 7
+
+  # Code quality and linting
+  lint:
+    name: Code Quality
+    runs-on: macos-15
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Install SwiftLint
+      run: |
+        if ! which swiftlint >/dev/null; then
+          echo "Installing SwiftLint..."
+          brew install swiftlint
+        else
+          echo "SwiftLint already installed"
+        fi
+    
+    - name: Run SwiftLint
+      run: |
+        if [ -f .swiftlint.yml ]; then
+          swiftlint lint --reporter github-actions-logging
+        else
+          echo "No SwiftLint configuration found, skipping..."
+        fi
+
+  # Final summary job
+  summary:
+    name: Build Summary
+    runs-on: macos-15
+    needs: [build, unit-tests, ui-tests, lint]
+    if: always()
+    
+    steps:
+    - name: Generate summary
+      run: |
+        echo "## 🚀 CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| UI Tests | ${{ needs.ui-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Code Quality | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Xcode: Default (system)" >> $GITHUB_STEP_SUMMARY
+        echo "- macOS Runner: macos-15" >> $GITHUB_STEP_SUMMARY
+        echo "- Triggered by: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY 
