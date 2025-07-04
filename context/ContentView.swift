@@ -10,6 +10,8 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var appState = AppStateManager()
     @State private var projectsPanelWidth: CGFloat = 300
+    @State private var toggleButtonShine: Bool = false
+    @State private var toggleButtonHovered: Bool = false
     
     private let minPanelWidth: CGFloat = 200
     private let defaultPanelWidth: CGFloat = 300
@@ -40,7 +42,7 @@ struct ContentView: View {
                                 .frame(width: 2)
                                 .offset(x: -1.5) // Move 1.5 pixels to the left
                         }
-                                .ignoresSafeArea(.all, edges: .top)
+                        .ignoresSafeArea(.all, edges: .top)
                         .gesture(
                             DragGesture()
                                 .onChanged { value in
@@ -48,7 +50,15 @@ struct ContentView: View {
                                     
                                     if newWidth < minPanelWidth {
                                         if appState.state.ui.showProjects {
-                                            appState.updateUI(["showProjects": false])
+                                            // Trigger shine animation for auto-close
+                                            toggleButtonShine = true
+                                            withAnimation(.easeInOut(duration: 0.3)) {
+                                                appState.updateUI(["showProjects": false])
+                                            }
+                                            // Reset shine after animation completes
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                                                toggleButtonShine = false
+                                            }
                                         }
                                     } else {
                                         let constrainedWidth = min(newWidth, geometry.size.width * 0.5)
@@ -104,22 +114,35 @@ struct ContentView: View {
         .overlay(
             // Panel toggle button - always visible
             Button(action: {
-                if appState.state.ui.showProjects {
-                    appState.updateUI(["showProjects": false])
-                } else {
-                    appState.updateUI(["showProjects": true])
-                    projectsPanelWidth = defaultPanelWidth
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    if appState.state.ui.showProjects {
+                        appState.updateUI(["showProjects": false])
+                    } else {
+                        appState.updateUI(["showProjects": true])
+                        projectsPanelWidth = defaultPanelWidth
+                    }
                 }
             }) {
                 Image(systemName: "sidebar.leading")
                     .font(.system(size: 18, weight: .light))
-                    .foregroundColor(Color(red: 135/255, green: 135/255, blue: 135/255))
-                    .frame(width: 24, height: 24)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .foregroundColor(
+                        toggleButtonShine ? .white : 
+                        (toggleButtonHovered ? Color(red: 180/255, green: 180/255, blue: 180/255) : Color(red: 135/255, green: 135/255, blue: 135/255))
+                    )
+                    .frame(width: 32, height: 24)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(toggleButtonHovered ? Color.white.opacity(0.1) : Color.clear)
+                    )
+                    .animation(.easeInOut(duration: 0.3).repeatCount(1, autoreverses: true), value: toggleButtonShine)
+                    .animation(.easeInOut(duration: 0.15), value: toggleButtonHovered)
             }
             .buttonStyle(PlainButtonStyle())
+            .onHover { hovering in
+                toggleButtonHovered = hovering
+            }
             .position(
-                x: appState.state.ui.showProjects ? projectsPanelWidth - 20 : 90,
+                x: 90,
                 y: -19
             )
             .zIndex(1000)
