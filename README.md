@@ -1,8 +1,7 @@
-# Context
 
-<div align="center">
-  <img src="logo.png" alt="Context Logo" width="128" height="128">
-</div>
+![Context Banner](logo-banner.png)
+
+# Context <a href="https://github.com/tartavull/context/releases/latest"><img src="https://img.shields.io/github/v/release/tartavull/context?label=Download%20for%20macOS&style=for-the-badge&logo=apple&logoColor=white&color=blue" alt="Download for macOS" align="right"></a>
 
 **Never lose context.**
 
@@ -10,13 +9,7 @@ Have you noticed how LLMs are so smart on the first answer and so stupid after a
 
 ## Download
 
-<div align="center">
-  <a href="https://github.com/tartavull/context/releases/latest">
-    <img src="https://img.shields.io/github/v/release/tartavull/context?label=Download&style=for-the-badge&logo=github&logoColor=white&color=blue" alt="Download Latest Release">
-  </a>
-</div>
-
-Get the latest version of Context from our GitHub releases page.
+Get the latest universal macOS installer from our [GitHub releases page](https://github.com/tartavull/context/releases/latest). Compatible with both Intel and Apple Silicon Macs.
 
 ## Documentation
 
