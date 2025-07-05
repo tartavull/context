@@ -107,7 +107,7 @@ struct Project: Identifiable, Codable {
         let rootTask = ProjectTask(
             title: title, 
             description: description, 
-            position: ProjectTask.Position(x: 50, y: 200)
+            position: ProjectTask.Position(x: 20, y: 20)
         )
         self.tasks = [rootTask.id: rootTask]
         self.rootTaskIds = [rootTask.id]

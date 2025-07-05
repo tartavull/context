@@ -79,8 +79,8 @@ struct TreeView: View {
                                 onDelete: { appState.deleteTask(projectId: project.id, taskId: task.id) }
                             )
                             .position(
-                                x: task.position.x + 110 + geometry.size.width / 2,
-                                y: task.position.y + 70 + geometry.size.height / 2
+                                x: task.position.x + 110,
+                                y: task.position.y + 70
                             )
                         }
                     }

@@ -326,8 +326,8 @@ class AppStateManager: ObservableObject {
         columnWidth: Double = 280,
         nodeHeight: Double = 160,
         verticalSpacing: Double = 20,
-        startX: Double = 50,
-        startY: Double = 50
+        startX: Double = 20,
+        startY: Double = 20
     ) -> [String: ProjectTask.Position] {
         var positions: [String: ProjectTask.Position] = [:]
         
@@ -368,20 +368,8 @@ class AppStateManager: ObservableObject {
         for (levelIndex, levelTasks) in levels.enumerated() {
             let x = startX + (Double(levelIndex) * columnWidth)
             
-            // Calculate total height needed for this level
-            let totalNodesHeight = Double(levelTasks.count) * nodeHeight
-            let totalSpacingHeight = Double(levelTasks.count - 1) * verticalSpacing
-            let totalHeight = totalNodesHeight + totalSpacingHeight
-            
-            // Start Y position to center the level vertically
+            // Start Y position from the top
             var currentY = startY
-            if levelTasks.count > 1 {
-                // If we have multiple nodes, distribute them evenly
-                currentY = max(startY, 200 - (totalHeight / 2))
-            } else {
-                // Single node, center it around y=200
-                currentY = 200 - (nodeHeight / 2)
-            }
             
             // Position each task in this level
             for (taskIndex, taskId) in levelTasks.enumerated() {
