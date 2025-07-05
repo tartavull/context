@@ -97,13 +97,13 @@ struct ContentView: View {
                                 ChatView(selectedProjectId: appState.state.selectedProjectId)
                                     .environmentObject(appState)
                                     .frame(width: 400)
-                                    .background(Color.black.opacity(0.75))
+                                    .background(Color.clear)
                                     .cornerRadius(12)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                            .stroke(Color.clear, lineWidth: 1)
                                     )
-                                    .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+                                    .shadow(color: .clear, radius: 8, x: 0, y: 4)
                                     .padding(.trailing, 20)
                                     .padding(.vertical, 20)
                             }

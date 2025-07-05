@@ -78,6 +78,13 @@ struct TaskTreeView: View {
             .clipped()
         }
         .background(Color(red: 27/255, green: 27/255, blue: 27/255))
+        .onHover { isHovering in
+            if isHovering {
+                NSCursor.openHand.set()
+            } else {
+                NSCursor.arrow.set()
+            }
+        }
         .onTapGesture(count: 2) {
             // Double tap to reset zoom and pan
             withAnimation(.easeInOut(duration: 0.3)) {
@@ -103,12 +110,14 @@ struct TaskTreeView: View {
                     },
                 DragGesture()
                     .onChanged { value in
+                        NSCursor.closedHand.set()
                         panOffset = CGSize(
                             width: basePanOffset.width + value.translation.width,
                             height: basePanOffset.height + value.translation.height
                         )
                     }
                     .onEnded { _ in
+                        NSCursor.openHand.set()
                         basePanOffset = panOffset
                     }
             )
@@ -185,13 +194,36 @@ struct GridBackgroundView: View {
     private let minSpacing: CGFloat = 30  // Minimum spacing before switching to larger grid
     private let maxSpacing: CGFloat = 120 // Maximum spacing before switching to smaller grid
     
+    @State private var currentLevel: Int = 0
+    @State private var animatedOpacity: Double = 1.0
+    
     var body: some View {
         Canvas { context, size in
             // Determine which single grid level to show
             let optimalLevel = determineOptimalGridLevel()
-            drawSingleGridLevel(context: context, size: size, level: optimalLevel)
+            
+            // Check if we need to transition to a new level
+            if optimalLevel != currentLevel {
+                // Start fade out animation
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    animatedOpacity = 0.0
+                }
+                
+                // After fade out, switch level and fade back in
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    currentLevel = optimalLevel
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        animatedOpacity = 1.0
+                    }
+                }
+            }
+            
+            drawSingleGridLevel(context: context, size: size, level: currentLevel)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            currentLevel = determineOptimalGridLevel()
+        }
     }
     
     private func determineOptimalGridLevel() -> Int {
@@ -225,26 +257,30 @@ struct GridBackgroundView: View {
         // Skip drawing if opacity is too low
         guard opacity > 0.05 else { return }
         
-        // Calculate the range of grid indices we need to draw
-        let extraDots = 2
+        // Calculate grid offset to create a proper infinite grid pattern
+        let offsetX: CGFloat = 0
+        let offsetY: CGFloat = 0
+        
+        // Calculate the range of grid indices we need to draw to cover the entire view
+        let extraDots = 3
         let minX = -scaledSpacing * CGFloat(extraDots)
         let maxX = size.width + scaledSpacing * CGFloat(extraDots)
         let minY = -scaledSpacing * CGFloat(extraDots)
         let maxY = size.height + scaledSpacing * CGFloat(extraDots)
         
-        // Calculate starting indices (no offset since grid is fixed)
-        let startCol = Int(floor(minX / scaledSpacing))
-        let endCol = Int(ceil(maxX / scaledSpacing))
-        let startRow = Int(floor(minY / scaledSpacing))
-        let endRow = Int(ceil(maxY / scaledSpacing))
+        // Calculate starting indices based on the offset
+        let startCol = Int(floor((minX - offsetX) / scaledSpacing))
+        let endCol = Int(ceil((maxX - offsetX) / scaledSpacing))
+        let startRow = Int(floor((minY - offsetY) / scaledSpacing))
+        let endRow = Int(ceil((maxY - offsetY) / scaledSpacing))
         
         // Draw dots for this grid level
         for col in startCol...endCol {
             for row in startRow...endRow {
-                let x = CGFloat(col) * scaledSpacing + size.width / 2
-                let y = CGFloat(row) * scaledSpacing + size.height / 2
+                let x = CGFloat(col) * scaledSpacing + offsetX
+                let y = CGFloat(row) * scaledSpacing + offsetY
                 
-                // Only draw dots that are visible
+                // Only draw dots that are within the visible area (with some margin)
                 guard x >= -dotSize && x <= size.width + dotSize &&
                       y >= -dotSize && y <= size.height + dotSize else { continue }
                 
@@ -255,7 +291,7 @@ struct GridBackgroundView: View {
                         width: dotSize,
                         height: dotSize
                     )),
-                    with: .color(.white.opacity(0.25 * opacity))
+                    with: .color(.white.opacity(0.25 * opacity * animatedOpacity))
                 )
             }
         }
