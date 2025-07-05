@@ -109,9 +109,7 @@ struct InputView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 12)
             }
-            .background(
-                BlurView(material: .hudWindow, blendingMode: .behindWindow)
-            )
+            .floatingBlur(cornerRadius: 16)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
