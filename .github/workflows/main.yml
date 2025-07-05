@@ -115,27 +115,42 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-spm-
     
-    - name: Run unit tests
+    - name: Build for testing
+      run: |
+        set -o pipefail
+        xcodebuild -project context.xcodeproj \
+          -scheme context \
+          -destination 'platform=macOS,arch=arm64' \
+          -configuration Debug \
+          -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
+          -only-testing:contextTests \
+          CODE_SIGNING_ALLOWED=NO \
+          ENABLE_TESTING_SEARCH_PATHS=YES \
+          build-for-testing
+    
+    - name: Run unit tests (without building)
       run: |
         set -o pipefail
         if which xcpretty >/dev/null; then
           xcodebuild -project context.xcodeproj \
             -scheme context \
-            -destination 'platform=macOS' \
+            -destination 'platform=macOS,arch=arm64' \
             -configuration Debug \
             -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
             -only-testing:contextTests \
             CODE_SIGNING_ALLOWED=NO \
-            test | xcpretty --test --color
+            ENABLE_TESTING_SEARCH_PATHS=YES \
+            test-without-building | xcpretty --test --color
         else
           xcodebuild -project context.xcodeproj \
             -scheme context \
-            -destination 'platform=macOS' \
+            -destination 'platform=macOS,arch=arm64' \
             -configuration Debug \
             -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
             -only-testing:contextTests \
             CODE_SIGNING_ALLOWED=NO \
-            test
+            ENABLE_TESTING_SEARCH_PATHS=YES \
+            test-without-building
         fi
     
     - name: Upload unit test results
