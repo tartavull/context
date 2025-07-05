@@ -33,10 +33,7 @@ struct TaskNodeView: View {
             .padding(.vertical, 8)
         }
         .frame(width: 220, height: 140)
-        .background(
-            BlurView(material: .hudWindow, blendingMode: .behindWindow)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-        )
+        .tintedBlur(cornerRadius: 8)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(isSelected ? Color(hex: "#a0a0a0") : nodeTypeColor, lineWidth: 2)
