@@ -1,7 +1,7 @@
 import SwiftUI
 import AppKit
 
-struct ChatInputView: View {
+struct InputView: View {
     @Binding var inputText: String
     @Binding var isLoading: Bool
     @Binding var selectedModel: String
@@ -35,8 +35,8 @@ struct ChatInputView: View {
                                     .foregroundColor(.white)
                                     .disabled(isLoading)
                                     .focused($isTextFieldFocused)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 14)
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 8)
                                     .background(Color.clear)
                                     .onSubmit {
                                         if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -109,7 +109,9 @@ struct ChatInputView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 12)
             }
-            .background(Color(hex: "#1a1a1a"))
+            .background(
+                BlurView(material: .hudWindow, blendingMode: .behindWindow)
+            )
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
@@ -204,4 +206,4 @@ struct ChatInputView: View {
                 .stroke(Color(hex: "#3a3a3a"), lineWidth: 1)
         )
     }
-} 
+}

@@ -18,8 +18,8 @@ struct ChatView: View {
         }
     }
     
-    private var defaultTask: Task {
-        var task = Task(
+    private var defaultTask: ProjectTask {
+        var task = ProjectTask(
             title: "Chat",
             description: "",
             nodeType: .original
@@ -34,7 +34,7 @@ struct ChatView: View {
 struct ChatContentView: View {
     @EnvironmentObject var appState: AppStateManager
     let projectId: String
-    let task: Task
+    let task: ProjectTask
     
     @State private var inputText = ""
     @State private var isLoading = false
@@ -51,11 +51,11 @@ struct ChatContentView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Messages
+            // Messages - takes available space
             messagesView
             
-            // Input Area
-            ChatInputView(
+            // Input Area - always at bottom
+            InputView(
                 inputText: $inputText,
                 isLoading: $isLoading,
                 selectedModel: $selectedModel,
@@ -65,6 +65,7 @@ struct ChatContentView: View {
                 handleSubmit()
             }
         }
+        .frame(maxHeight: 600)
     }
     
     private var taskHeaderView: some View {

@@ -26,7 +26,7 @@ struct Conversation: Identifiable, Codable {
     }
 }
 
-struct Task: Identifiable, Codable {
+struct ProjectTask: Identifiable, Codable {
     let id: String
     var title: String
     var description: String
@@ -85,7 +85,7 @@ struct Project: Identifiable, Codable {
     var title: String
     var description: String
     var status: ProjectStatus
-    var tasks: [String: Task]
+    var tasks: [String: ProjectTask]
     var rootTaskIds: [String]
     let createdAt: Date
     var updatedAt: Date
@@ -104,10 +104,10 @@ struct Project: Identifiable, Codable {
         self.status = .active
         
         // Create root task
-        let rootTask = Task(
+        let rootTask = ProjectTask(
             title: title, 
             description: description, 
-            position: Task.Position(x: 50, y: 200)
+            position: ProjectTask.Position(x: 50, y: 200)
         )
         self.tasks = [rootTask.id: rootTask]
         self.rootTaskIds = [rootTask.id]
@@ -171,20 +171,20 @@ extension AppState {
             updatedProject1.tasks[rootTaskId]?.status = .active
             
             // Create child tasks
-            let task2 = Task(
+            let task2 = ProjectTask(
                 title: "Design UI Components",
                 description: "Create reusable UI components for the todo app",
                 nodeType: .spawn,
                 parentId: rootTaskId,
-                position: Task.Position(x: 350, y: 110)
+                position: ProjectTask.Position(x: 350, y: 110)
             )
             
-            let task3 = Task(
+            let task3 = ProjectTask(
                 title: "Implement State Management",
                 description: "Set up state management with Context API",
                 nodeType: .clone,
                 parentId: rootTaskId,
-                position: Task.Position(x: 350, y: 290)
+                position: ProjectTask.Position(x: 350, y: 290)
             )
             
             // Update the root task to have children

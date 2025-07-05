@@ -105,13 +105,13 @@ class AppStateManager: ObservableObject {
         projectId: String, 
         title: String, 
         description: String, 
-        nodeType: Task.NodeType, 
+        nodeType: ProjectTask.NodeType, 
         parentId: String? = nil, 
-        position: Task.Position = Task.Position(x: 100, y: 100)
+        position: ProjectTask.Position = ProjectTask.Position(x: 100, y: 100)
     ) {
         guard var project = state.projects[projectId] else { return }
         
-        let newTask = Task(
+        let newTask = ProjectTask(
             title: title, 
             description: description, 
             nodeType: nodeType, 
@@ -152,10 +152,10 @@ class AppStateManager: ObservableObject {
             task.description = description
         }
         if let status = updates["status"] as? String,
-           let taskStatus = Task.TaskStatus(rawValue: status) {
+           let taskStatus = ProjectTask.TaskStatus(rawValue: status) {
             task.status = taskStatus
         }
-        if let position = updates["position"] as? Task.Position {
+        if let position = updates["position"] as? ProjectTask.Position {
             task.position = position
         }
         
@@ -194,7 +194,7 @@ class AppStateManager: ObservableObject {
         guard var project = state.projects[projectId],
               let originalTask = project.tasks[taskId] else { return }
         
-        let clonedTask = Task(
+        let clonedTask = ProjectTask(
             title: "\(originalTask.title) (Clone)",
             description: originalTask.description,
             nodeType: .clone,
@@ -228,7 +228,7 @@ class AppStateManager: ObservableObject {
         guard var project = state.projects[projectId],
               var parentTask = project.tasks[parentTaskId] else { return }
         
-        let spawnedTask = Task(
+        let spawnedTask = ProjectTask(
             title: title,
             description: description,
             nodeType: .spawn,
@@ -291,14 +291,14 @@ class AppStateManager: ObservableObject {
         return state.projects[projectId]
     }
     
-    var selectedTask: Task? {
+    var selectedTask: ProjectTask? {
         guard let projectId = state.selectedProjectId,
               let taskId = state.selectedTaskId,
               let project = state.projects[projectId] else { return nil }
         return project.tasks[taskId]
     }
     
-    func getProjectTasks(_ projectId: String) -> [Task] {
+    func getProjectTasks(_ projectId: String) -> [ProjectTask] {
         guard let project = state.projects[projectId] else { return [] }
         return Array(project.tasks.values)
     }
@@ -321,15 +321,15 @@ class AppStateManager: ObservableObject {
     }
     
     private func calculateTreeLayout(
-        tasks: [String: Task],
+        tasks: [String: ProjectTask],
         rootTaskIds: [String],
         columnWidth: Double = 280,
         nodeHeight: Double = 160,
         verticalSpacing: Double = 20,
         startX: Double = 50,
         startY: Double = 50
-    ) -> [String: Task.Position] {
-        var positions: [String: Task.Position] = [:]
+    ) -> [String: ProjectTask.Position] {
+        var positions: [String: ProjectTask.Position] = [:]
         
         // Build tree structure by levels
         var levels: [[String]] = []
@@ -385,7 +385,7 @@ class AppStateManager: ObservableObject {
             
             // Position each task in this level
             for (taskIndex, taskId) in levelTasks.enumerated() {
-                positions[taskId] = Task.Position(
+                positions[taskId] = ProjectTask.Position(
                     x: x,
                     y: currentY + (Double(taskIndex) * (nodeHeight + verticalSpacing))
                 )
