@@ -75,37 +75,6 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Main Content View (now unused - keeping for reference)
-    private var mainContentView: some View {
-        VStack(spacing: 0) {
-            GeometryReader { geometry in
-                HStack(spacing: 0) {
-                    // Add spacer for project panel width when it's visible
-                    if appState.state.ui.showProjects {
-                        Spacer()
-                            .frame(width: projectsPanelWidth)
-                    }
-                    chartPanelWithOverlays(geometry: geometry)
-                }
-            }
-        }
-    }
-    
-    // MARK: - Projects Panel Overlay (now unused - keeping for reference)
-    private var projectsPanelOverlay: some View {
-        Group {
-            if appState.state.ui.showProjects {
-                HStack {
-                    ProjectsView(isCollapsed: false)
-                        .environmentObject(appState)
-                        .frame(width: projectsPanelWidth)
-                        .background(Color.clear)
-                    Spacer()
-                }
-            }
-        }
-    }
-    
     // MARK: - Chart Panel with Overlays
     private func chartPanelWithOverlays(geometry: GeometryProxy) -> some View {
         Group {
