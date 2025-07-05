@@ -16,21 +16,23 @@ struct ProjectsView: View {
                     Text("Projects")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
-                    Spacer()
                 }
+                
+                Spacer()
                 
                 Button(action: {
                     createNewProject()
                 }, label: {
                     NewConversationIcon()
                         .foregroundColor(.white)
-                        .frame(width: isCollapsed ? 32 : 24, height: isCollapsed ? 32 : 24)
+                        .frame(width: 24, height: 24)
                 })
                 .buttonStyle(PlainButtonStyle())
                 .help("Create New Project")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
+            .padding(.top, 30)
             .overlay(
                 Rectangle()
                     .fill(Color.white.opacity(0.1))
@@ -83,10 +85,14 @@ struct ProjectsView: View {
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("projects-panel")
         .accessibilityLabel("Projects Panel")
-        .background(
-            BlurView(material: .hudWindow, blendingMode: .behindWindow)
-                .ignoresSafeArea(.all, edges: .top)
+        .overlay(
+            Rectangle()
+                .fill(Color.black)
+                .frame(width: 2),
+            alignment: .trailing
         )
+        .behindWindowBlur()
+        .ignoresSafeArea(.all, edges: .top)
 
         .onChange(of: isEditing) { _, newValue in
             if newValue != nil {
