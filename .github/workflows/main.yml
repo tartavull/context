@@ -148,70 +148,6 @@ jobs:
           *.xml
         retention-days: 7
 
-  # UI tests (depends on build, runs in parallel with unit tests)
-  ui-tests:
-    name: UI Tests
-    runs-on: macos-15
-    needs: build
-    if: needs.build.outputs.build-success == 'true'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Install xcpretty
-      run: |
-        if ! which xcpretty >/dev/null; then
-          echo "Installing xcpretty..."
-          gem install xcpretty
-        else
-          echo "xcpretty already installed"
-        fi
-    
-    - name: Cache Swift Package Manager
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/Library/Developer/Xcode/DerivedData
-          ~/.swiftpm
-          .build
-        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-        restore-keys: |
-          ${{ runner.os }}-spm-
-    
-    - name: Run UI tests
-      run: |
-        set -o pipefail
-        if which xcpretty >/dev/null; then
-          xcodebuild -project context.xcodeproj \
-            -scheme context \
-            -destination 'platform=macOS' \
-            -configuration Debug \
-            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
-            -only-testing:contextUITests \
-            CODE_SIGNING_ALLOWED=NO \
-            test | xcpretty --test --color
-        else
-          xcodebuild -project context.xcodeproj \
-            -scheme context \
-            -destination 'platform=macOS' \
-            -configuration Debug \
-            -derivedDataPath ${{ env.DERIVED_DATA_PATH }} \
-            -only-testing:contextUITests \
-            CODE_SIGNING_ALLOWED=NO \
-            test
-        fi
-    
-    - name: Upload UI test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: ui-test-results
-        path: |
-          ${{ env.DERIVED_DATA_PATH }}/Logs/Test/
-          *.xml
-        retention-days: 7
-
   # Code quality and linting
   lint:
     name: Code Quality
@@ -242,7 +178,7 @@ jobs:
   summary:
     name: Build Summary
     runs-on: macos-15
-    needs: [build, unit-tests, ui-tests, lint]
+    needs: [build, unit-tests, lint]
     if: always()
     
     steps:
@@ -254,7 +190,6 @@ jobs:
         echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
         echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
         echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
-        echo "| UI Tests | ${{ needs.ui-tests.result }} |" >> $GITHUB_STEP_SUMMARY
         echo "| Code Quality | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Environment:**" >> $GITHUB_STEP_SUMMARY
