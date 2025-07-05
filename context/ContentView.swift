@@ -24,21 +24,36 @@ struct ContentView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            HStack(spacing: 0) {
-                // Projects Panel - conditionally shown
-                if appState.state.ui.showProjects {
-                    ProjectsView(isCollapsed: false)
-                        .environmentObject(appState)
-                        .frame(width: projectsPanelWidth)
-                        .background(Color.clear)
+            ZStack {
+                // Main Content Area (always present)
+                HStack(spacing: 0) {
+                    // Add spacer for projects panel width when it's visible
+                    if appState.state.ui.showProjects {
+                        Spacer()
+                            .frame(width: projectsPanelWidth)
+                    }
+                    
+                    chartPanelWithOverlays(geometry: geometry)
+                        .frame(maxWidth: .infinity)
                 }
+                .background(Color.clear)
                 
-                // Main Content Area
-                chartPanelWithOverlays(geometry: geometry)
-                    .frame(maxWidth: .infinity)
+                // Chat input - lower z-index
+                floatingChatInput
+                    .zIndex(50)
+                
+                // Projects panel overlay - higher z-index
+                if appState.state.ui.showProjects {
+                    HStack {
+                        ProjectsView(isCollapsed: false)
+                            .environmentObject(appState)
+                            .frame(width: projectsPanelWidth)
+                            .background(Color.clear)
+                        Spacer()
+                    }
+                    .zIndex(100)
+                }
             }
-            .background(Color.clear)
-            .overlay(floatingChatInput)
             .overlay(resizeHandleOverlay(geometry: geometry), alignment: .leading)
             .preferredColorScheme(.dark)
             .overlay(panelToggleButton, alignment: .topLeading)
@@ -241,6 +256,7 @@ struct ContentView: View {
                     }
                     .padding(.bottom, 20)
                 }
+                .zIndex(50) // Lower z-index than projects panel
             }
         }
     }
