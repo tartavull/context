@@ -7,55 +7,29 @@ struct ChatView: View {
     
     var body: some View {
         ZStack {
-            Color(hex: "#1a1a1a")
+            Color.clear
                 .ignoresSafeArea()
             
-            if let projectId = selectedProjectId,
-               let selectedTask = appState.selectedTask {
-                ChatContentView(projectId: projectId, task: selectedTask)
-            } else if selectedProjectId != nil {
-                // Project selected but no task
-                emptyTaskView
-            } else {
-                // No project selected
-                emptyProjectView
-            }
+            // Always show chat content with default values if needed
+            ChatContentView(
+                projectId: selectedProjectId ?? "default",
+                task: appState.selectedTask ?? defaultTask
+            )
         }
     }
     
-    private var emptyTaskView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "message")
-                .font(.system(size: 48))
-                .foregroundColor(.gray)
-            
-            Text("No Task Selected")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.white)
-            
-            Text("Click on a task in the chart to view its conversation")
-                .font(.system(size: 14))
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-        }
+    private var defaultTask: Task {
+        Task(
+            id: "default",
+            title: "Chat",
+            description: "",
+            status: .active,
+            nodeType: .task,
+            conversation: Conversation(messages: [])
+        )
     }
     
-    private var emptyProjectView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "message")
-                .font(.system(size: 48))
-                .foregroundColor(.gray)
-            
-            Text("No Project Selected")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.white)
-            
-            Text("Select a project from the left panel to start chatting")
-                .font(.system(size: 14))
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-        }
-    }
+
 }
 
 struct ChatContentView: View {
@@ -78,9 +52,6 @@ struct ChatContentView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Task Header
-            taskHeaderView
-            
             // Messages
             messagesView
             
@@ -146,85 +117,18 @@ struct ChatContentView: View {
     private var messagesView: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                if task.conversation.messages.isEmpty {
-                    emptyMessagesView
-                } else {
-                    ForEach(task.conversation.messages, id: \.id) { message in
-                        MessageView(message: message)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
-                    }
-                    
-                    if isLoading {
-                        loadingView
-                    }
+                ForEach(task.conversation.messages, id: \.id) { message in
+                    MessageView(message: message)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                }
+                
+                if isLoading {
+                    loadingView
                 }
             }
         }
-        .background(Color(hex: "#1a1a1a"))
-    }
-    
-    private var emptyMessagesView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "message.circle")
-                .font(.system(size: 48))
-                .foregroundColor(.blue)
-            
-            Text("Start a conversation")
-                .font(.system(size: 20, weight: .medium))
-                .foregroundColor(.white)
-            
-            Text("Ask questions, request help, or use commands " +
-                 "to manage your project")
-                .font(.system(size: 14))
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-            
-            commandsHelpView
-        }
-        .padding(.vertical, 48)
-    }
-    
-    private var commandsHelpView: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Available Commands:")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("/clone")
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(.blue)
-                    Text("- Clone the current task")
-                        .font(.system(size: 12))
-                        .foregroundColor(.gray)
-                }
-                
-                HStack {
-                    Text("/spawn [title]")
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(.blue)
-                    Text("- Create a new child task")
-                        .font(.system(size: 12))
-                        .foregroundColor(.gray)
-                }
-                
-                HStack {
-                    Text("/exit")
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(.blue)
-                    Text("- Fold task back to parent")
-                        .font(.system(size: 12))
-                        .foregroundColor(.gray)
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color(hex: "#2a2a2a"))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(Color.clear)
     }
     
     private var loadingView: some View {

@@ -115,45 +115,43 @@ struct ContentView: View {
         .background(Color.clear)
         .preferredColorScheme(.dark)
         .overlay(
-            // Panel toggle button - always visible
-            Button(action: {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    if appState.state.ui.showProjects {
-                        appState.updateUI(["showProjects": false])
-                    } else {
-                        appState.updateUI(["showProjects": true])
-                        projectsPanelWidth = defaultPanelWidth
+            Group {
+                // Panel toggle button - always visible (positioned in title bar)
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        if appState.state.ui.showProjects {
+                            appState.updateUI(["showProjects": false])
+                        } else {
+                            appState.updateUI(["showProjects": true])
+                            projectsPanelWidth = defaultPanelWidth
+                        }
                     }
+                }, label: {
+                    Image(systemName: "sidebar.leading")
+                        .font(.system(size: 18, weight: .light))
+                        .foregroundColor(
+                            toggleButtonShine ? .white :
+                            (toggleButtonHovered ? Color(red: 180/255, green: 180/255, blue: 180/255) : 
+                             Color(red: 135/255, green: 135/255, blue: 135/255))
+                        )
+                        .frame(width: 32, height: 24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(toggleButtonHovered ? Color.white.opacity(0.1) : Color.clear)
+                        )
+                        .animation(.easeInOut(duration: 0.3).repeatCount(1, autoreverses: true), value: toggleButtonShine)
+                        .animation(.easeInOut(duration: 0.15), value: toggleButtonHovered)
+                })
+                .buttonStyle(PlainButtonStyle())
+                .onHover { hovering in
+                    toggleButtonHovered = hovering
                 }
-            }, label: {
-                Image(systemName: "sidebar.leading")
-                    .font(.system(size: 18, weight: .light))
-                    .foregroundColor(
-                        toggleButtonShine ? .white :
-                        (toggleButtonHovered ? Color(red: 180/255, green: 180/255, blue: 180/255) : 
-                         Color(red: 135/255, green: 135/255, blue: 135/255))
-                    )
-                    .frame(width: 32, height: 24)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(toggleButtonHovered ? Color.white.opacity(0.1) : Color.clear)
-                    )
-                    .animation(.easeInOut(duration: 0.3).repeatCount(1, autoreverses: true), value: toggleButtonShine)
-                    .animation(.easeInOut(duration: 0.15), value: toggleButtonHovered)
-            })
-            .buttonStyle(PlainButtonStyle())
-            .accessibilityElement()
-            .accessibilityIdentifier("projects-panel-toggle-button")
-            .accessibilityLabel("Toggle Projects Panel")
-            .onHover { hovering in
-                toggleButtonHovered = hovering
-            }
-            .position(
-                x: 90,
-                y: -19
-            )
-            .zIndex(1000)
-            .help(appState.state.ui.showProjects ? "Hide Projects Panel" : "Show Projects Panel"),
+                .position(x: 90, y: -19)
+                .zIndex(1000)
+                .help(appState.state.ui.showProjects ? "Hide Projects Panel" : "Show Projects Panel")
+                .accessibilityIdentifier("projects-panel-toggle-button")
+                .accessibilityLabel("Toggle Projects Panel")
+            },
             alignment: .topLeading
         )
         .toolbar {
@@ -174,3 +172,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+
+

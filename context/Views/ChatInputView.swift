@@ -14,10 +14,6 @@ struct ChatInputView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            Rectangle()
-                .fill(Color(hex: "#2a2a2a"))
-                .frame(height: 1)
-            
             VStack(spacing: 0) {
                 // Main input area
                 HStack(alignment: .bottom, spacing: 0) {
@@ -29,11 +25,7 @@ struct ChatInputView: View {
                             ZStack(alignment: .topLeading) {
                                 // Background
                                 RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color(hex: "#2a2a2a"))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .stroke(Color(hex: "#3a3a3a"), lineWidth: 1)
-                                    )
+                                    .fill(Color.clear)
                                     .frame(height: max(48, textHeight))
                                 
                                 // Text input
@@ -116,8 +108,15 @@ struct ChatInputView: View {
                 .padding(.horizontal, 16)
                 .padding(.top, 16)
                 .padding(.bottom, 12)
-                .background(Color(hex: "#1a1a1a"))
             }
+            .background(Color(hex: "#1a1a1a"))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(hex: "#3a3a3a"), lineWidth: 1)
+            )
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
         }
         .onAppear {
             isTextFieldFocused = true
@@ -163,7 +162,7 @@ struct ChatInputView: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color(hex: "#3a3a3a"))
+            .background(Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 4))
         })
         .buttonStyle(PlainButtonStyle())

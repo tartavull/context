@@ -22,11 +22,11 @@ struct MessageView: View {
                     .foregroundColor(message.role == .user ? .white : .white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(message.role == .user ? Color.blue : Color(hex: "#2a2a2a"))
+                    .background(Color.clear)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(
-                                message.role == .user ? Color.clear : Color(hex: "#3a3a3a"), 
+                                message.role == .user ? Color.clear : Color.clear, 
                                 lineWidth: 1
                             )
                     )

@@ -35,43 +35,46 @@ struct TaskTreeView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Grid background
+                // Fixed grid background (responds to zoom but not pan)
                 GridBackgroundView(
-                    panOffset: panOffset,
+                    panOffset: .zero,
                     zoomScale: zoomScale,
                     viewSize: geometry.size
                 )
                 
-                // Draw connections first (behind nodes)
-                ForEach(Array(project.tasks.values), id: \.id) { task in
-                    ForEach(task.childIds.compactMap { childId in
-                        project.tasks[childId]
-                    }, id: \.id) { childTask in
-                        TaskConnectionView(
-                            from: task.position,
-                            to: childTask.position,
-                            isActive: task.status == .active || childTask.status == .active
+                // Moveable content (nodes and connections)
+                ZStack {
+                    // Draw connections first (behind nodes)
+                    ForEach(Array(project.tasks.values), id: \.id) { task in
+                        ForEach(task.childIds.compactMap { childId in
+                            project.tasks[childId]
+                        }, id: \.id) { childTask in
+                            TaskConnectionView(
+                                from: task.position,
+                                to: childTask.position,
+                                isActive: task.status == .active || childTask.status == .active
+                            )
+                        }
+                    }
+                    
+                    // Draw nodes on top
+                    ForEach(Array(project.tasks.values), id: \.id) { task in
+                        TaskNodeView(
+                            task: task,
+                            isSelected: appState.state.selectedTaskId == task.id,
+                            onSelect: { appState.selectTask(task.id) },
+                            onDelete: { appState.deleteTask(projectId: project.id, taskId: task.id) }
+                        )
+                        .position(
+                            x: task.position.x + 110 + geometry.size.width / 2,
+                            y: task.position.y + 70 + geometry.size.height / 2
                         )
                     }
                 }
-                
-                // Draw nodes on top
-                ForEach(Array(project.tasks.values), id: \.id) { task in
-                    TaskNodeView(
-                        task: task,
-                        isSelected: appState.state.selectedTaskId == task.id,
-                        onSelect: { appState.selectTask(task.id) },
-                        onDelete: { appState.deleteTask(projectId: project.id, taskId: task.id) }
-                    )
-                    .position(
-                        x: task.position.x + 110 + geometry.size.width / 2,
-                        y: task.position.y + 70 + geometry.size.height / 2
-                    )
-                }
+                .scaleEffect(zoomScale)
+                .offset(panOffset)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .scaleEffect(zoomScale)
-            .offset(panOffset)
             .clipped()
         }
         .background(Color(red: 27/255, green: 27/255, blue: 27/255))
@@ -177,52 +180,98 @@ struct GridBackgroundView: View {
     let zoomScale: CGFloat
     let viewSize: CGSize
     
-    private let gridSpacing: CGFloat = 50
-    private let dotSize: CGFloat = 2
+    private let baseGridSpacing: CGFloat = 60
+    private let dotSize: CGFloat = 1.5
+    private let minSpacing: CGFloat = 30  // Minimum spacing before switching to larger grid
+    private let maxSpacing: CGFloat = 120 // Maximum spacing before switching to smaller grid
     
     var body: some View {
         Canvas { context, size in
-            // Calculate the effective grid spacing with zoom
-            let scaledSpacing = gridSpacing * zoomScale
-            
-            // Calculate the grid offset to create an infinite grid
-            // The grid should appear to extend infinitely in all directions
-            let offsetX = panOffset.width.truncatingRemainder(dividingBy: scaledSpacing)
-            let offsetY = panOffset.height.truncatingRemainder(dividingBy: scaledSpacing)
-            
-            // Calculate the range of grid indices we need to draw
-            let extraDots = 3 // Extra dots beyond visible area for smooth scrolling
-            let minX = -scaledSpacing * CGFloat(extraDots)
-            let maxX = size.width + scaledSpacing * CGFloat(extraDots)
-            let minY = -scaledSpacing * CGFloat(extraDots)
-            let maxY = size.height + scaledSpacing * CGFloat(extraDots)
-            
-            // Calculate starting indices based on the offset
-            let startCol = Int(floor((minX - offsetX) / scaledSpacing))
-            let endCol = Int(ceil((maxX - offsetX) / scaledSpacing))
-            let startRow = Int(floor((minY - offsetY) / scaledSpacing))
-            let endRow = Int(ceil((maxY - offsetY) / scaledSpacing))
-            
-            // Draw dots in an infinite grid pattern
-            for col in startCol...endCol {
-                for row in startRow...endRow {
-                    let x = CGFloat(col) * scaledSpacing + offsetX
-                    let y = CGFloat(row) * scaledSpacing + offsetY
-                    
-                    // Draw the dot
-                    context.fill(
-                        Path(ellipseIn: CGRect(
-                            x: x - dotSize/2,
-                            y: y - dotSize/2,
-                            width: dotSize,
-                            height: dotSize
-                        )),
-                        with: .color(.white.opacity(0.3))
-                    )
-                }
-            }
+            // Determine which single grid level to show
+            let optimalLevel = determineOptimalGridLevel()
+            drawSingleGridLevel(context: context, size: size, level: optimalLevel)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private func determineOptimalGridLevel() -> Int {
+        // Test different grid levels and pick the one that fits best
+        let testLevels = [-2, -1, 0, 1, 2]
+        
+        for level in testLevels {
+            let levelMultiplier = pow(2.0, Double(level))
+            let gridSpacing = baseGridSpacing * CGFloat(levelMultiplier)
+            let scaledSpacing = gridSpacing * zoomScale
+            
+            // Check if this level is in the optimal range
+            if scaledSpacing >= minSpacing && scaledSpacing <= maxSpacing {
+                return level
+            }
+        }
+        
+        // Fallback to level 0 if no optimal level found
+        return 0
+    }
+    
+    private func drawSingleGridLevel(context: GraphicsContext, size: CGSize, level: Int) {
+        // Calculate spacing for this grid level
+        let levelMultiplier = pow(2.0, Double(level))
+        let gridSpacing = baseGridSpacing * CGFloat(levelMultiplier)
+        let scaledSpacing = gridSpacing * zoomScale
+        
+        // Calculate fade based on how close we are to the edges of the optimal range
+        let opacity = calculateFadeOpacity(scaledSpacing: scaledSpacing)
+        
+        // Skip drawing if opacity is too low
+        guard opacity > 0.05 else { return }
+        
+        // Calculate the range of grid indices we need to draw
+        let extraDots = 2
+        let minX = -scaledSpacing * CGFloat(extraDots)
+        let maxX = size.width + scaledSpacing * CGFloat(extraDots)
+        let minY = -scaledSpacing * CGFloat(extraDots)
+        let maxY = size.height + scaledSpacing * CGFloat(extraDots)
+        
+        // Calculate starting indices (no offset since grid is fixed)
+        let startCol = Int(floor(minX / scaledSpacing))
+        let endCol = Int(ceil(maxX / scaledSpacing))
+        let startRow = Int(floor(minY / scaledSpacing))
+        let endRow = Int(ceil(maxY / scaledSpacing))
+        
+        // Draw dots for this grid level
+        for col in startCol...endCol {
+            for row in startRow...endRow {
+                let x = CGFloat(col) * scaledSpacing + size.width / 2
+                let y = CGFloat(row) * scaledSpacing + size.height / 2
+                
+                // Only draw dots that are visible
+                guard x >= -dotSize && x <= size.width + dotSize &&
+                      y >= -dotSize && y <= size.height + dotSize else { continue }
+                
+                context.fill(
+                    Path(ellipseIn: CGRect(
+                        x: x - dotSize/2,
+                        y: y - dotSize/2,
+                        width: dotSize,
+                        height: dotSize
+                    )),
+                    with: .color(.white.opacity(0.25 * opacity))
+                )
+            }
+        }
+    }
+    
+    private func calculateFadeOpacity(scaledSpacing: CGFloat) -> Double {
+        let center = (minSpacing + maxSpacing) / 2
+        let range = maxSpacing - minSpacing
+        let distance = abs(scaledSpacing - center)
+        let normalizedDistance = distance / (range / 2)
+        
+        // Smooth fade at the edges
+        if normalizedDistance > 1.0 {
+            return max(0, 1.0 - (normalizedDistance - 1.0) * 2)
+        }
+        return 1.0
     }
 }
 
