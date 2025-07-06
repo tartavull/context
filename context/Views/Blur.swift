@@ -65,6 +65,7 @@ struct TintedBlur: View {
     @State private var gradientAngle: CGFloat = 0
     @State private var gradientStops: [Gradient.Stop] = []
     @State private var animationTimer: Timer?
+    @State private var isAnimationActive: Bool = false
     
     init(cornerRadius: CGFloat = 8) {
         self.cornerRadius = cornerRadius
@@ -86,11 +87,14 @@ struct TintedBlur: View {
             )
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .onAppear {
-                generateRandomGradient()
-                startRandomAnimation()
+                // Only start animation if not already active
+                if !isAnimationActive {
+                    generateRandomGradient()
+                    startRandomAnimation()
+                }
             }
             .onDisappear {
-                animationTimer?.invalidate()
+                stopAnimation()
             }
             
             // Blur overlay
@@ -102,12 +106,21 @@ struct TintedBlur: View {
     
     // MARK: - Animation Functions
     private func startRandomAnimation() {
+        guard !isAnimationActive else { return }
+        isAnimationActive = true
+        
         animateToRandomPosition()
         
         // Set up continuous random animations
         animationTimer = Timer.scheduledTimer(withTimeInterval: Double.random(in: 0.5...2.0), repeats: true) { _ in
             animateToRandomPosition()
         }
+    }
+    
+    private func stopAnimation() {
+        isAnimationActive = false
+        animationTimer?.invalidate()
+        animationTimer = nil
     }
     
     private func animateToRandomPosition() {

@@ -24,35 +24,32 @@ struct ContentView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                // Main Content Area (always present)
-                HStack(spacing: 0) {
-                    // Add spacer for projects panel width when it's visible
-                    if appState.state.ui.showProjects {
-                        Spacer()
-                            .frame(width: projectsPanelWidth)
+            HStack(spacing: 0) {
+                // Projects panel (fixed position when visible)
+                if appState.state.ui.showProjects {
+                    ProjectsView(isCollapsed: false)
+                        .environmentObject(appState)
+                        .frame(width: projectsPanelWidth)
+                        .background(Color.clear)
+                }
+                
+                // Main content area (TreeView with overlays)
+                ZStack {
+                    // Tree container (fills remaining space)
+                    if appState.state.ui.showChart {
+                        treeContainer
                     }
                     
-                    chartPanelWithOverlays(geometry: geometry)
-                        .frame(maxWidth: .infinity)
+                    // Chat messages overlay
+                    chatMessagesOverlay
+                        .zIndex(10)
+                    
+                    // Chat input overlay
+                    floatingChatInput
+                        .zIndex(50)
                 }
+                .frame(maxWidth: .infinity)
                 .background(Color.clear)
-                
-                // Chat input - lower z-index
-                floatingChatInput
-                    .zIndex(50)
-                
-                // Projects panel overlay - higher z-index
-                if appState.state.ui.showProjects {
-                    HStack {
-                        ProjectsView(isCollapsed: false)
-                            .environmentObject(appState)
-                            .frame(width: projectsPanelWidth)
-                            .background(Color.clear)
-                        Spacer()
-                    }
-                    .zIndex(100)
-                }
             }
             .overlay(resizeHandleOverlay(geometry: geometry), alignment: .leading)
             .preferredColorScheme(.dark)
@@ -75,37 +72,25 @@ struct ContentView: View {
         }
     }
     
-    // MARK: - Chart Panel with Overlays
-    private func chartPanelWithOverlays(geometry: GeometryProxy) -> some View {
-        Group {
-            if appState.state.ui.showChart {
-                ZStack {
-                    treeContainer
-                    chatMessagesOverlay
-                }
-            }
-        }
-    }
+
     
     // MARK: - Tree Container
     private var treeContainer: some View {
-        TreeContainer(selectedProjectId: appState.state.selectedProjectId)
+        TreeView(selectedProjectId: appState.state.selectedProjectId)
             .environmentObject(appState)
             .frame(maxWidth: .infinity)
             .background(Color.clear)
+            .ignoresSafeArea(.all, edges: .top)
     }
     
     // MARK: - Resize Handle Overlay
     private func resizeHandleOverlay(geometry: GeometryProxy) -> some View {
         Group {
             if appState.state.ui.showProjects {
-                VStack(spacing: 0) {
-                    HStack {
-                        Spacer()
-                            .frame(width: projectsPanelWidth - 4) // Position at the edge of the panel
-                        resizeHandleRectangle(geometry: geometry)
-                        Spacer()
-                    }
+                HStack {
+                    Spacer()
+                        .frame(width: projectsPanelWidth - 4) // Position at the edge of the panel
+                    resizeHandleRectangle(geometry: geometry)
                     Spacer()
                 }
             }

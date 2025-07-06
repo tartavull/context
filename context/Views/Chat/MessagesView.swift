@@ -48,9 +48,11 @@ struct ChatMessagesContentView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(task.conversation.messages, id: \.id) { message in
+                    /*
                     MessageView(message: message)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
+                    */
                 }
                 
                 if isLoading {
