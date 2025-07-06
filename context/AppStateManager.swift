@@ -6,7 +6,7 @@ class AppStateManager: ObservableObject {
     @Published var state: AppState
     
     init() {
-        self.state = AppState()
+        self.state = AppState.sample
         
         // Auto-select first project or create empty project if none exists
         DispatchQueue.main.async {
