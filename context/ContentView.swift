@@ -55,6 +55,11 @@ struct ContentView: View {
             .preferredColorScheme(.dark)
             .overlay(panelToggleButton, alignment: .topLeading)
         }
+        .background(
+            // Window background blur - prevents see-through during animations
+            BlurView(material: .windowBackground, blendingMode: .behindWindow)
+                .ignoresSafeArea(.all)
+        )
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Spacer()
