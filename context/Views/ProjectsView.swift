@@ -199,15 +199,15 @@ struct ProjectItemView: View {
         HStack(spacing: 0) {
             // Project Avatar
             Text(String(project.title.prefix(1)).uppercased())
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))  // Reduced from 12
                 .foregroundColor(.white)
-                .frame(width: 32, height: 32)
+                .frame(width: 28, height: 28)  // Reduced from 32x32 to 28x28
                 .background(statusColor)
                 .clipShape(Circle())
             
             if !isCollapsed {
                 // Project Content
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {  // Reduced from 2 to 1
                     HStack {
                         if isEditing {
                             TextField(
@@ -251,7 +251,7 @@ struct ProjectItemView: View {
                             .truncationMode(.tail)
                     }
                 }
-                .padding(.leading, 12)
+                .padding(.leading, 8)  // Reduced from 12 to 8
                 
                 // Actions
                 if showActions && !isEditing {
@@ -279,7 +279,7 @@ struct ProjectItemView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 8)  // Reduced from 12 to 8
         .background(
             isSelected ? 
                 Color.accentColor.opacity(0.2) : 

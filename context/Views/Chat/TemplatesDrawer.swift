@@ -8,7 +8,7 @@ struct TemplatesDrawer: View {
         DrawerView(
             isPresented: $isPresented,
             parentFrame: parentFrame,
-            contentHeight: min(400, max(200, CGFloat(10 * 60 + 100)))
+            contentHeight: min(400, max(200, CGFloat(10 * 50 + 80)))  // Reduced row height from 60 to 50, padding from 100 to 80
         ) {
             TemplatesDrawerContent(isPresented: $isPresented)
         }
@@ -22,7 +22,7 @@ struct TemplatesDrawerContent: View {
         VStack(spacing: 0) {
             // Scrollable template list
             ScrollView {
-                LazyVStack(spacing: 8) {
+                LazyVStack(spacing: 4) {  // Reduced from 8 to 4
                     // Create new template row
                     createNewTemplateRow()
                     
@@ -31,7 +31,7 @@ struct TemplatesDrawerContent: View {
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.vertical, 16)
+                .padding(.vertical, 12)  // Reduced from 16 to 12
             }
         }
     }
@@ -49,7 +49,7 @@ struct TemplatesDrawerContent: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.white)
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {  // Reduced from 4 to 2
                     Text("Create a new template")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
@@ -69,7 +69,7 @@ struct TemplatesDrawerContent: View {
                     .foregroundColor(.gray)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 12)
+            .padding(.vertical, 8)  // Reduced from 12 to 8
             .background(Color(hex: "#3a3a3a"))
             .clipShape(RoundedRectangle(cornerRadius: 8))
         })
@@ -88,7 +88,7 @@ struct TemplatesDrawerContent: View {
                 Text(template.icon)
                     .font(.system(size: 16))
                 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {  // Reduced from 4 to 2
                     Text(template.title)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
@@ -108,7 +108,7 @@ struct TemplatesDrawerContent: View {
                     .foregroundColor(.gray)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 12)
+            .padding(.vertical, 8)  // Reduced from 12 to 8
             .background(Color(hex: "#3a3a3a"))
             .clipShape(RoundedRectangle(cornerRadius: 8))
         })
