@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct TaskNodeView: View {
+struct TreeNode: View {
     let task: ProjectTask
     let isSelected: Bool
     let onSelect: () -> Void
@@ -18,6 +18,7 @@ struct TaskNodeView: View {
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("TaskNode_\(task.id)_Title")
                 
                 if !task.description.isEmpty {
                     Text(task.description)
@@ -26,20 +27,24 @@ struct TaskNodeView: View {
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("TaskNode_\(task.id)_Description")
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 40, alignment: .leading)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
+            .accessibilityIdentifier("TaskNode_\(task.id)_ContentArea")
         }
         .frame(width: 220, height: 140)
         .tintedBlur(cornerRadius: 8)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
                 .stroke(isSelected ? Color(hex: "#a0a0a0") : nodeTypeColor, lineWidth: 2)
+                .accessibilityIdentifier("TaskNode_\(task.id)_Border")
         )
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+        .accessibilityIdentifier("TaskNode_\(task.id)_Main")
         .onTapGesture {
             onSelect()
         }

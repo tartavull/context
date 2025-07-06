@@ -2,14 +2,16 @@ import SwiftUI
 
 struct GridBackgroundView: NSViewRepresentable {
     let zoomScale: CGFloat
+    let panOffset: CGSize
     
     func makeNSView(context: Context) -> PerformantGridView {
         let gridView = PerformantGridView()
+        gridView.updateGrid(zoomScale: zoomScale, panOffset: panOffset)
         return gridView
     }
     
     func updateNSView(_ nsView: PerformantGridView, context: Context) {
-        nsView.updateGrid(zoomScale: zoomScale)
+        nsView.updateGrid(zoomScale: zoomScale, panOffset: panOffset)
     }
 }
 
@@ -21,7 +23,18 @@ class PerformantGridView: NSView {
     
     private var currentLevel: Int = 0
     private var zoomScale: CGFloat = 1.0
+    private var panOffset: CGSize = .zero
     private var gridLayer: CALayer?
+    
+    // Cache to prevent unnecessary redraws
+    private var lastBounds: CGRect = .zero
+    private var lastZoomScale: CGFloat = 1.0
+    private var lastPanOffset: CGSize = .zero
+    private var lastLevel: Int = 0
+    
+    // Debouncing for resize events
+    private var resizeTimer: Timer?
+    private var pendingResize: Bool = false
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -31,6 +44,11 @@ class PerformantGridView: NSView {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupLayer()
+    }
+    
+    deinit {
+        resizeTimer?.invalidate()
+        resizeTimer = nil
     }
     
     private func setupLayer() {
@@ -45,19 +63,74 @@ class PerformantGridView: NSView {
     
     override func layout() {
         super.layout()
+        
+        // Disable implicit animations during layout
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        
+        // Only update grid layer frame, don't redraw content unless necessary
         gridLayer?.frame = bounds
-        updateGridContent()
+        
+        CATransaction.commit()
+        
+        // Check if we actually need to update the grid content
+        if shouldUpdateGridContent() {
+            // If only bounds changed (window resize), use faster debounce
+            if bounds != lastBounds && 
+               zoomScale == lastZoomScale && 
+               panOffset == lastPanOffset && 
+               currentLevel == lastLevel {
+                debouncedUpdateGridContent()
+            } else {
+                // Immediate update for zoom/pan changes
+                updateGridContent()
+                updateCache()
+            }
+        }
     }
     
-    func updateGrid(zoomScale: CGFloat) {
+    private func debouncedUpdateGridContent() {
+        pendingResize = true
+        resizeTimer?.invalidate()
+        resizeTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: false) { [weak self] _ in
+            guard let self = self, self.pendingResize else { return }
+            self.pendingResize = false
+            
+            // Disable animations during resize updates
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            self.updateGridContent()
+            self.updateCache()
+            CATransaction.commit()
+        }
+    }
+    
+    private func shouldUpdateGridContent() -> Bool {
+        // Check if any relevant properties have changed
+        return bounds != lastBounds ||
+               zoomScale != lastZoomScale ||
+               panOffset != lastPanOffset ||
+               currentLevel != lastLevel
+    }
+    
+    private func updateCache() {
+        lastBounds = bounds
+        lastZoomScale = zoomScale
+        lastPanOffset = panOffset
+        lastLevel = currentLevel
+    }
+    
+    func updateGrid(zoomScale: CGFloat, panOffset: CGSize) {
         self.zoomScale = zoomScale
+        self.panOffset = panOffset
         let optimalLevel = determineOptimalGridLevel()
         
         if optimalLevel != currentLevel {
             currentLevel = optimalLevel
             animateGridTransition()
-        } else {
+        } else if shouldUpdateGridContent() {
             updateGridContent()
+            updateCache()
         }
     }
     
@@ -79,13 +152,14 @@ class PerformantGridView: NSView {
     private func animateGridTransition() {
         // Fade out current grid
         CATransaction.begin()
-        CATransaction.setAnimationDuration(0.2)
+        CATransaction.setAnimationDuration(0.15) // Slightly faster transition
         gridLayer?.opacity = 0.0
         CATransaction.setCompletionBlock {
             // Update content and fade back in
             self.updateGridContent()
+            self.updateCache()
             CATransaction.begin()
-            CATransaction.setAnimationDuration(0.2)
+            CATransaction.setAnimationDuration(0.15)
             self.gridLayer?.opacity = 1.0
             CATransaction.commit()
         }
@@ -96,6 +170,12 @@ class PerformantGridView: NSView {
         guard let gridLayer = gridLayer else { return }
         
         let size = bounds.size
+        
+        // If bounds are empty, don't draw anything
+        guard size.width > 0 && size.height > 0 else {
+            return
+        }
+        
         let levelMultiplier = pow(2.0, Double(currentLevel))
         let gridSpacing = baseGridSpacing * CGFloat(levelMultiplier)
         let scaledSpacing = gridSpacing * zoomScale
@@ -127,15 +207,40 @@ class PerformantGridView: NSView {
         context.clear(CGRect(origin: .zero, size: size))
         
         // Set dot color
-        let dotColor = NSColor.white.withAlphaComponent(0.25 * opacity).cgColor
+        let dotColor = NSColor.white.withAlphaComponent(0.5 * opacity).cgColor
         context.setFillColor(dotColor)
         
-        // Calculate grid range
+        // Calculate grid range with pan offset and zoom center adjustment
         let extraDots = 3
-        let minX = -scaledSpacing * CGFloat(extraDots)
-        let maxX = size.width + scaledSpacing * CGFloat(extraDots)
-        let minY = -scaledSpacing * CGFloat(extraDots)
-        let maxY = size.height + scaledSpacing * CGFloat(extraDots)
+        
+        // Only apply zoom center adjustment when actually zoomed (not at 1.0 scale)
+        let adjustedOffsetX: CGFloat
+        let adjustedOffsetY: CGFloat
+        
+        if abs(zoomScale - 1.0) > 0.001 {
+            // Calculate zoom center (center of the view)
+            let centerX = size.width / 2
+            let centerY = size.height / 2
+            
+            // Adjust offset to account for zoom center
+            let zoomCenterAdjustmentX = centerX * (1 - zoomScale)
+            let zoomCenterAdjustmentY = centerY * (1 - zoomScale)
+            
+            adjustedOffsetX = panOffset.width + zoomCenterAdjustmentX
+            adjustedOffsetY = -panOffset.height + zoomCenterAdjustmentY
+        } else {
+            // At normal zoom, use simple offset without center adjustments
+            adjustedOffsetX = panOffset.width
+            adjustedOffsetY = -panOffset.height
+        }
+        
+        let offsetX = adjustedOffsetX.truncatingRemainder(dividingBy: scaledSpacing)
+        let offsetY = adjustedOffsetY.truncatingRemainder(dividingBy: scaledSpacing)
+        
+        let minX = -scaledSpacing * CGFloat(extraDots) - offsetX
+        let maxX = size.width + scaledSpacing * CGFloat(extraDots) - offsetX
+        let minY = -scaledSpacing * CGFloat(extraDots) - offsetY
+        let maxY = size.height + scaledSpacing * CGFloat(extraDots) - offsetY
         
         let startCol = Int(floor(minX / scaledSpacing))
         let endCol = Int(ceil(maxX / scaledSpacing))
@@ -145,8 +250,8 @@ class PerformantGridView: NSView {
         // Draw dots efficiently
         for col in startCol...endCol {
             for row in startRow...endRow {
-                let x = CGFloat(col) * scaledSpacing
-                let y = CGFloat(row) * scaledSpacing
+                let x = CGFloat(col) * scaledSpacing + offsetX
+                let y = CGFloat(row) * scaledSpacing + offsetY
                 
                 guard x >= -dotSize && x <= size.width + dotSize &&
                       y >= -dotSize && y <= size.height + dotSize else { continue }
