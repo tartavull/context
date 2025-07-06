@@ -11,9 +11,35 @@ struct InputView: View {
     
     @State private var textHeight: CGFloat = 48
     @FocusState private var isTextFieldFocused: Bool
+    @State private var showDrawer: Bool = false
+    @State private var drawerType: DrawerType = .templates
+    @State private var inputViewFrame: CGRect = .zero
+    
+    private var contentHeight: CGFloat {
+        switch drawerType {
+        case .templates:
+            return min(400, max(200, CGFloat(10 * 60 + 100))) // Dynamic based on content
+        case .images:
+            return 180 // Fixed for single row of images
+        }
+    }
     
     var body: some View {
         VStack(spacing: 0) {
+            // Drawer overlays - self-contained components
+            TemplatesDrawer(
+                isPresented: .constant(showDrawer && drawerType == .templates),
+                parentFrame: inputViewFrame
+            )
+            .zIndex(showDrawer && drawerType == .templates ? 2 : -1)  // Above input when shown
+            
+            FileDrawer(
+                isPresented: .constant(showDrawer && drawerType == .images),
+                parentFrame: inputViewFrame
+            )
+            .zIndex(showDrawer && drawerType == .images ? 2 : -1)  // Above input when shown
+            
+            // Main input area
             VStack(spacing: 0) {
                 // Main input area
                 HStack(alignment: .bottom, spacing: 0) {
@@ -69,40 +95,92 @@ struct InputView: View {
                             .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading)
                         }
                         
-                        // Bottom controls
-                        HStack {
+                        // Bottom controls - all buttons on same row, left-justified
+                        HStack(alignment: .bottom, spacing: 8) {
                             // Model selector
                             modelSelectorView
+                                .frame(height: 24)
+                            
+                            // Image button
+                            Button(action: {
+                                if showDrawer && drawerType == .images {
+                                    // If images drawer is already open, close it
+                                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                        showDrawer = false
+                                    }
+                                } else {
+                                    // If templates drawer is open, close it first
+                                    if showDrawer && drawerType == .templates {
+                                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                            showDrawer = false
+                                        }
+                                        // Wait for dismissal animation, then open images
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                            drawerType = .images
+                                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                                showDrawer = true
+                                            }
+                                        }
+                                    } else {
+                                        // Open images drawer directly
+                                        drawerType = .images
+                                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                            showDrawer = true
+                                        }
+                                    }
+                                }
+                            }, label: {
+                                Image(systemName: "paperclip")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.gray)
+                                    .frame(width: 24, height: 24)
+                            })
+                            .buttonStyle(PlainButtonStyle())
+                            .help("Attach File")
+                            
+                            // Template button
+                            Button(action: {
+                                if showDrawer && drawerType == .templates {
+                                    // If templates drawer is already open, close it
+                                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                        showDrawer = false
+                                    }
+                                } else {
+                                    // If images drawer is open, close it first
+                                    if showDrawer && drawerType == .images {
+                                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                            showDrawer = false
+                                        }
+                                        // Wait for dismissal animation, then open templates
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                            drawerType = .templates
+                                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                                showDrawer = true
+                                            }
+                                        }
+                                    } else {
+                                        // Open templates drawer directly
+                                        drawerType = .templates
+                                        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                            showDrawer = true
+                                        }
+                                    }
+                                }
+                            }, label: {
+                                Text("{ }")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.gray)
+                                    .frame(width: 24, height: 24)
+                                    .baselineOffset(2)
+                                    .multilineTextAlignment(.center)
+                            })
+                            .buttonStyle(PlainButtonStyle())
+                            .help("Open Templates")
                             
                             Spacer()
-                            
-                            // Additional controls
-                            HStack(spacing: 8) {
-                                Button(action: {
-                                    // Image upload functionality placeholder
-                                }, label: {
-                                    Image(systemName: "photo")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.gray)
-                                        .frame(width: 24, height: 24)
-                                })
-                                .buttonStyle(PlainButtonStyle())
-                                .help("Attach Image")
-                                
-                                Button(action: {
-                                    // Additional options placeholder
-                                }, label: {
-                                    Image(systemName: "ellipsis")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.gray)
-                                        .frame(width: 24, height: 24)
-                                })
-                                .buttonStyle(PlainButtonStyle())
-                                .help("More Options")
-                            }
                         }
                         .padding(.horizontal, 16)
-                        .padding(.top, 8)
+                        .padding(.top, 2)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -117,7 +195,19 @@ struct InputView: View {
             )
             .padding(.horizontal, 16)
             .padding(.bottom, 16)
+            .zIndex(1)  // Above drawers
         }
+        .background(
+            GeometryReader { geometry in
+                Color.clear
+                    .onAppear {
+                        inputViewFrame = geometry.frame(in: .global)
+                    }
+                    .onChange(of: geometry.frame(in: .global)) { _, newFrame in
+                        inputViewFrame = newFrame
+                    }
+            }
+        )
         .onAppear {
             isTextFieldFocused = true
         }
@@ -142,33 +232,86 @@ struct InputView: View {
     }
     
     private var modelSelectorView: some View {
-        Button(action: {
-            showModelDropdown.toggle()
-        }, label: {
-            HStack(spacing: 4) {
-                Text(selectedModel)
-                    .font(.system(size: 12))
-                    .foregroundColor(.white)
-                
-                if let tier = models.first(where: { $0.0 == selectedModel })?.1 {
-                    Text(tier)
-                        .font(.system(size: 10))
-                        .foregroundColor(.gray)
+        VStack(alignment: .leading, spacing: 0) {
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    showModelDropdown.toggle()
                 }
-                
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 8))
-                    .foregroundColor(.gray)
+            }, label: {
+                HStack(alignment: .center, spacing: 2) {
+                    Text(selectedModel)
+                        .font(.system(size: 10))
+                        .foregroundColor(.white)
+                        .baselineOffset(0)
+                    
+                    if let tier = models.first(where: { $0.0 == selectedModel })?.1 {
+                        Text(tier)
+                            .font(.system(size: 8))
+                            .foregroundColor(.gray)
+                            .baselineOffset(0)
+                    }
+                    
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 6))
+                        .foregroundColor(.gray)
+                        .rotationEffect(.degrees(showModelDropdown ? 180 : 0))
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .frame(minHeight: 24)
+                .background(Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .contentShape(Rectangle())
+            })
+            .buttonStyle(PlainButtonStyle())
+            
+            // Custom dropdown
+            if showModelDropdown {
+                customModelDropdownView
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .scale(scale: 0.95, anchor: .top)),
+                        removal: .opacity
+                    ))
+                    .zIndex(100)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
-        })
-        .buttonStyle(PlainButtonStyle())
-        .popover(isPresented: $showModelDropdown) {
-            modelDropdownView
         }
+    }
+    
+    private var customModelDropdownView: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(models, id: \.0) { model, tier in
+                Button(action: {
+                    selectedModel = model
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        showModelDropdown = false
+                    }
+                }, label: {
+                    HStack {
+                        Text(model)
+                            .font(.system(size: 12))
+                            .foregroundColor(.white)
+                        
+                        Spacer()
+                        
+                        Text(tier)
+                            .font(.system(size: 10))
+                            .foregroundColor(.gray)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(selectedModel == model ? Color(hex: "#3a3a3a") : Color.clear)
+                })
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .frame(minWidth: 200)
+        .background(Color(hex: "#2a2a2a"))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color(hex: "#3a3a3a"), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.3), radius: 8, x: 0, y: 4)
     }
     
     private var modelDropdownView: some View {
