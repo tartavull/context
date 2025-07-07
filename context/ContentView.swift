@@ -12,7 +12,12 @@ struct ContentView: View {
     @State private var projectsPanelWidth: CGFloat = 300
     @State private var toggleButtonShine: Bool = false
     @State private var toggleButtonHovered: Bool = false
-    @State private var chatInputHandler: InputHandler?
+    @State private var inputText = ""
+    @State private var isLoading = false
+    @State private var selectedModel = "claude-4-sonnet"
+    @State private var showModelDropdown = false
+    
+    @Namespace private var templateHeroNamespace
     
     private let minPanelWidth: CGFloat = 200
     private let defaultPanelWidth: CGFloat = 300
@@ -54,6 +59,15 @@ struct ContentView: View {
             .overlay(resizeHandleOverlay(geometry: geometry), alignment: .leading)
             .preferredColorScheme(.dark)
             .overlay(panelToggleButton, alignment: .topLeading)
+            .overlay(
+                // Global template edit modal overlay - positioned at root level
+                TemplateEditModalOverlay(
+                    modalManager: TemplateEditModalManager.shared,
+                    namespace: templateHeroNamespace
+                )
+                .allowsHitTesting(TemplateEditModalManager.shared.showEditModal)
+                .zIndex(1000)
+            )
         }
         .background(
             // Window background blur - prevents see-through during animations
@@ -71,9 +85,6 @@ struct ContentView: View {
             // Set initial panel width based on UI state
             let calculatedWidth = appState.state.ui.projectsPanelSize * 10
             projectsPanelWidth = max(calculatedWidth, defaultPanelWidth)
-            
-            // Initialize chat input handler
-            chatInputHandler = InputHandler(appState: appState)
         }
     }
     
@@ -156,19 +167,21 @@ struct ContentView: View {
                 HStack {
                     Spacer()
                     
-                    MessagesView(selectedProjectId: appState.state.selectedProjectId)
-                        .environmentObject(appState)
-                        .frame(width: chatContainerWidth)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .background(Color.clear)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.clear, lineWidth: 1)
-                        )
-                        .shadow(color: .clear, radius: 8, x: 0, y: 4)
-                        .padding(.trailing, 20)
-                        .padding(.vertical, 20)
+                    // Empty chat messages area
+                    VStack {
+                        Spacer()
+                    }
+                    .frame(width: chatContainerWidth)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .background(Color.clear)
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.clear, lineWidth: 1)
+                    )
+                    .shadow(color: .clear, radius: 8, x: 0, y: 4)
+                    .padding(.trailing, 20)
+                    .padding(.vertical, 20)
                 }
             }
         }
@@ -184,30 +197,15 @@ struct ContentView: View {
                     HStack {
                         Spacer()
                         
-                        Group {
-                            if let handler = chatInputHandler {
-                                InputView(
-                                    inputText: Binding(
-                                        get: { handler.inputText },
-                                        set: { handler.inputText = $0 }
-                                    ),
-                                    isLoading: Binding(
-                                        get: { handler.isLoading },
-                                        set: { handler.isLoading = $0 }
-                                    ),
-                                    selectedModel: Binding(
-                                        get: { handler.selectedModel },
-                                        set: { handler.selectedModel = $0 }
-                                    ),
-                                    showModelDropdown: Binding(
-                                        get: { handler.showModelDropdown },
-                                        set: { handler.showModelDropdown = $0 }
-                                    ),
-                                    models: handler.models
-                                ) {
-                                    handler.handleSubmit()
-                                }
-                            }
+                        InputView(
+                            inputText: $inputText,
+                            isLoading: $isLoading,
+                            selectedModel: $selectedModel,
+                            showModelDropdown: $showModelDropdown,
+                            models: AIModels.simpleList,
+                            namespace: templateHeroNamespace
+                        ) {
+                            // No action for now - send button does nothing
                         }
                         .frame(width: 650)
                         
