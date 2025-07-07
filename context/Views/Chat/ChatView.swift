@@ -4,6 +4,7 @@ import AppKit
 struct ChatView: View {
     @EnvironmentObject var appState: AppStateManager
     let selectedProjectId: String?
+    let namespace: Namespace.ID
     
     var body: some View {
         ZStack {
@@ -13,7 +14,8 @@ struct ChatView: View {
             // Always show chat content with default values if needed
             ChatContentView(
                 projectId: selectedProjectId ?? "default",
-                task: appState.selectedTask ?? defaultTask
+                task: appState.selectedTask ?? defaultTask,
+                namespace: namespace
             )
         }
     }
@@ -35,19 +37,14 @@ struct ChatContentView: View {
     @EnvironmentObject var appState: AppStateManager
     let projectId: String
     let task: ProjectTask
+    let namespace: Namespace.ID
     
     @State private var inputText = ""
     @State private var isLoading = false
     @State private var selectedModel = "claude-4-sonnet"
     @State private var showModelDropdown = false
     
-    private let models = [
-        ("claude-4-sonnet", "MAX"),
-        ("claude-3-sonnet", "PRO"),
-        ("claude-3-haiku", "FAST"),
-        ("gpt-4", "MAX"),
-        ("gpt-3.5-turbo", "FAST")
-    ]
+    private let models = AIModels.simpleList
     
     var body: some View {
         VStack(spacing: 0) {
@@ -60,7 +57,8 @@ struct ChatContentView: View {
                 isLoading: $isLoading,
                 selectedModel: $selectedModel,
                 showModelDropdown: $showModelDropdown,
-                models: models
+                models: models,
+                namespace: namespace
             ) {
                 handleSubmit()
             }
@@ -99,7 +97,7 @@ struct ChatContentView: View {
         .background(Color(hex: "#2a2a2a"))
         .overlay(
             Rectangle()
-                .fill(Color(hex: "#3a3a3a"))
+                .fill(AppColors.Component.surfacePrimary)
                 .frame(height: 1),
             alignment: .bottom
         )
@@ -117,14 +115,9 @@ struct ChatContentView: View {
     private var messagesView: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(task.conversation.messages, id: \.id) { message in
-                    MessageView(message: message)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                }
-                
-                if isLoading {
-                    LoadingMessageView()
+                // Empty messages area
+                VStack {
+                    Spacer()
                 }
             }
         }
