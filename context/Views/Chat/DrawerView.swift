@@ -3,6 +3,7 @@ import SwiftUI
 enum DrawerType {
     case templates
     case images
+    case models
 }
 
 // Custom shape with rounded top corners only
@@ -83,7 +84,7 @@ struct DrawerView<Content: View>: View {
                 .clipShape(TopRoundedRectangle(cornerRadius: 16))
                 .overlay(
                     TopRoundedRectangle(cornerRadius: 16)
-                        .stroke(Color(hex: "#3a3a3a"), lineWidth: 1)
+                        .stroke(AppColors.Component.borderPrimary, lineWidth: 1)
                         .allowsHitTesting(false) // Ensure stroke doesn't block interactions
                 )
         }
