@@ -233,3 +233,4 @@ class TemplateRowFrameStore: ObservableObject {
         return frames[templateId] ?? .zero
     }
 }
+// Test comment for Git hook
