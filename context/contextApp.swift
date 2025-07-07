@@ -9,12 +9,12 @@ import SwiftUI
 
 @main
 struct ContextApp: App {
-    
+
     // Detect if running in UI testing mode
     var isUITesting: Bool {
         ProcessInfo.processInfo.arguments.contains("--uitesting")
     }
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -44,7 +44,7 @@ struct WindowAccessor: NSViewRepresentable {
         }
         return view
     }
-    
+
     func updateNSView(_ nsView: NSView, context: Context) {
         DispatchQueue.main.async {
             if let window = nsView.window {

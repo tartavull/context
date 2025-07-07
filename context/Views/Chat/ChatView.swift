@@ -5,21 +5,29 @@ struct ChatView: View {
     @EnvironmentObject var appState: AppStateManager
     let selectedProjectId: String?
     let namespace: Namespace.ID
-    
+    @ObservedObject private var modalManager = TemplateEditModalManager.shared
+
     var body: some View {
         ZStack {
             Color.clear
                 .ignoresSafeArea()
-            
+
             // Always show chat content with default values if needed
             ChatContentView(
                 projectId: selectedProjectId ?? "default",
                 task: appState.selectedTask ?? defaultTask,
                 namespace: namespace
             )
+
+            // Template edit modal overlay - positioned at root level for correct coordinate space
+            TemplateEditModalOverlay(
+                modalManager: modalManager,
+                namespace: namespace
+            )
+            .zIndex(100)  // Above everything else
         }
     }
-    
+
     private var defaultTask: ProjectTask {
         var task = ProjectTask(
             title: "Chat",
@@ -29,7 +37,6 @@ struct ChatView: View {
         task.status = .active
         return task
     }
-    
 
 }
 
@@ -38,19 +45,19 @@ struct ChatContentView: View {
     let projectId: String
     let task: ProjectTask
     let namespace: Namespace.ID
-    
+
     @State private var inputText = ""
     @State private var isLoading = false
     @State private var selectedModel = "claude-4-sonnet"
     @State private var showModelDropdown = false
-    
+
     private let models = AIModels.simpleList
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Messages - takes available space
             messagesView
-            
+
             // Input Area - always at bottom
             InputView(
                 inputText: $inputText,
@@ -65,19 +72,19 @@ struct ChatContentView: View {
         }
         .frame(maxHeight: 600)
     }
-    
+
     private var taskHeaderView: some View {
         HStack {
             Circle()
                 .fill(statusColor)
                 .frame(width: 12, height: 12)
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.white)
                     .lineLimit(1)
-                
+
                 if !task.description.isEmpty {
                     Text(task.description)
                         .font(.system(size: 11))
@@ -85,9 +92,9 @@ struct ChatContentView: View {
                         .lineLimit(1)
                 }
             }
-            
+
             Spacer()
-            
+
             Text(task.nodeType.rawValue.capitalized)
                 .font(.system(size: 11))
                 .foregroundColor(.gray)
@@ -102,7 +109,7 @@ struct ChatContentView: View {
             alignment: .bottom
         )
     }
-    
+
     private var statusColor: Color {
         switch task.status {
         case .pending: return .yellow
@@ -111,7 +118,7 @@ struct ChatContentView: View {
         case .failed: return .red
         }
     }
-    
+
     private var messagesView: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
@@ -123,14 +130,12 @@ struct ChatContentView: View {
         }
         .background(Color.clear)
     }
-    
 
-    
     private func handleSubmit() {
         guard !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        
+
         let trimmedInput = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         // Add user message
         let userMessage = Message(
             id: UUID().uuidString,
@@ -138,10 +143,10 @@ struct ChatContentView: View {
             content: trimmedInput,
             timestamp: Date()
         )
-        
+
         appState.addMessage(projectId: projectId, taskId: task.id, message: userMessage)
         inputText = ""
-        
+
         // Handle commands
         if trimmedInput.hasPrefix("/") {
             handleCommand(trimmedInput)
@@ -150,68 +155,68 @@ struct ChatContentView: View {
             handleRegularMessage(trimmedInput)
         }
     }
-    
+
     private func handleCommand(_ command: String) {
         isLoading = true
-        
+
         DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
             DispatchQueue.main.async {
                 let parts = command.split(separator: " ")
                 let commandName = String(parts.first ?? "")
                 let args = parts.dropFirst().map(String.init)
-                
+
                 var responseMessage = ""
-                
+
                 switch commandName {
                 case "/clone":
                     appState.cloneTask(projectId: projectId, taskId: task.id)
                     responseMessage = "✅ Task cloned successfully! A new clone has been created."
-                    
+
                 case "/spawn":
                     let title = args.joined(separator: " ").isEmpty ? "New Task" : args.joined(separator: " ")
                     let description = "Spawned from \(task.title)"
                     appState.spawnTask(
-                        projectId: projectId, 
-                        parentTaskId: task.id, 
-                        title: title, 
+                        projectId: projectId,
+                        parentTaskId: task.id,
+                        title: title,
                         description: description
                     )
                     responseMessage = "✅ New task \"\(title)\" spawned successfully!"
-                    
+
                 case "/exit":
                     responseMessage = "✅ Task folded back to parent successfully."
-                    
+
                 default:
                     responseMessage = "❌ Unknown command: \(commandName). " +
-                                    "Available commands: /clone, /spawn [title], /exit"
+                        "Available commands: /clone, /spawn [title], /exit"
                 }
-                
+
                 let assistantMessage = Message(
                     id: UUID().uuidString,
                     role: .assistant,
                     content: responseMessage,
                     timestamp: Date()
                 )
-                
+
                 appState.addMessage(projectId: projectId, taskId: task.id, message: assistantMessage)
                 isLoading = false
             }
         }
     }
-    
+
     private func handleRegularMessage(_ message: String) {
         isLoading = true
-        
+
         DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) {
             DispatchQueue.main.async {
                 let assistantMessage = Message(
                     id: UUID().uuidString,
                     role: .assistant,
                     content: "I received your message: \"\(message)\". This is a mock response " +
-                             "using \(selectedModel). In a real implementation, this would connect to an AI service.",
+                        "using \(selectedModel). In a real implementation, this would connect to an AI service.",
                     timestamp: Date()
                 )
-                
+
                 appState.addMessage(projectId: projectId, taskId: task.id, message: assistantMessage)
                 isLoading = false
             }

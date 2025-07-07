@@ -7,7 +7,7 @@ struct ProjectsView: View {
     @State private var editTitle: String = ""
     @FocusState private var isTextFieldFocused: Bool
     let isCollapsed: Bool
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -17,9 +17,9 @@ struct ProjectsView: View {
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
                 }
-                
+
                 Spacer()
-                
+
                 Button(action: {
                     createNewProject()
                 }, label: {
@@ -39,7 +39,7 @@ struct ProjectsView: View {
                     .frame(height: 1),
                 alignment: .bottom
             )
-            
+
             // Projects List
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -51,7 +51,7 @@ struct ProjectsView: View {
                                     .font(.system(size: 13))
                                     .foregroundColor(.gray)
                             }
-                            
+
                             Button(action: {
                                 createNewProject()
                             }, label: {
@@ -77,7 +77,7 @@ struct ProjectsView: View {
                     }
                 }
             }
-            
+
             // Add a spacer to push content to top and ensure background fills remaining space
             Spacer(minLength: 0)
         }
@@ -102,7 +102,7 @@ struct ProjectsView: View {
             }
         }
     }
-    
+
     private func projectItemView(for project: Project) -> some View {
         ProjectItemView(
             project: project,
@@ -110,12 +110,12 @@ struct ProjectsView: View {
             isCollapsed: isCollapsed,
             isEditing: isEditing == project.id,
             editTitle: editTitle,
-            onSelect: { 
+            onSelect: {
                 if isEditing != project.id {
-                    appState.selectProject(project.id) 
+                    appState.selectProject(project.id)
                 }
             },
-            onEdit: { 
+            onEdit: {
                 startEditing(project: project)
             },
             onSaveEdit: { newTitle in
@@ -124,14 +124,14 @@ struct ProjectsView: View {
             onCancelEdit: {
                 cancelEdit()
             },
-            onDelete: { 
+            onDelete: {
                 deleteProject(project.id)
             },
             onTitleChange: { editTitle = $0 }
         )
         .focused($isTextFieldFocused, equals: isEditing == project.id)
     }
-    
+
     private func createNewProject() {
         appState.createProject(title: "New Project", description: "Project description")
         // Auto-start editing the new project
@@ -143,13 +143,13 @@ struct ProjectsView: View {
             }
         }
     }
-    
+
     private func startEditing(project: Project) {
         isEditing = project.id
         editTitle = project.title
         isTextFieldFocused = true
     }
-    
+
     private func saveEdit(project: Project, newTitle: String) {
         let trimmedTitle = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedTitle.isEmpty && trimmedTitle != project.title {
@@ -158,12 +158,12 @@ struct ProjectsView: View {
         isEditing = nil
         isTextFieldFocused = false
     }
-    
+
     private func cancelEdit() {
         isEditing = nil
         isTextFieldFocused = false
     }
-    
+
     private func deleteProject(_ projectId: String) {
         // Show confirmation dialog
         let alert = NSAlert()
@@ -172,7 +172,7 @@ struct ProjectsView: View {
         alert.alertStyle = .warning
         alert.addButton(withTitle: "Delete")
         alert.addButton(withTitle: "Cancel")
-        
+
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
             appState.deleteProject(projectId)
@@ -192,9 +192,9 @@ struct ProjectItemView: View {
     let onCancelEdit: () -> Void
     let onDelete: () -> Void
     let onTitleChange: (String) -> Void
-    
+
     @State private var showActions = false
-    
+
     var body: some View {
         HStack(spacing: 0) {
             // Project Avatar
@@ -204,7 +204,7 @@ struct ProjectItemView: View {
                 .frame(width: 28, height: 28)  // Reduced from 32x32 to 28x28
                 .background(statusColor)
                 .clipShape(Circle())
-            
+
             if !isCollapsed {
                 // Project Content
                 VStack(alignment: .leading, spacing: 1) {  // Reduced from 2 to 1
@@ -233,16 +233,16 @@ struct ProjectItemView: View {
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                         }
-                        
+
                         Spacer()
-                        
+
                         if !isEditing {
                             Text(formatDate(project.createdAt))
                                 .font(.system(size: 11))
                                 .foregroundColor(.gray)
                         }
                     }
-                    
+
                     if !project.description.isEmpty && !isEditing {
                         Text(project.description)
                             .font(.system(size: 11))
@@ -252,7 +252,7 @@ struct ProjectItemView: View {
                     }
                 }
                 .padding(.leading, 8)  // Reduced from 12 to 8
-                
+
                 // Actions
                 if showActions && !isEditing {
                     HStack(spacing: 4) {
@@ -264,7 +264,7 @@ struct ProjectItemView: View {
                         }
                         .buttonStyle(PlainButtonStyle())
                         .help("Edit")
-                        
+
                         Button(action: onDelete) {
                             Image(systemName: "trash")
                                 .font(.system(size: 12))
@@ -281,8 +281,8 @@ struct ProjectItemView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)  // Reduced from 12 to 8
         .background(
-            isSelected ? 
-                Color.accentColor.opacity(0.2) : 
+            isSelected ?
+                Color.accentColor.opacity(0.2) :
                 Color.clear
         )
         .contentShape(Rectangle())
@@ -297,7 +297,7 @@ struct ProjectItemView: View {
             }
         }
     }
-    
+
     private var statusColor: Color {
         switch project.status {
         case .completed:
@@ -310,11 +310,11 @@ struct ProjectItemView: View {
             return Color(hex: "#6B7280")
         }
     }
-    
+
     private func formatDate(_ date: Date) -> String {
         let now = Date()
         let diffInHours = now.timeIntervalSince(date) / 3600
-        
+
         if diffInHours < 24 {
             let formatter = DateFormatter()
             formatter.timeStyle = .short
@@ -330,8 +330,6 @@ struct ProjectItemView: View {
         }
     }
 }
-
-
 
 // New conversation icon (iMessage-style) - moved from HeaderView
 struct NewConversationIcon: View {

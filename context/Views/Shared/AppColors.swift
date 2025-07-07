@@ -3,7 +3,7 @@ import SwiftUI
 // MARK: - App Color Palette
 /// Centralized color system for consistent theming across the app
 struct AppColors {
-    
+
     // MARK: - Gray Scale System
     /// Primary gray scale from darkest to lightest
     struct Gray {
@@ -15,23 +15,23 @@ struct AppColors {
         static let lighter = Color(hex: "#707070")     // Tree edges, medium elements
         static let lightest = Color(hex: "#a0a0a0")    // Tree node borders, descriptions
     }
-    
+
     // MARK: - Semantic Colors
     /// Colors with specific semantic meaning
     struct Semantic {
         // Status colors
         static let success = Color(hex: "#10B981")     // Green - completed status
-        static let info = Color(hex: "#3B82F6")        // Blue - active status  
+        static let info = Color(hex: "#3B82F6")        // Blue - active status
         static let warning = Color.yellow              // Yellow - pending status
         static let error = Color(hex: "#EF4444")       // Red - failed status, close buttons
         static let neutral = Color(hex: "#6B7280")     // Gray - default status
-        
+
         // Text colors
         static let textPrimary = Color.white           // Primary text
         static let textSecondary = Color.gray          // Secondary text, descriptions
         static let textTertiary = Gray.lightest        // Tertiary text
     }
-    
+
     // MARK: - Component Colors
     /// Colors for specific UI components
     struct Component {
@@ -40,22 +40,22 @@ struct AppColors {
         static let surfaceSecondary = Gray.darker      // Secondary surface (buttons, inputs) - #2a2a2a
         static let surfaceHover = Gray.medium          // Hover states - #4a4a4a
         static let surfaceSelected = Gray.medium       // Selected states - #4a4a4a
-        
+
         // Borders
         static let borderPrimary = Gray.dark           // Primary borders
         static let borderSecondary = Gray.darker       // Secondary borders
         static let borderSelected = Gray.lightest      // Selected borders
-        
+
         // Interactive elements
         static let buttonPrimary = Gray.dark
         static let buttonSecondary = Gray.darker
         static let buttonHover = Gray.medium
-        
+
         // Modal and overlay
         static let modalBackground = Gray.darkest
         static let overlayBackground = Gray.dark
     }
-    
+
     // MARK: - Tree System Colors
     /// Colors specific to the tree visualization
     struct Tree {
@@ -92,7 +92,7 @@ extension Color {
             .sRGB,
             red: Double(r) / 255,
             green: Double(g) / 255,
-            blue:  Double(b) / 255,
+            blue: Double(b) / 255,
             opacity: Double(a) / 255
         )
     }
@@ -110,7 +110,7 @@ extension View {
                     .stroke(AppColors.Component.borderPrimary, lineWidth: 1)
             )
     }
-    
+
     /// Apply hover state styling
     func hoverSurface(isHovered: Bool, cornerRadius: CGFloat = 8) -> some View {
         self
@@ -121,7 +121,7 @@ extension View {
                     .stroke(AppColors.Component.borderPrimary, lineWidth: 1)
             )
     }
-    
+
     /// Apply selected state styling
     func selectedSurface(isSelected: Bool, cornerRadius: CGFloat = 8) -> some View {
         self
@@ -129,7 +129,12 @@ extension View {
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
-                    .stroke(isSelected ? AppColors.Component.borderSelected : AppColors.Component.borderPrimary, lineWidth: 1)
+                    .stroke(
+                        isSelected 
+                            ? AppColors.Component.borderSelected 
+                            : AppColors.Component.borderPrimary, 
+                        lineWidth: 1
+                    )
             )
     }
 }

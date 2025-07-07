@@ -5,7 +5,7 @@ import AppKit
 struct BlurView: NSViewRepresentable {
     let material: NSVisualEffectView.Material
     let blendingMode: NSVisualEffectView.BlendingMode
-    
+
     init(
         material: NSVisualEffectView.Material = .hudWindow,
         blendingMode: NSVisualEffectView.BlendingMode = .behindWindow
@@ -13,7 +13,7 @@ struct BlurView: NSViewRepresentable {
         self.material = material
         self.blendingMode = blendingMode
     }
-    
+
     func makeNSView(context: Context) -> NSVisualEffectView {
         let effectView = NSVisualEffectView()
         effectView.material = material
@@ -21,7 +21,7 @@ struct BlurView: NSViewRepresentable {
         effectView.state = .active
         return effectView
     }
-    
+
     func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
         nsView.material = material
         nsView.blendingMode = blendingMode
@@ -31,11 +31,11 @@ struct BlurView: NSViewRepresentable {
 // MARK: - Behind Window Blur (Blurs desktop/wallpaper behind window)
 struct BehindWindowBlur: View {
     let cornerRadius: CGFloat
-    
+
     init(cornerRadius: CGFloat = 0) {
         self.cornerRadius = cornerRadius
     }
-    
+
     var body: some View {
         BlurView(material: .hudWindow, blendingMode: .behindWindow)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
@@ -45,11 +45,11 @@ struct BehindWindowBlur: View {
 // MARK: - Floating Blur (For floating elements - blurs content within window)
 struct FloatingBlur: View {
     let cornerRadius: CGFloat
-    
+
     init(cornerRadius: CGFloat = 16) {
         self.cornerRadius = cornerRadius
     }
-    
+
     var body: some View {
         BlurView(material: .hudWindow, blendingMode: .withinWindow)
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
@@ -59,18 +59,18 @@ struct FloatingBlur: View {
 // MARK: - Tinted Blur (Animated gradient with blur)
 struct TintedBlur: View {
     let cornerRadius: CGFloat
-    
+
     // Animation state
     @State private var gradientOffset: CGFloat = 0
     @State private var gradientAngle: CGFloat = 0
     @State private var gradientStops: [Gradient.Stop] = []
     @State private var animationTimer: Timer?
     @State private var isAnimationActive: Bool = false
-    
+
     init(cornerRadius: CGFloat = 8) {
         self.cornerRadius = cornerRadius
     }
-    
+
     var body: some View {
         ZStack {
             // Animated gradient background with peaks
@@ -96,59 +96,59 @@ struct TintedBlur: View {
             .onDisappear {
                 stopAnimation()
             }
-            
+
             // Blur overlay
             BlurView(material: .hudWindow, blendingMode: .withinWindow)
                 .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
                 .opacity(0.85)
         }
     }
-    
+
     // MARK: - Animation Functions
     private func startRandomAnimation() {
         guard !isAnimationActive else { return }
         isAnimationActive = true
-        
+
         animateToRandomPosition()
-        
+
         // Set up continuous random animations
         animationTimer = Timer.scheduledTimer(withTimeInterval: Double.random(in: 0.5...2.0), repeats: true) { _ in
             animateToRandomPosition()
         }
     }
-    
+
     private func stopAnimation() {
         isAnimationActive = false
         animationTimer?.invalidate()
         animationTimer = nil
     }
-    
+
     private func animateToRandomPosition() {
         let randomDuration = Double.random(in: 1.5...2.5)
         let randomOffset = CGFloat.random(in: -1.0...3.0)
         let randomAngle = CGFloat.random(in: -0.3...0.3)
-        
+
         // Always generate a new gradient pattern
         generateRandomGradient()
-        
+
         withAnimation(.easeInOut(duration: randomDuration)) {
             gradientOffset = randomOffset
             gradientAngle = randomAngle
         }
     }
-    
+
     // MARK: - Gradient Generation
     private func generateRandomGradient() {
         var stops: [Gradient.Stop] = []
-        
+
         // Always start and end with clear
         stops.append(.init(color: Color.clear, location: 0.0))
-        
+
         // Generate single peak with random position and intensity
         let peakCenter = CGFloat.random(in: 0.2...0.8)
         let peakWidth = CGFloat.random(in: 0.1...0.3)
         let leadIntensity = CGFloat.random(in: 0.02...0.1)
-        
+
         // Add leading edge
         let leadPosition = max(0.05, peakCenter - peakWidth)
         stops.append(.init(color: Color.red.opacity(leadIntensity), location: leadPosition))
@@ -161,7 +161,7 @@ struct TintedBlur: View {
 
         // Always end with clear
         stops.append(.init(color: Color.clear, location: 1.0))
-        
+
         gradientStops = stops
     }
 }
@@ -173,16 +173,16 @@ extension View {
             BehindWindowBlur(cornerRadius: cornerRadius)
         )
     }
-    
+
     func floatingBlur(cornerRadius: CGFloat = 16) -> some View {
         self.background(
             FloatingBlur(cornerRadius: cornerRadius)
         )
     }
-    
+
     func tintedBlur(cornerRadius: CGFloat = 8) -> some View {
         self.background(
             TintedBlur(cornerRadius: cornerRadius)
         )
     }
-} 
+}

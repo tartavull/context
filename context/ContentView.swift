@@ -16,17 +16,17 @@ struct ContentView: View {
     @State private var isLoading = false
     @State private var selectedModel = "claude-4-sonnet"
     @State private var showModelDropdown = false
-    
+
     @Namespace private var templateHeroNamespace
-    
+
     private let minPanelWidth: CGFloat = 200
     private let defaultPanelWidth: CGFloat = 300
-    
+
     // Fixed chat container width
     private var chatContainerWidth: CGFloat {
         return 400
     }
-    
+
     var body: some View {
         GeometryReader { geometry in
             HStack(spacing: 0) {
@@ -37,18 +37,18 @@ struct ContentView: View {
                         .frame(width: projectsPanelWidth)
                         .background(Color.clear)
                 }
-                
+
                 // Main content area (TreeView with overlays)
                 ZStack {
                     // Tree container (fills remaining space)
                     if appState.state.ui.showChart {
                         treeContainer
                     }
-                    
+
                     // Chat messages overlay
                     chatMessagesOverlay
                         .zIndex(10)
-                    
+
                     // Chat input overlay
                     floatingChatInput
                         .zIndex(50)
@@ -87,9 +87,7 @@ struct ContentView: View {
             projectsPanelWidth = max(calculatedWidth, defaultPanelWidth)
         }
     }
-    
 
-    
     // MARK: - Tree Container
     private var treeContainer: some View {
         TreeView(selectedProjectId: appState.state.selectedProjectId)
@@ -98,7 +96,7 @@ struct ContentView: View {
             .background(Color.clear)
             .ignoresSafeArea(.all, edges: .top)
     }
-    
+
     // MARK: - Resize Handle Overlay
     private func resizeHandleOverlay(geometry: GeometryProxy) -> some View {
         Group {
@@ -112,7 +110,7 @@ struct ContentView: View {
             }
         }
     }
-    
+
     // MARK: - Resize Handle Rectangle
     private func resizeHandleRectangle(geometry: GeometryProxy) -> some View {
         Rectangle()
@@ -131,13 +129,13 @@ struct ContentView: View {
             .accessibilityIdentifier("projects-panel-resize-handle")
             .accessibilityLabel("Projects Panel Resize Handle")
     }
-    
+
     // MARK: - Resize Gesture
     private func resizeGesture(geometry: GeometryProxy) -> some Gesture {
         DragGesture()
             .onChanged { value in
                 let newWidth = projectsPanelWidth + value.translation.width
-                
+
                 if newWidth < minPanelWidth {
                     if appState.state.ui.showProjects {
                         // Trigger shine animation for auto-close
@@ -152,21 +150,21 @@ struct ContentView: View {
                     }
                 } else {
                     let constrainedWidth = min(newWidth, geometry.size.width * 0.5)
-                    
+
                     // Direct update - no animation needed with proper layout structure
                     projectsPanelWidth = constrainedWidth
                     appState.updateUI(["projectsPanelSize": Double(constrainedWidth / 10)])
                 }
             }
     }
-    
+
     // MARK: - Chat Messages Overlay
     private var chatMessagesOverlay: some View {
         Group {
             if appState.state.ui.showChat {
                 HStack {
                     Spacer()
-                    
+
                     // Empty chat messages area
                     VStack {
                         Spacer()
@@ -186,17 +184,17 @@ struct ContentView: View {
             }
         }
     }
-    
+
     // MARK: - Floating Chat Input
     private var floatingChatInput: some View {
         Group {
             if appState.state.ui.showChat {
                 VStack {
                     Spacer()
-                    
+
                     HStack {
                         Spacer()
-                        
+
                         InputView(
                             inputText: $inputText,
                             isLoading: $isLoading,
@@ -208,7 +206,7 @@ struct ContentView: View {
                             // No action for now - send button does nothing
                         }
                         .frame(width: 650)
-                        
+
                         Spacer()
                     }
                     .padding(.bottom, 20)
@@ -217,7 +215,7 @@ struct ContentView: View {
             }
         }
     }
-    
+
     // MARK: - Panel Toggle Button
     private var panelToggleButton: some View {
         Button(action: {
@@ -234,8 +232,8 @@ struct ContentView: View {
                 .font(.system(size: 18, weight: .light))
                 .foregroundColor(
                     toggleButtonShine ? .white :
-                    (toggleButtonHovered ? Color(red: 180/255, green: 180/255, blue: 180/255) : 
-                     Color(red: 135/255, green: 135/255, blue: 135/255))
+                        (toggleButtonHovered ? Color(red: 180/255, green: 180/255, blue: 180/255) :
+                            Color(red: 135/255, green: 135/255, blue: 135/255))
                 )
                 .frame(width: 32, height: 24)
                 .background(
@@ -260,5 +258,3 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
-
-

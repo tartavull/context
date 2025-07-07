@@ -5,9 +5,9 @@ struct TreeNode: View {
     let isSelected: Bool
     let onSelect: () -> Void
     let onDelete: () -> Void
-    
+
     @State private var showActions = false
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Content area - flexible height
@@ -19,7 +19,7 @@ struct TreeNode: View {
                     .multilineTextAlignment(.leading)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier("TaskNode_\(task.id)_Title")
-                
+
                 if !task.description.isEmpty {
                     Text(task.description)
                         .font(.system(size: 11))
@@ -54,18 +54,18 @@ struct TreeNode: View {
             }
         }
     }
-    
+
     private var nodeTypeColor: Color {
         switch task.nodeType {
         case .clone:
             return Color(hex: "#a0a0a0") // light gray
         case .spawn:
-            return Color(hex: "#707070") // medium gray  
+            return Color(hex: "#707070") // medium gray
         case .original:
             return Color(hex: "#606060") // accent gray
         }
     }
-    
+
     private var statusColor: Color {
         switch task.status {
         case .completed:
@@ -78,4 +78,4 @@ struct TreeNode: View {
             return Color(hex: "#4d4d4d") // border gray
         }
     }
-} 
+}
