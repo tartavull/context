@@ -3,20 +3,34 @@ import SwiftUI
 struct TemplatesDrawer: View {
     @Binding var isPresented: Bool
     let parentFrame: CGRect
+    let namespace: Namespace.ID
+    @ObservedObject private var modalManager = TemplateEditModalManager.shared
+    
+    // Calculate height based on template content
+    private var calculatedHeight: CGFloat {
+        return min(400, max(200, CGFloat(10 * 50 + 80))) // Dynamic based on content
+    }
     
     var body: some View {
         DrawerView(
             isPresented: $isPresented,
             parentFrame: parentFrame,
-            contentHeight: min(400, max(200, CGFloat(10 * 50 + 80)))  // Reduced row height from 60 to 50, padding from 100 to 80
+            contentHeight: calculatedHeight
         ) {
-            TemplatesDrawerContent(isPresented: $isPresented)
+            TemplatesDrawerContent(
+                isPresented: $isPresented,
+                modalManager: modalManager,
+                namespace: namespace
+            )
         }
     }
 }
 
 struct TemplatesDrawerContent: View {
     @Binding var isPresented: Bool
+    let modalManager: TemplateEditModalManager
+    let namespace: Namespace.ID
+    @State private var hoveredTemplate: String?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -47,33 +61,33 @@ struct TemplatesDrawerContent: View {
             HStack {
                 Image(systemName: "plus")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white)
+                    .foregroundColor(AppColors.Semantic.textPrimary)
                 
                 VStack(alignment: .leading, spacing: 2) {  // Reduced from 4 to 2
                     Text("Create a new template")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white)
+                        .foregroundColor(AppColors.Semantic.textPrimary)
                         .multilineTextAlignment(.leading)
                     
                     Text("Build a custom template for your workflows")
                         .font(.system(size: 12))
-                        .foregroundColor(.gray)
+                        .foregroundColor(AppColors.Semantic.textSecondary)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                 }
                 
                 Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10))
-                    .foregroundColor(.gray)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)  // Reduced from 12 to 8
-            .background(Color(hex: "#3a3a3a"))
+            .background(Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(AppColors.Component.borderPrimary, lineWidth: 1)
+            )
         })
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
     
     private func templateRow(_ template: TemplateItem) -> some View {
@@ -91,48 +105,86 @@ struct TemplatesDrawerContent: View {
                 VStack(alignment: .leading, spacing: 2) {  // Reduced from 4 to 2
                     Text(template.title)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white)
+                        .foregroundColor(AppColors.Semantic.textPrimary)
                         .multilineTextAlignment(.leading)
+                        .matchedGeometryEffect(id: "\(template.id)-title", in: namespace, isSource: true)
                     
                     Text(template.description)
                         .font(.system(size: 12))
-                        .foregroundColor(.gray)
+                        .foregroundColor(AppColors.Semantic.textSecondary)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
+                        .matchedGeometryEffect(id: "\(template.id)-description", in: namespace, isSource: true)
                 }
                 
                 Spacer()
                 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10))
-                    .foregroundColor(.gray)
+                if hoveredTemplate == template.id {
+                    Button(action: {
+                        // Get the stored frame for this template row
+                        let rowFrame = TemplateRowFrameStore.shared.getFrame(for: template.id)
+                        modalManager.startEditing(template, sourceFrame: rowFrame)
+                    }) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.scale.combined(with: .opacity))
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)  // Reduced from 12 to 8
-            .background(Color(hex: "#3a3a3a"))
+            .background(
+                GeometryReader { geometry in
+                    Color.clear
+                        .preference(key: TemplateRowFramePreferenceKey.self, value: [template.id: geometry.frame(in: .global)])
+                }
+            )
+            .background(Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(AppColors.Component.borderPrimary, lineWidth: 1)
+            )
+            .matchedGeometryEffect(id: "\(template.id)-background", in: namespace, properties: .frame, anchor: .center, isSource: true)
+            .animation(.easeInOut(duration: 0.2), value: hoveredTemplate == template.id)
         })
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
+        .onHover { isHovered in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                hoveredTemplate = isHovered ? template.id : nil
+            }
+        }
+        .onPreferenceChange(TemplateRowFramePreferenceKey.self) { frames in
+            // Store the frame for this template row
+            if let frame = frames[template.id] {
+                TemplateRowFrameStore.shared.setFrame(for: template.id, frame: frame)
+            }
+        }
     }
 }
 
-// Sample data structures
-struct TemplateItem {
-    let id = UUID()
-    let title: String
-    let description: String
-    let icon: String
+// MARK: - Frame Tracking Infrastructure
+
+struct TemplateRowFramePreferenceKey: PreferenceKey {
+    static var defaultValue: [String: CGRect] = [:]
+    
+    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) {
+        value.merge(nextValue()) { _, new in new }
+    }
 }
 
-private let sampleTemplates: [TemplateItem] = [
-    TemplateItem(title: "/code_review", description: "Review this code for best practices and potential improvements", icon: "👁️"),
-    TemplateItem(title: "/bug_report", description: "Help me debug this issue I'm encountering", icon: "🐛"),
-    TemplateItem(title: "/explain_code", description: "Explain how this code works step by step", icon: "💡"),
-    TemplateItem(title: "/optimize_performance", description: "Suggest optimizations for better performance", icon: "⚡"),
-    TemplateItem(title: "/write_tests", description: "Create comprehensive tests for this functionality", icon: "🧪"),
-    TemplateItem(title: "/documentation", description: "Generate documentation for this code", icon: "📚"),
-    TemplateItem(title: "/refactor_code", description: "Refactor this code for better readability", icon: "🔧"),
-    TemplateItem(title: "/api_design", description: "Design a REST API for this functionality", icon: "🔌"),
-    TemplateItem(title: "/database_schema", description: "Create a database schema for this data", icon: "🗄️"),
-    TemplateItem(title: "/security_review", description: "Review this code for security vulnerabilities", icon: "🔒"),
-] 
+class TemplateRowFrameStore: ObservableObject {
+    static let shared = TemplateRowFrameStore()
+    
+    private var frames: [String: CGRect] = [:]
+    
+    func setFrame(for templateId: String, frame: CGRect) {
+        frames[templateId] = frame
+    }
+    
+    func getFrame(for templateId: String) -> CGRect {
+        return frames[templateId] ?? .zero
+    }
+} 
