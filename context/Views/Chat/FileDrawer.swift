@@ -5,11 +5,16 @@ struct FileDrawer: View {
     @Binding var isPresented: Bool
     let parentFrame: CGRect
     
+    // Calculate height for single row of images with padding
+    private var calculatedHeight: CGFloat {
+        return 152 // Height for single row with consistent padding
+    }
+    
     var body: some View {
         DrawerView(
             isPresented: $isPresented,
             parentFrame: parentFrame,
-            contentHeight: 152  // Height for single row with consistent padding
+            contentHeight: calculatedHeight
         ) {
             FileDrawerContent(isPresented: $isPresented)
         }
@@ -48,14 +53,18 @@ struct FileDrawerContent: View {
                             print("Added new image. Total count: \(imageCount)")
                         }, label: {
                             Rectangle()
-                                .fill(Color(hex: "#3a3a3a"))
+                                .fill(Color.clear)
                                 .frame(width: 80, height: 120)  // Portrait aspect ratio
                                 .overlay(
                                     Image(systemName: "plus")
                                         .font(.system(size: 28, weight: .medium))
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(.white)
                                 )
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(AppColors.Component.borderPrimary, lineWidth: 1)
+                                )
                         })
                         .buttonStyle(PlainButtonStyle())
                         .id("add")
@@ -90,14 +99,18 @@ struct FileDrawerContent: View {
         }, label: {
             ZStack {
                 Rectangle()
-                    .fill(Color(hex: "#3a3a3a"))
+                    .fill(Color.clear)
                     .frame(width: 80, height: 120)  // Portrait aspect ratio
                     .overlay(
                         Image(systemName: "photo")
                             .font(.system(size: 24))
-                            .foregroundColor(.gray)
+                            .foregroundColor(.white)
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(AppColors.Component.borderPrimary, lineWidth: 1)
+                    )
                 
                 // Trash icon overlay
                 TrashOverlay(index: index, imageCount: $imageCount)
