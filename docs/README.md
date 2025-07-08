@@ -12,6 +12,7 @@ Welcome to the Context developer documentation. This directory contains guides a
 ### Concept & Design
 - **[Task System](./task-system.md)** - The vision and research behind Context
 - **[Template System](./template-system.md)** - Document templating and generation system
+- **[LLM Template Evolution](./llm-template-evolution.md)** - Templates for LLM Self-Improvement design document
 
 
 ### Getting Started
