@@ -117,6 +117,19 @@ struct Project: Identifiable, Codable {
     }
 }
 
+// MARK: - Drawer Types
+
+enum DrawerState {
+    case open
+    case closed
+}
+
+enum DrawerType {
+    case templates
+    case images
+    case models
+}
+
 // MARK: - UI State
 
 struct UIState: Codable {
@@ -125,6 +138,35 @@ struct UIState: Codable {
     var showChat: Bool = true // Always show chat panel
     var projectsCollapsed: Bool = false
     var projectsPanelSize: Double = 30.0
+    
+    // Drawer states
+    var templatesDrawerOpen: Bool = false
+    var imagesDrawerOpen: Bool = false
+    var modelsDrawerOpen: Bool = false
+    var selectedModel: String = "claude-4-sonnet"
+    
+    // Expansion states (not persisted)
+    var editingTemplateId: String? {
+        get { _editingTemplateId }
+        set { _editingTemplateId = newValue }
+    }
+    
+    private var _editingTemplateId: String? = nil
+    
+    // Frame tracking (not persisted)
+    var inputViewFrame: CGRect {
+        get { _inputViewFrame }
+        set { _inputViewFrame = newValue }
+    }
+    
+    private var _inputViewFrame: CGRect = .zero
+    
+    private enum CodingKeys: String, CodingKey {
+        case showProjects, showChart, showChat
+        case projectsCollapsed, projectsPanelSize
+        case templatesDrawerOpen, imagesDrawerOpen, modelsDrawerOpen
+        case selectedModel
+    }
 }
 
 // MARK: - App State

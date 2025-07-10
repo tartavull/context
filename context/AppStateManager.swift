@@ -282,6 +282,74 @@ class AppStateManager: ObservableObject {
         if let projectsPanelSize = updates["projectsPanelSize"] as? Double {
             state.ui.projectsPanelSize = projectsPanelSize
         }
+        if let templatesDrawerOpen = updates["templatesDrawerOpen"] as? Bool {
+            state.ui.templatesDrawerOpen = templatesDrawerOpen
+        }
+        if let imagesDrawerOpen = updates["imagesDrawerOpen"] as? Bool {
+            state.ui.imagesDrawerOpen = imagesDrawerOpen
+        }
+        if let modelsDrawerOpen = updates["modelsDrawerOpen"] as? Bool {
+            state.ui.modelsDrawerOpen = modelsDrawerOpen
+        }
+        if let inputViewFrame = updates["inputViewFrame"] as? CGRect {
+            state.ui.inputViewFrame = inputViewFrame
+        }
+        if let selectedModel = updates["selectedModel"] as? String {
+            state.ui.selectedModel = selectedModel
+        }
+        if let editingTemplateId = updates["editingTemplateId"] as? String? {
+            state.ui.editingTemplateId = editingTemplateId
+        }
+    }
+
+    // MARK: - Drawer State Management
+    
+    func toggleDrawer(_ drawerType: DrawerType) {
+        switch drawerType {
+        case .templates:
+            let newState = !state.ui.templatesDrawerOpen
+            updateUI([
+                "templatesDrawerOpen": newState,
+                "imagesDrawerOpen": false,
+                "modelsDrawerOpen": false
+            ])
+        case .images:
+            let newState = !state.ui.imagesDrawerOpen
+            updateUI([
+                "templatesDrawerOpen": false,
+                "imagesDrawerOpen": newState,
+                "modelsDrawerOpen": false
+            ])
+        case .models:
+            let newState = !state.ui.modelsDrawerOpen
+            updateUI([
+                "templatesDrawerOpen": false,
+                "imagesDrawerOpen": false,
+                "modelsDrawerOpen": newState
+            ])
+        }
+    }
+    
+    func closeAllDrawers() {
+        updateUI([
+            "templatesDrawerOpen": false,
+            "imagesDrawerOpen": false,
+            "modelsDrawerOpen": false
+        ])
+    }
+    
+    func setInputViewFrame(_ frame: CGRect) {
+        state.ui.inputViewFrame = frame
+    }
+    
+    func setSelectedModel(_ model: String) {
+        updateUI(["selectedModel": model])
+    }
+    
+    func setEditingTemplateId(_ templateId: String?) {
+        withAnimation(.easeInOut(duration: 3.0)) {
+            updateUI(["editingTemplateId": templateId])
+        }
     }
 
     // MARK: - Getters

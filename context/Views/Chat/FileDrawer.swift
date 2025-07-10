@@ -28,6 +28,9 @@ struct FileDrawerContent: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Top spacer for fixed spacing
+            Spacer().frame(height: 6)
+            
             // Horizontal image row with scroll
             ScrollViewReader { scrollProxy in
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -56,7 +59,6 @@ struct FileDrawerContent: View {
                             label: {
                                 Rectangle()
                                     .fill(Color.clear)
-                                    .frame(width: 80, height: 120)  // Portrait aspect ratio
                                     .overlay(
                                         Image(systemName: "plus")
                                             .font(.system(size: 28, weight: .medium))
@@ -67,6 +69,8 @@ struct FileDrawerContent: View {
                                         RoundedRectangle(cornerRadius: 8)
                                             .stroke(AppColors.Component.borderPrimary, lineWidth: 1)
                                     )
+                                    .frame(width: 80, height: 120)  // Fixed size
+                                    .fixedSize()  // Prevent any scaling from parent container
                             }
                         )
                         .buttonStyle(PlainButtonStyle())
@@ -74,10 +78,13 @@ struct FileDrawerContent: View {
                     }
                     .padding(.horizontal, 16)
                 }
-                .frame(maxWidth: .infinity, maxHeight: 140)
+                .frame(height: 140)  // Fixed height, no maxWidth/maxHeight that could scale
             }
+            
+            // Bottom spacer for fixed spacing
+            Spacer().frame(height: 6)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure VStack takes full width and height
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func imageGridItem(index: Int) -> some View {
@@ -105,7 +112,6 @@ struct FileDrawerContent: View {
                 ZStack {
                     Rectangle()
                         .fill(Color.clear)
-                        .frame(width: 80, height: 120)  // Portrait aspect ratio
                         .overlay(
                             Image(systemName: "photo")
                                 .font(.system(size: 24))
@@ -120,6 +126,8 @@ struct FileDrawerContent: View {
                     // Trash icon overlay
                     TrashOverlay(index: index, imageCount: $imageCount)
                 }
+                .frame(width: 80, height: 120)  // Fixed size applied to the entire ZStack
+                .fixedSize()  // Prevent any scaling from parent container
             }
         )
         .buttonStyle(PlainButtonStyle())

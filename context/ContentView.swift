@@ -12,20 +12,21 @@ struct ContentView: View {
     @State private var projectsPanelWidth: CGFloat = 300
     @State private var toggleButtonShine: Bool = false
     @State private var toggleButtonHovered: Bool = false
+    @State private var drawerExpansionProgress: CGFloat = 0.0
+
+    @Namespace private var geometryNamespace
+    
+    // Chat input states
     @State private var inputText = ""
     @State private var isLoading = false
-    @State private var selectedModel = "claude-4-sonnet"
     @State private var showModelDropdown = false
-
-    @Namespace private var templateHeroNamespace
+    
+    private let models = AIModels.simpleList
 
     private let minPanelWidth: CGFloat = 200
     private let defaultPanelWidth: CGFloat = 300
 
-    // Fixed chat container width
-    private var chatContainerWidth: CGFloat {
-        return 400
-    }
+
 
     var body: some View {
         GeometryReader { geometry in
@@ -40,18 +41,12 @@ struct ContentView: View {
 
                 // Main content area (TreeView with overlays)
                 ZStack {
-                    // Tree container (fills remaining space)
-                    if appState.state.ui.showChart {
-                        treeContainer
-                    }
-
-                    // Chat messages overlay
-                    chatMessagesOverlay
-                        .zIndex(10)
-
-                    // Chat input overlay
-                    floatingChatInput
-                        .zIndex(50)
+                    // Tree container (fills remaining space) - always visible
+                    treeContainer
+                        
+                    drawerOverlay
+                    
+                    floatingChatInput(geometry: geometry)
                 }
                 .frame(maxWidth: .infinity)
                 .background(Color.clear)
@@ -59,15 +54,6 @@ struct ContentView: View {
             .overlay(resizeHandleOverlay(geometry: geometry), alignment: .leading)
             .preferredColorScheme(.dark)
             .overlay(panelToggleButton, alignment: .topLeading)
-            .overlay(
-                // Global template edit modal overlay - positioned at root level
-                TemplateEditModalOverlay(
-                    modalManager: TemplateEditModalManager.shared,
-                    namespace: templateHeroNamespace
-                )
-                .allowsHitTesting(TemplateEditModalManager.shared.showEditModal)
-                .zIndex(1000)
-            )
         }
         .background(
             // Window background blur - prevents see-through during animations
@@ -85,6 +71,15 @@ struct ContentView: View {
             // Set initial panel width based on UI state
             let calculatedWidth = appState.state.ui.projectsPanelSize * 10
             projectsPanelWidth = max(calculatedWidth, defaultPanelWidth)
+            
+            // Set initial drawer expansion progress
+            drawerExpansionProgress = appState.state.ui.editingTemplateId != nil ? 1.0 : 0.0
+        }
+        .onChange(of: appState.state.ui.editingTemplateId) { _, newValue in
+            // Animate drawer expansion progress when editing state changes
+            withAnimation(.easeInOut(duration: 0.6)) {
+                drawerExpansionProgress = newValue != nil ? 1.0 : 0.0
+            }
         }
     }
 
@@ -158,62 +153,142 @@ struct ContentView: View {
             }
     }
 
-    // MARK: - Chat Messages Overlay
-    private var chatMessagesOverlay: some View {
-        Group {
-            if appState.state.ui.showChat {
-                HStack {
-                    Spacer()
 
-                    // Empty chat messages area
-                    VStack {
-                        Spacer()
-                    }
-                    .frame(width: chatContainerWidth)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .background(Color.clear)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.clear, lineWidth: 1)
-                    )
-                    .shadow(color: .clear, radius: 8, x: 0, y: 4)
-                    .padding(.trailing, 20)
-                    .padding(.vertical, 20)
-                }
-            }
-        }
-    }
 
     // MARK: - Floating Chat Input
-    private var floatingChatInput: some View {
-        Group {
-            if appState.state.ui.showChat {
-                VStack {
-                    Spacer()
+    private func floatingChatInput(geometry: GeometryProxy) -> some View {
+        InputView(
+            inputText: $inputText,
+            isLoading: $isLoading,
+            selectedModel: Binding(
+                get: { appState.state.ui.selectedModel },
+                set: { _ in }
+            ),
+            showModelDropdown: $showModelDropdown,
+            models: models,
+            namespace: geometryNamespace
+        ) {
+            handleSubmit()
+        }
+        .environmentObject(appState)  // Pass the environment object
+        .frame(width: 650)
+        .position(
+            x: geometry.size.width / 2,
+            y: geometry.size.height - 125  // 75 points from bottom
+        )
+        .allowsHitTesting(true)
+    }
 
-                    HStack {
-                        Spacer()
+    // MARK: - Drawer Overlay
+    private var drawerOverlay: some View {
+        GeometryReader { geometry in
+            VStack(alignment: .center, spacing: 0) {
+                // Top spacer - allows room for drawer expansion
+                Spacer()
+                
+                // Single drawer instances that smoothly transition between normal and expanded states
+                ZStack {
+                    // Templates Drawer - single instance that handles both states
+                    TemplatesDrawer(
+                        isPresented: Binding(
+                            get: { appState.state.ui.templatesDrawerOpen },
+                            set: { _ in }
+                        ),
+                        parentFrame: isAnyDrawerExpanded ? 
+                            CGRect(x: 0, y: 0, width: 750, height: geometry.size.height - 100) :
+                            appState.state.ui.inputViewFrame,
+                        namespace: geometryNamespace
+                    )
+                    .environmentObject(appState)
+                    .allowsHitTesting(appState.state.ui.templatesDrawerOpen)
 
-                        InputView(
-                            inputText: $inputText,
-                            isLoading: $isLoading,
-                            selectedModel: $selectedModel,
-                            showModelDropdown: $showModelDropdown,
-                            models: AIModels.simpleList,
-                            namespace: templateHeroNamespace
-                        ) {
-                            // No action for now - send button does nothing
+                    // File Drawer - single instance that handles both states
+                    FileDrawer(
+                        isPresented: Binding(
+                            get: { appState.state.ui.imagesDrawerOpen },
+                            set: { _ in }
+                        ),
+                        parentFrame: isAnyDrawerExpanded ?
+                            CGRect(x: 0, y: 0, width: 750, height: geometry.size.height - 100) :
+                            appState.state.ui.inputViewFrame
+                    )
+                    .allowsHitTesting(appState.state.ui.imagesDrawerOpen)
+
+                    // Model Drawer - single instance that handles both states
+                    ModelDrawer(
+                        isPresented: Binding(
+                            get: { appState.state.ui.modelsDrawerOpen },
+                            set: { _ in }
+                        ),
+                        selectedModel: Binding(
+                            get: { appState.state.ui.selectedModel },
+                            set: { _ in }
+                        ),
+                        parentFrame: isAnyDrawerExpanded ?
+                            CGRect(x: 0, y: 0, width: 750, height: geometry.size.height - 100) :
+                            appState.state.ui.inputViewFrame,
+                        onModelSelect: { model in
+                            appState.setSelectedModel(model)
                         }
-                        .frame(width: 650)
-
-                        Spacer()
-                    }
-                    .padding(.bottom, 20)
+                    )
+                    .allowsHitTesting(appState.state.ui.modelsDrawerOpen)
                 }
-                .zIndex(50) // Lower z-index than projects panel
+                .frame(maxWidth: .infinity, alignment: .center)
+                .allowsHitTesting(
+                    appState.state.ui.templatesDrawerOpen || 
+                    appState.state.ui.imagesDrawerOpen || 
+                    appState.state.ui.modelsDrawerOpen
+                )
+                
+                // Bottom spacer - fixes drawer bottom to input view top
+                Spacer()
+                    .frame(height: drawerBottomSpacing(for: geometry))
             }
         }
+        .ignoresSafeArea()
+    }
+    
+    // Helper to check if any drawer is in expanded state
+    private var isAnyDrawerExpanded: Bool {
+        // Check if any drawer is in expanded state (only when editing)
+        return appState.state.ui.editingTemplateId != nil
+    }
+    
+    // Helper to calculate drawer bottom spacing for VStack positioning
+    private func drawerBottomSpacing(for geometry: GeometryProxy) -> CGFloat {
+        let inputViewFrame = appState.state.ui.inputViewFrame
+        
+        // If we have a valid input view frame, calculate smooth transition
+        if inputViewFrame != .zero {
+            // Spacing when open (drawer bottom aligns with input top)
+            let openStateSpacing = geometry.size.height - inputViewFrame.minY
+            
+            // Spacing when expanded (drawer has bottom margin)
+            let expandedBottomMargin: CGFloat = 50
+            let expandedStateSpacing = expandedBottomMargin
+            
+            // Smooth interpolation between open and expanded spacing using animated progress
+            let interpolatedSpacing = openStateSpacing + (expandedStateSpacing - openStateSpacing) * drawerExpansionProgress
+            
+            // Ensure spacing is not negative
+            return max(interpolatedSpacing, 0)
+        } else {
+            // Fallback spacing
+            return 125 // Matches the input view position from bottom
+        }
+    }
+    
+    // MARK: - Chat Input Handler
+    private func handleSubmit() {
+        guard !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+
+        let trimmedInput = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Clear input
+        inputText = ""
+        
+        // TODO: Handle input submission
+        print("Input submitted: \(trimmedInput)")
     }
 
     // MARK: - Panel Toggle Button
