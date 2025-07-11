@@ -33,114 +33,97 @@ struct InputView: View {
     }
 
     private var inputFieldView: some View {
-        VStack(spacing: 0) {
-            ZStack(alignment: .trailing) {
-                // Text field area
-                HStack {
-                    TextField("", text: $inputText, axis: .vertical)
-                        .textFieldStyle(PlainTextFieldStyle())
-                        .font(.system(size: 14))
-                        .foregroundColor(.white)
-                        .tint(.white)
-                        .lineLimit(1...6)
-                        .frame(minHeight: 48)
-                        .frame(height: textHeight)
-                        .focused($isTextFieldFocused)
-                        .onKeyPress { keyPress in
-                            if keyPress.key == .return {
-                                if keyPress.modifiers.contains(.shift) {
-                                    // Shift+Enter: add new line
-                                    inputText += "\n"
-                                    updateTextHeight(for: inputText)
-                                    return .handled
-                                } else {
-                                    // Enter: submit if not empty
-                                    if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                        onSubmit()
-                                    }
-                                    return .handled
+        HStack(alignment: .center, spacing: 12) {
+            // Left side - vertical stack with text input and buttons
+            VStack(spacing: 2) {
+                // Text input area
+                TextField("", text: $inputText, axis: .vertical)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .font(.system(size: 14))
+                    .foregroundColor(.white)
+                    .tint(.white)
+                    .lineLimit(1...10)
+                    .frame(minHeight: 48)
+                    .frame(height: textHeight)
+                    .focused($isTextFieldFocused)
+                    .onKeyPress { keyPress in
+                        if keyPress.key == .return {
+                            if keyPress.modifiers.contains(.shift) {
+                                // Shift+Enter: add new line
+                                inputText += "\n"
+                                updateTextHeight(for: inputText)
+                                return .handled
+                            } else {
+                                // Enter: submit if not empty
+                                if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                    onSubmit()
                                 }
+                                return .handled
                             }
-                            return .ignored
                         }
-                        .onChange(of: inputText) { _, newValue in
-                            updateTextHeight(for: newValue)
-                        }
-                        .disabled(isLoading)
-                    
-                    // Spacer to make room for send button
-                    Spacer()
-                        .frame(width: 36) // 24 + 12 spacing
-                }
+                        return .ignored
+                    }
+                    .onChange(of: inputText) { _, newValue in
+                        updateTextHeight(for: newValue)
+                    }
+                    .disabled(isLoading)
                 
-                // Send button positioned at center-right
-                Button(action: {
-                    if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        onSubmit()
-                    }
-                }, label: {
-                    ZStack {
-                        if isLoading {
-                            ProgressView()
-                                .scaleEffect(0.5)
-                                .frame(width: 16, height: 16)
-                                .foregroundColor(.white)
-                        } else {
-                            Image(systemName: "arrow.up")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(.white)
-                        }
-                    }
+                // Bottom buttons horizontal stack
+                HStack(alignment: .bottom) {
+                    // Model selector
+                    modelSelectorView
+                        .frame(height: 24)
+
+                    // Image button
+                    Button(action: {
+                        appState.toggleDrawer(.images)
+                    }, label: {
+                        Image(systemName: "paperclip")
+                            .font(.system(size: 11))
+                            .foregroundColor(.gray)
+                            .frame(width: 24, height: 24)
+                    })
+                    .buttonStyle(PlainButtonStyle())
+                    .help("Attach File")
+
+                    // Template button
+                    Button(action: {
+                        appState.toggleDrawer(.templates)
+                    }, label: {
+                        Text("{ }")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.gray)
+                            .frame(width: 24, height: 24)
+                            .baselineOffset(2)
+                            .multilineTextAlignment(.center)
+                    })
+                    .buttonStyle(PlainButtonStyle())
+                    .help("Open Templates")
+
+                    Spacer()
+                }
+            }
+            
+            // Right side - send button (centered vertically)
+            Button(action: {
+                if !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    onSubmit()
+                }
+            }, label: {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white)
                     .frame(width: 24, height: 24)
                     .background(
                         Circle()
                             .fill(Color.white.opacity(0.1))
                     )
-                })
-                .buttonStyle(PlainButtonStyle())
-                .disabled(isLoading || inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .padding(.trailing, 12)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 12)
-
-            HStack(alignment: .bottom) {
-                // Model selector
-                modelSelectorView
-                    .frame(height: 24)
-
-                // Image button
-                Button(action: {
-                    appState.toggleDrawer(.images)
-                }, label: {
-                    Image(systemName: "paperclip")
-                        .font(.system(size: 11))
-                        .foregroundColor(.gray)
-                        .frame(width: 24, height: 24)
-                })
-                .buttonStyle(PlainButtonStyle())
-                .help("Attach File")
-
-                // Template button
-                Button(action: {
-                    appState.toggleDrawer(.templates)
-                }, label: {
-                    Text("{ }")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.gray)
-                        .frame(width: 24, height: 24)
-                        .baselineOffset(2)
-                        .multilineTextAlignment(.center)
-                })
-                .buttonStyle(PlainButtonStyle())
-                .help("Open Templates")
-
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 12)
+            })
+            .buttonStyle(PlainButtonStyle())
+            .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
         .floatingBlur(cornerRadius: 16)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
