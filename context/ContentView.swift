@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var inputText = ""
     @State private var isLoading = false
     @State private var showModelDropdown = false
+    @State private var inputViewHeight: CGFloat = 80 // Initial estimate
     
     private let models = AIModels.simpleList
 
@@ -166,15 +167,19 @@ struct ContentView: View {
             ),
             showModelDropdown: $showModelDropdown,
             models: models,
-            namespace: geometryNamespace
-        ) {
-            handleSubmit()
-        }
+            namespace: geometryNamespace,
+            onSubmit: {
+                handleSubmit()
+            },
+            onHeightChange: { height in
+                inputViewHeight = height
+            }
+        )
         .environmentObject(appState)  // Pass the environment object
         .frame(width: 650)
         .position(
             x: geometry.size.width / 2,
-            y: geometry.size.height - 125  // 75 points from bottom
+            y: geometry.size.height - 72 -  (inputViewHeight / 2) 
         )
         .allowsHitTesting(true)
     }

@@ -10,14 +10,26 @@ struct InputView: View {
     let models: [(String, String)]
     let namespace: Namespace.ID
     let onSubmit: () -> Void
+    let onHeightChange: (CGFloat) -> Void
 
     @State private var textHeight: CGFloat = 48
     @FocusState private var isTextFieldFocused: Bool
+    
+    // Calculate total InputView height including padding and button row
+    private var totalHeight: CGFloat {
+        let textAreaHeight = textHeight
+        let buttonRowHeight: CGFloat = 24
+        let verticalSpacing: CGFloat = 2
+        let verticalPadding: CGFloat = 32 // 16 top + 16 bottom
+        return textAreaHeight + buttonRowHeight + verticalSpacing + verticalPadding
+    }
 
     var body: some View {
         inputFieldView
             .onAppear {
                 isTextFieldFocused = true
+                // Report initial height to parent
+                onHeightChange(totalHeight)
             }
             .background(
                 GeometryReader { geometry in
@@ -150,6 +162,9 @@ struct InputView: View {
 
         let newHeight = max(48, min(128, boundingRect.height + 28)) // Add padding
         textHeight = newHeight
+        
+        // Report total height change to parent
+        onHeightChange(totalHeight)
     }
 
     // MARK: - Model Selector
